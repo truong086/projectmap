@@ -1,16 +1,16 @@
 <template>
-  <HelloWorld />
+  <router-view></router-view>
 </template>
 
 <script>
-import HelloWorld from './components/mapdataPage.vue'
+// import HelloWorld from './components/mapdataPage.vue'
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+// export default {
+//   name: 'App',
+//   components: {
+//     HelloWorld
+//   }
+// }
 </script>
 
 <style>

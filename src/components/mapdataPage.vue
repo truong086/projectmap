@@ -1,14 +1,23 @@
 <template>
     <div>
-
+      
     <div style="position: relative;">
+      <button @click="logout" style="position: absolute; top: 5px; z-index: 1000; right: 80px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+          登出
+        </button>
  <!-- Bản đồ -->
  <GMapMap
+        ref="mapRefs"
         :center="mapCenter"
         :zoom="zoomLevel"
         style="height: 100vh; width: 100%;"
+        map-type-id="roadmap"
+        @zoom_changed="onZoomChanged"
+        @center_changed="onCenterChanged"
       >
 
+      <GMapTrafficLayer />
+      <!-- "@zoom_changed" là bắt sự kiện khi người dùng phóng to, thu nhỏ bản đồ -->
       <div v-if="checkData">
     <GMapPolygon
       v-for="(island, index) in boundaryCoordinates"
@@ -28,7 +37,7 @@
     :paths="boundaryCoordinates"
     :options="{ 
       fillColor: '#FF0000',
-      fillOpacity: 0.3,
+      fillOpacity: 0,
       strokeColor: '#FF0000',
       strokeWeight: 2,
     }"
@@ -80,6 +89,10 @@
       </span>
     </button>
 
+    <button @click="toggleTraffic" style="margin-bottom: 10px; padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer;">
+      {{ trafficVisible ? "關閉交通" : "開放交通" }}
+    </button>
+
     <div v-if="routeDistance">
       <p><strong>Travel Distance:</strong> {{ routeDistance.toFixed(2) }} km</p>
     </div>
@@ -127,16 +140,21 @@
 
 
     <!-- Marker cho tất cả vị trí tìm kiếm được -->
+
+    
+    
      <div v-for="(location, index) in locations" :key="index">
+      <div v-if="zoomLevel >= 13">
+      <div v-if="location.isError">
         <GMapMarker
-        v-if="location.status == 1"
+        v-if="location.statusError == 0"
           :position="location.coordinates"
           :label="location.address"
-          @click="showInfo(index)"
+          @click="showInfo(location.coordinates.lat)"
           :icon="{
             // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status1,
-            scaledSize: { width: 80, height: 80 },
+            url: imageStatus.status0,
+            scaledSize: { width: 40, height: 40 },
             anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
           }"
 
@@ -145,17 +163,22 @@
             <!-- Hiển thị thông tin khi bấm vào marker -->
 
              <GMapInfoWindow
-                    v-if="selectedMarker === index && showDistanceList"
+                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                     :options="{ maxWidth: 250 }"
                     @closeclick="selectedMarker = null"
                     >
                     <div>
-                        <h4>{{ location.name }}</h4>
-                        <p>{{ location.details }}</p>
-                        <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
-                        <div v-if="location.images.length > 0">
+                      <h4>category Code: {{ location.categoryCode }}</h4>
+                        <p>IdentificationCode: {{ location.identificationCode }}</p>
+                        <p>Lat: {{ location.latitude }}</p>
+                        <p>Lng: {{ location.longitude }}</p>
+                        <p>signal Number: {{ location.signalNumber }}</p>
+                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                        <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+                        <!-- <div v-if="location.images.length > 0">
                           <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div>
+                        </div> -->
                         <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
                         <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
                         <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
@@ -165,15 +188,63 @@
                         <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
                         <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
                         <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                      </div>
+                    </GMapInfoWindow>
+       
+    </GMapMarker>
+        <GMapMarker
+        v-if="location.statusError == 1"
+          :position="location.coordinates"
+          :label="location.address"
+          @click="showInfo(location.coordinates.lat)"
+          :icon="{
+            // url: marker1.url, // Đây là đổi ảnh liên tục
+            url: imageStatus.status1s,
+            scaledSize: { width: 40, height: 40 },
+            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          }"
+
+          class="marker-icon"
+        >
+            <!-- Hiển thị thông tin khi bấm vào marker -->
+
+             <GMapInfoWindow
+                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                    :options="{ maxWidth: 250 }"
+                    @closeclick="selectedMarker = null"
+                    >
+                    <div>
+                      <h4>category Code: {{ location.categoryCode }}</h4>
+                        <p>IdentificationCode: {{ location.identificationCode }}</p>
+                        <p>Lat: {{ location.latitude }}</p>
+                        <p>Lng: {{ location.longitude }}</p>
+                        <p>signal Number: {{ location.signalNumber }}</p>
+                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                        <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                        <!-- <div v-if="location.images.length > 0">
+                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
+                        </div> -->
+                        <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                        <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                        <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                        <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                        <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                        <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                        <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                        <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                       </div>
                     </GMapInfoWindow>
        
     </GMapMarker>
     <GMapMarker
-        v-if="location.status == 2"
+        v-if="location.statusError == 2"
           :position="location.coordinates"
           :label="location.address"
-          @click="showInfo(index)"
+          @click="showInfo(location.coordinates.lat)"
           :icon="{
             // url: marker1.url, // Đây là đổi ảnh liên tục
             url: imageStatus.status2,
@@ -186,18 +257,23 @@
             <!-- Hiển thị thông tin khi bấm vào marker -->
 
              <GMapInfoWindow
-                    v-if="selectedMarker === index && showDistanceList"
+                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                     :options="{ maxWidth: 250 }"
                     @closeclick="selectedMarker = null"
                     >
                     <div>
-                        <h4>{{ location.name }}</h4>
-                        <p>{{ location.details }}</p>
+                      <h4>category Code: {{ location.categoryCode }}</h4>
+                        <p>IdentificationCode: {{ location.identificationCode }}</p>
+                        <p>Lat: {{ location.latitude }}</p>
+                        <p>Lng: {{ location.longitude }}</p>
+                        <p>signal Number: {{ location.signalNumber }}</p>
+                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
 
-                        <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-                        <div v-if="location.images.length > 0">
+                        <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
+                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                        <!-- <div v-if="location.images.length > 0">
                           <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div>
+                        </div> -->
                         <button :class="'s2' + location.lat" @click="clickDataLocation(location, 'driving-car', 's2' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
                         <button :class="'s22' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's22' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
                         <button :class="'s23' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's23' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
@@ -207,16 +283,17 @@
                         <button :class="'s26' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's26' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
                         <button :class="'s27' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's27' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
                         <button :class="'s28' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's28' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                       </div>
                     </GMapInfoWindow>
        
     </GMapMarker>
 
     <GMapMarker
-        v-if="location.status == 3"
+        v-if="location.statusError == 3"
           :position="location.coordinates"
           :label="location.address"
-          @click="showInfo(index)"
+          @click="showInfo(location.coordinates.lat)"
           :icon="{
             // url: marker1.url, // Đây là đổi ảnh liên tục
             url: imageStatus.status3,
@@ -226,18 +303,23 @@
           class="marker-icon"
         >
              <GMapInfoWindow
-                    v-if="selectedMarker === index && showDistanceList"
+                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                     :options="{ maxWidth: 250 }"
                     @closeclick="selectedMarker = null"
                     >
                     <div>
-                        <h4>{{ location.address }}</h4>
-                        <p>{{ location.details }}</p>
+                      <h4>category Code: {{ location.categoryCode }}</h4>
+                        <p>IdentificationCode: {{ location.identificationCode }}</p>
+                        <p>Lat: {{ location.latitude }}</p>
+                        <p>Lng: {{ location.longitude }}</p>
+                        <p>signal Number: {{ location.signalNumber }}</p>
+                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
 
-                        <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;"><i class="fa fa-handshake-o" aria-hidden="true"></i></p>
-                        <div v-if="location.images.length > 0">
+                        <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                        <!-- <div v-if="location.images.length > 0">
                           <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div>
+                        </div> -->
                         <button :class="'s3' + location.lat" @click="clickDataLocation(location, 'driving-car', 's3' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
                         <button :class="'s32' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's32' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
                         <button :class="'s33' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's33' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
@@ -247,12 +329,80 @@
                         <button :class="'s36' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's36' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
                         <button :class="'s37' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's37' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
                         <button :class="'s38' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's38' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                    
+                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                       </div>
                     </GMapInfoWindow>
        
     </GMapMarker>
+      </div>
+      <div v-else>
+        <GMapMarker
+          :position="location.coordinates"
+          :label="location.managementUnit"
+          @click="showInfo(location.coordinates.lat)"
+          :icon="{
+            // url: marker1.url, // Đây là đổi ảnh liên tục
+            url: imageStatus.status1,
+            scaledSize: { width: 40, height: 40 },
+            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          }"
+
+          class="marker-icon"
+        >
+            <!-- Hiển thị thông tin khi bấm vào marker -->
+
+             <GMapInfoWindow
+                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                    :options="{ maxWidth: 250 }"
+                    @closeclick="selectedMarker = null"
+                    >
+                    <div>
+                        <h4>category Code: {{ location.categoryCode }}</h4>
+                        <p>IdentificationCode: {{ location.identificationCode }}</p>
+                        <p>Lat: {{ location.latitude }}</p>
+                        <p>Lng: {{ location.longitude }}</p>
+                        <p>signal Number: {{ location.signalNumber }}</p>
+                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                        <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
+                        <!-- <div v-if="location.images.length > 0">
+                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
+                        </div> -->
+                        <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                        <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                        <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                        <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                        <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                        <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                        <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                        <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                      </div>
+                    </GMapInfoWindow>
+       
+    </GMapMarker>
+      </div>
+        
+
+      
      </div>
+     <GMapMarker
+          v-if="location.status == 4"
+            :position="location.coordinates"
+            :label="location.address"
+            @click="zoomData(location.coordinates)"
+            :icon="{
+              // url: marker1.url, // Đây là đổi ảnh liên tục
+              url: imageStatus.status0,
+              scaledSize: { width: 40, height: 40 },
+              anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+            }"
+
+            class="marker-icon"
+          >
+        
+      </GMapMarker>
+    </div>
         <!-- Marker cho vị trí hiện tại -->
         <GMapMarker
           :position="currentLocation"
@@ -297,10 +447,101 @@
         <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
         <button @click="searchStatus2('b2s')" class="b2s"><i style="color: red;" class="fa fa-exclamation-triangle" aria-hidden="true"></i> Search Data 2</button>
         <button @click="searchStatus3('b3s')" class="b3s"><i style="color: yellow;" class="fa fa-handshake-o" aria-hidden="true"></i> Search Data 3</button>
+        <button @click="searchStatus5('b5s')" class="b5s">💦💤 Search Data 5</button>
+        <button @click="searchStatus4('b4s')" class="b4s">💌 Search Data 4</button>
         <button @click="AllData">📍 All Location</button>
       </div>
 
-       
+       <div style="position: absolute; padding: 10px; width: 300px; height: 400px; overflow: auto; background-color: rgba(255, 255, 255, 0.8); border: 1px solid black; top: 250px; right: 10px; border-radius: 10px;">
+        <div v-if="zoomLevel >= 13">
+          <div v-for="(location, index) in locations" :key="index">
+          <div v-if="location.isError">
+            <div v-if="location.statusError == 0" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+              <h4>category Code: {{ location.categoryCode }}</h4>
+              <div style="display: flex;">
+              <div>
+              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+            </div>
+            <div>
+              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+              <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+            </div>
+            </div>
+             
+            </div>
+            
+            <div v-if="location.statusError == 1" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+              <div style="display: flex;">
+              <div>
+              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+            </div>
+            <div>
+              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+              <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+            </div>
+            </div>
+              
+            </div>
+
+            <div v-if="location.statusError == 2" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+              <div style="display: flex;">
+              <div>
+              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+            </div>
+            <div>
+              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+              <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
+            </div>
+            </div>
+              
+            </div>
+
+            <div v-if="location.statusError == 3" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+              <div style="display: flex;">
+              <div>
+              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+            </div>
+            <div>
+              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+              <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+            </div>
+            </div>
+              
+            </div>
+          </div>
+          <div v-else style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;" @click="showDataMap(location.coordinates)">
+            <h4>category Code: {{ location.categoryCode }}</h4>
+            
+            <div style="display: flex;">
+              <div>
+              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+            </div>
+            <div>
+              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+              <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
+            </div>
+            </div>
+            
+          </div>
+        </div>
+        </div>
+        <PagesTotal :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
+       </div>
       </GMapMap>
     </div>
      
@@ -318,13 +559,22 @@
   <script setup>
   /* global google */
   // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-  import { ref, onMounted, computed, onUnmounted } from "vue";
+  import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch } from "vue";
   import axios from "axios";
-  
+  import PagesTotal from "./PageList/PagesTotal.vue";
+  import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
+  import { useRouter } from "vue-router";
+  import {useCounterStore} from '../store'
+
   // Vị trí trung tâm bản đồ (Hồ Chí Minh)
   const mapCenter = ref({ lat: 10.762622, lng: 106.660172 });
-  const zoomLevel = ref(12);
-  
+  const zoomLevel = ref(6);
+  const valueE = ref("")
+  const page = ref(1)
+  const totalPage = ref(0)
+  const pageSize = ref(5)
+  const store = useCounterStore()
+  const router = useRouter()
   // Vị trí hiện tại của người dùng
   const currentLocation = ref({ lat: 10.762622, lng: 106.660172 });
   
@@ -343,8 +593,37 @@
   const showTimeDiChuyenKm = ref(null);
   const boundaryCoordinates = ref([]);
 
+  // const intervalData = ref(null)
   const checkData = ref(false)
   const selectedImage = ref(null)
+  const trafficLayer = ref(null)
+  const trafficVisible = ref(false); // Trạng thái bật/tắt giao thông
+  const TaiNanCenter = ref([{
+    // 22.998670465166924, 120.22384000412357
+    coordinates: { lat: 22.998670465166924, lng: 120.22384000412357 },
+    status: 4
+  }])
+
+  const logout = async () => {
+    isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+    const res = await axios.post(hostName + '/api/User/Logout', {}, getToken())
+    store.clearStore()
+    if(res.data.success){
+      
+      router.push("/login")
+    }
+
+    isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
+  }
+  // Danh sách địa điểm với thông tin chi tiết
+  const locations = ref([]);
+
+ 
+  const mapRefs = ref(null)
   const dataLoadStart = ref([
   {
     name: "Hà Nội",
@@ -632,13 +911,181 @@
     ]
   },
 ])
-  // Danh sách địa điểm với thông tin chi tiết
-const locations = ref([]);
 
+// const statusGiaoThong = () => {
+//   intervalData.value = setInterval(() => {
+//       if (mapRefs.value?.$mapObject) {
+//         clearInterval(intervalData.value);
+//         const trafficLayer = new google.maps.TrafficLayer();
+//         trafficLayer.setMap(mapRefs.value.$mapObject);
+//       }
+//     }, 500);
+//   }
+
+  const statusGiaoThong = () => {
+    const checkMapLoaded = setInterval(() => {
+    if (mapRefs.value?.$mapObject) {
+      clearInterval(checkMapLoaded);
+      trafficLayer.value = new google.maps.TrafficLayer();
+    }
+  }, 500);
+  }
+
+  const toggleTraffic = () => {
+  if (trafficLayer.value) {
+    trafficVisible.value = !trafficVisible.value;
+    trafficLayer.value.setMap(trafficVisible.value ? mapRefs.value.$mapObject : null);
+  }
+};
+const showDataMap = (location) => {
+  mapCenter.value = location
+    // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
+    zoomLevel.value = 13
+    selectedMarker.value = location.lat
+    showDistanceList.value = !showDistanceList.value
+}
+
+const clickDataUpdate = (id) => {
+  router.push({path: "/admin/fromelementPages", query: {id: id}})
+}
+
+// Hàm tính khoảng cách giữa 2 điểm (Haversine Formula)
+const getDistance = (lat1, lng1, lat2, lng2) => {
+  // alert("Đã vào")
+      const R = 6371; // Bán kính Trái Đất (km)
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+          Math.cos(lat2 * (Math.PI / 180)) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      
+      console.log("Km", R * c)
+      return R * c; // Khoảng cách (km)
+    };
+
+    // Biến timeout để debounce
+let centerChangeTimeout = null;
+
+    const onCenterChanged = () => {
+      if (centerChangeTimeout) clearTimeout(centerChangeTimeout);
+
+  centerChangeTimeout = setTimeout(() => {
+    if (mapRefs.value) {
+      const center = mapRefs.value.$mapObject.getCenter();
+      const newCenter = { lat: center.lat(), lng: center.lng() };
+
+      // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
+      if (
+        Math.abs(newCenter.lat - mapCenter.value.lat) > 0.001 ||
+        Math.abs(newCenter.lng - mapCenter.value.lng) > 0.001
+      ) {
+        mapCenter.value = { lat: center.lat(), lng: center.lng() };
+        onZoomChanged()
+        console.log("Cập nhật vị trí:", mapCenter.value);
+      }
+    }
+  }, 300); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
+    }
+const onZoomChanged = () => {
+  zoomLevel.value = mapRefs.value.$mapObject.getZoom();
+  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+
+    if (zoomLevel.value < 13) {
+      // Khi thu nhỏ bản đồ -> chỉ hiển thị các Quận
+      locations.value = TaiNanCenter.value;
+    } else {
+      // Nếu zoom >= 18 thì cập nhật danh sách điểm
+      if (zoomLevel.value >= 13) {
+        // mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+        // locations.value = dataLoadStart.value.filter((location) => {
+        //   const distance = getDistance(
+        //     mapCenter.value.lat,
+        //     mapCenter.value.lng,
+        //     location.coordinates.lat,
+        //     location.coordinates.lng
+        //   );
+        //   console.log(distance)
+        //   return distance <= 1; // Lấy các điểm trong bán kính 1km
+        // });
+
+        // console.log(locations.value)
+        if(btnSearch.value == null){
+         // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+         mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+        locations.value = dataLoadStart.value.filter((location) => {
+          const distance = getDistance(
+            mapCenter.value.lat,
+            mapCenter.value.lng,
+            location.coordinates.lat,
+            location.coordinates.lng
+          );
+          console.log(distance)
+          return distance <= 1; // Lấy các điểm trong bán kính 1km
+        });
+       }
+
+       else{
+         if(btnSearch.value == 'b1s'){
+           searchStatus1(btnSearch.value)
+         }else if(btnSearch.value == 'b2s'){
+           searchStatus2(btnSearch.value)
+         }else if(btnSearch.value == 'b3s'){
+           searchStatus3(btnSearch.value)
+         }else if(btnSearch.value == 'b4s'){
+           searchStatus4(btnSearch.value)
+         }else if(btnSearch.value == 'b5s'){
+           searchStatus5(btnSearch.value)
+         }
+        }
+      } else {
+        locations.value = []; // Nếu zoom < 18 thì ẩn hết điểm
+      }
+      //  if(btnSearch.value == null){
+      //    // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+      //    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      //   locations.value = dataLoadStart.value.filter((location) => {
+      //     const distance = getDistance(
+      //       mapCenter.value.lat,
+      //       mapCenter.value.lng,
+      //       location.coordinates.lat,
+      //       location.coordinates.lng
+      //     );
+      //     console.log(distance)
+      //     return distance <= 1; // Lấy các điểm trong bán kính 1km
+      //   });
+      //  }else{
+      //    if(btnSearch.value == 'b1s'){
+      //      searchStatus1(btnSearch.value)
+      //    }else if(btnSearch.value == 'b2s'){
+      //      searchStatus2(btnSearch.value)
+      //    }else if(btnSearch.value == 'b3s'){
+      //      searchStatus3(btnSearch.value)
+      //    }else if(btnSearch.value == 'b4s'){
+      //      searchStatus4(btnSearch.value)
+      //    }else if(btnSearch.value == 'b5s'){
+      //      searchStatus5(btnSearch.value)
+      //    }
+      //  }
+          
+    }
+  }
+
+  const zoomData = (data) => {
+    mapCenter.value = data
+    // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
+    zoomLevel.value = 13
+  }
 const imageStatus = ref({
-  status1: 'https://png.pngtree.com/png-clipart/20230526/original/pngtree-cartoon-traffic-lights-png-image_9170567.png',
-  status2: 'https://tse3.mm.bing.net/th?id=OIP.lffsH2vQnmltb646jKf7NwHaHa&pid=Api&P=0&h=220',
-  status3: 'https://img.lovepik.com/original_origin_pic/18/11/26/103baec6ff238c443ca2920f2151a34c.png_wh860.png'
+  status0: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+  status1: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+  status1s: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+  status2: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+  status3: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+
 })
 // Lưu marker đang được chọn
 const selectedMarker = ref(null);
@@ -650,6 +1097,8 @@ const classBtnOld = ref(null)
 const btnSearch = ref(null)
 
 const isLoading = ref(false)
+const { proxy } = getCurrentInstance();
+const hostName = proxy?.hostname;
 // Danh sách ảnh
 const images = ref([
   "https://png.pngtree.com/png-clipart/20230417/original/pngtree-return-of-investment-flat-icon-png-image_9064391.png",
@@ -660,8 +1109,55 @@ const images = ref([
   "https://cdn-icons-png.flaticon.com/512/25/25694.png"
 ]);
 
-const findAllDataMap = async () => {
-    
+watch(page.value, (newPage) => {
+  findAllDataMap(valueE.value, newPage)
+  })
+
+  const changeReload = (event) =>{
+    pageSize.value = event
+    findAllDataMap(valueE.value, page.value)
+  }
+const getToken = () => {
+
+  var result = {
+    headers: { Authorization: `Bearer ${store.getToken}` },
+  };
+  return result;
+};
+const findAllDataMap = async (searchData, pageData) => {
+    isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+    const res = searchData == "" ? await axios.get(hostName + `/api/TrafficEquipment/FindAll?page=${pageData}&pageSize=${pageSize.value}`, getToken())
+    : await axios.get(hostName + `/api/TrafficEquipment/FindAll?name=${searchData}&page=${pageData}&pageSize=${pageSize.value}`, getToken())
+
+    if(res.data.success){
+        dataLoadStart.value = res.data.content.data.map(m => ({
+            ...m,
+            coordinates: { lat: m.latitude, lng: m.longitude }
+        }))
+
+        mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+        locations.value = dataLoadStart.value.filter((location) => {
+          const distance = getDistance(
+            mapCenter.value.lat,
+            mapCenter.value.lng,
+            location.coordinates.lat,
+            location.coordinates.lng
+          );
+          console.log(distance)
+          return distance <= 1; // Lấy các điểm trong bán kính 1km
+        });
+
+        // console.log(dataLoadStart.value)
+        // locations.value = dataLoadStart.value
+        page.value = res.data.content.page;
+        totalPage.value = res.data.content.totalPages;
+    }
+    console.log(res)
+    isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
 }
 
 // Hàm lấy ranh giới từ tên quận
@@ -719,9 +1215,9 @@ console.log("Danh sách các đảo:", combinedCoordinates);
 const loadData = () => {
   locations.value = dataLoadStart.value
 }
-const showImage = (image) => {
-  selectedImage.value = image; // Hiển thị ảnh khi click
-};
+// const showImage = (image) => {
+//   selectedImage.value = image; // Hiển thị ảnh khi click
+// };
 const closeImage = () => {
   selectedImage.value = null; // Đóng popup khi click ngoài
 };
@@ -737,8 +1233,8 @@ const searchStatus1 = (classData) => {
   document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
   btnSearch.value = classData
-  locations.value = dataLoadStart.value.filter(x => x.status === 1)
-  routePath.value = []
+  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 1)
+  // routePath.value = []
   routeDistance.value = null
   return locations.value
 }
@@ -750,8 +1246,8 @@ const searchStatus2 = (classData) => {
   document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
   btnSearch.value = classData
-  locations.value = dataLoadStart.value.filter(x => x.status === 2)
-  routePath.value = []
+  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 2)
+  // routePath.value = []
   routeDistance.value = null
   return locations.value
 }
@@ -764,14 +1260,68 @@ const searchStatus3 = (classData) => {
 
   btnSearch.value = classData
 
-  locations.value = dataLoadStart.value.filter(x => x.status === 3)
-  routePath.value = []
+  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 3)
+  // routePath.value = []
+  routeDistance.value = null
+  return locations.value
+}
+
+const searchStatus5 = (classData) => {
+  if(btnSearch.value != null)
+    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+    
+  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+
+  btnSearch.value = classData
+
+  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 0)
+  // routePath.value = []
+  routeDistance.value = null
+  return locations.value
+}
+
+const searchStatus4 = (classData) => {
+  if(btnSearch.value != null)
+    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+    
+  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+
+  btnSearch.value = classData
+
+  if(pageSize.value >= 500){
+    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+        locations.value = dataLoadStart.value.filter((location) => {
+          const distance = getDistance(
+            mapCenter.value.lat,
+            mapCenter.value.lng,
+            location.coordinates.lat,
+            location.coordinates.lng
+          );
+          console.log(distance)
+          return distance <= 1 && location.isError === false; // Lấy các điểm trong bán kính 1km
+        });
+  }else{
+    
+        locations.value = dataLoadStart.value.filter((location) => location.isError === false);
+  }
+  
+  // routePath.value = []
   routeDistance.value = null
   return locations.value
 }
 
 const AllData = () => {
-  locations.value = dataLoadStart.value
+  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+        locations.value = dataLoadStart.value.filter((location) => {
+          const distance = getDistance(
+            mapCenter.value.lat,
+            mapCenter.value.lng,
+            location.coordinates.lat,
+            location.coordinates.lng
+          );
+          console.log(distance)
+          return distance <= 1; // Lấy các điểm trong bán kính 1km
+        });
   if(btnSearch.value != null)
     document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
 
@@ -1006,6 +1556,8 @@ const clickDataLocation = (location, type, classData) => {
         }
       );
     }
+
+    
   };
 
   // Tính điểm giữa tuyến đường để hiển thị số km
@@ -1017,9 +1569,12 @@ const midPoint = computed(() => {
 });
   
   onMounted(() => {
+    findAllDataMap(valueE.value, page.value)
     getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
     startImageRotation()
     loadData()
+    statusGiaoThong()
+  
   });
 
   onUnmounted(() => {
