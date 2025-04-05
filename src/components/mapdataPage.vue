@@ -1354,7 +1354,7 @@ const searchStatus1 = async (classData) => {
   }
   
   // routePath.value = []
-  routeDistance.value = null
+  // routeDistance.value = null
   isLoading.value = false;
   document.body.classList.remove("loading");
   document.body.style.overflow = "auto";
@@ -1380,7 +1380,7 @@ const searchStatus2 = async (classData) => {
         isPhanTrang.value = false
   }
   // routePath.value = []
-  routeDistance.value = null
+  // routeDistance.value = null
   return locations.value
 }
 
@@ -1403,7 +1403,7 @@ const searchStatus3 = async (classData) => {
         isPhanTrang.value = false
   }
   // routePath.value = []
-  routeDistance.value = null
+  // routeDistance.value = null
   return locations.value
 }
 
@@ -1431,7 +1431,7 @@ const searchStatus5 = async (classData) => {
   }
   
   // routePath.value = []
-  routeDistance.value = null
+  // routeDistance.value = null
 
   isLoading.value = false;
   document.body.classList.remove("loading");
@@ -1467,7 +1467,7 @@ const searchStatus4 = (classData) => {
   isPhanTrang.value = false
   
   // routePath.value = []
-  routeDistance.value = null
+  // routeDistance.value = null
   return locations.value
 }
 
