@@ -2,14 +2,54 @@
     <div>
       
     <div style="position: relative;">
-      <button @click="logout" style="position: absolute; top: 5px; z-index: 1000; right: 80px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+      <button @click="logout" style="position: absolute; top: 45px; z-index: 1000; right: 80px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
           登出
         </button>
+
+        <button @click="offpoi" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+          Off Poi
+        </button>
+
+        <button @click="getCurrentLocation" style="position: absolute; top: 45px; z-index: 1000; right: 260px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+          <i class="fa fa-street-view" aria-hidden="true"></i>
+        </button>
+
+        <div style="position: absolute; text-align: right; right: 50px; z-index: 1000;">
+          <button @click="toggleSchool('attraction', 'FF4500', 'poi1')" class="poi1" style=" margin: 0 20px; top: 5px; z-index: 1000; right: 100px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
+            <i class="fa fa-camera-retro" aria-hidden="true"></i> attraction 
+          </button> 
+
+          <button @click="toggleSchool('business', '191970', 'poi2')" class="poi2" style=" top: 5px; z-index: 1000; right: 120px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
+            <i class="fa fa-building" aria-hidden="true"></i>  business 
+          </button>
+
+          <button @click="toggleSchool('government', 'FF8C00', 'poi3')" class="poi3" style="top: 5px; z-index: 1000; right: 140px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
+            <i class="fa fa-university" aria-hidden="true"></i>  government 
+          </button>
+
+          <button @click="toggleSchool('medical', '000000', 'poi4')" class="poi4" style="top: 5px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
+            <i class="fa fa-medkit" aria-hidden="true"></i>  medical 
+          </button>
+
+          <button @click="toggleSchool('park', '8B0000', 'poi5')" class="poi5" style="top: 5px; z-index: 1000; right: 180px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
+            <i class="fa fa-pagelines" aria-hidden="true"></i> Park  
+          </button>
+          <button @click="toggleSchool('place_of_worship', 'DC143C', 'poi6')" class="poi6" style="top: 5px; z-index: 1000; right: 2000px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
+            <i class="fa fa-area-chart" aria-hidden="true"></i> Place of worship  
+          </button>
+          <button @click="toggleSchool('school', '80bfff', 'poi7')" class="poi7" style="top: 5px; z-index: 1000; right: 220px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
+            <i class="fa fa-graduation-cap" aria-hidden="true"></i> school  
+          </button>
+          <button @click="toggleSchool('sports_complex', '8A2BE2', 'poi8')" class="poi8" style="top: 5px; z-index: 1000; right: 240px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
+            <i class="fa fa-child" aria-hidden="true"></i> sports complex  
+          </button>
+        </div>
  <!-- Bản đồ -->
  <GMapMap
         ref="mapRefs"
         :center="mapCenter"
         :zoom="zoomLevel"
+        :options="mapOptions"
         style="height: 100vh; width: 100%;"
         map-type-id="roadmap"
         @zoom_changed="onZoomChanged"
@@ -137,12 +177,7 @@
           </div>
         </GMapInfoWindow>
     </GMapMarker>
-
-
     <!-- Marker cho tất cả vị trí tìm kiếm được -->
-
-    
-    
      <div v-for="(location, index) in locations" :key="index">
       <div v-if="zoomLevel >= 13">
       <div v-if="location.isError">
@@ -441,7 +476,7 @@
 
        <!-- Nút trong bản đồ -->
        <div class="map-buttons">
-        <button @click="searchLocation">📍 Tìm vị trí</button>
+        <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
         <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
 
         <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
@@ -540,7 +575,7 @@
           </div>
         </div>
         </div>
-        <PagesTotal :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
+        <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
        </div>
       </GMapMap>
     </div>
@@ -567,7 +602,7 @@
   import {useCounterStore} from '../store'
 
   // Vị trí trung tâm bản đồ (Hồ Chí Minh)
-  const mapCenter = ref({ lat: 10.762622, lng: 106.660172 });
+  const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
   const zoomLevel = ref(6);
   const valueE = ref("")
   const page = ref(1)
@@ -576,7 +611,7 @@
   const store = useCounterStore()
   const router = useRouter()
   // Vị trí hiện tại của người dùng
-  const currentLocation = ref({ lat: 10.762622, lng: 106.660172 });
+  const currentLocation = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
   
   // Danh sách địa chỉ và vị trí đã giải mã
   const resolvedLocations = ref([]);
@@ -604,6 +639,73 @@
     status: 4
   }])
 
+  const classPoi = ref(null)
+  const isPhanTrang = ref(true)
+
+  // const mapOptions = ref({
+  //   /*
+  //     "labels.text": Chỉnh toàn bộ chữ trong nhãn.
+  //     "labels.text.fill": Chỉ chỉnh màu chữ.
+  //     "weight": "bold": Làm chữ đậm.
+  //   */
+  //   disableDefaultUI: true,
+  //   styles: [
+  //     {
+  //     featureType: "poi",
+  //     elementType: "labels", // Ẩn tất cả nhãn POI
+  //     stylers: [{ visibility: "on" }]
+  //     },
+  //     {
+  //       featureType: "poi.park", // Hiển thị công viên với màu xanh lá
+  //       elementType: "labels",
+  //       stylers: [{ color: "#a0e99b" }, { visibility: "on" }],
+  //     },
+  //     {
+  //       featureType: "poi.business", // Làm mờ các khu vực kinh doanh
+  //       elementType: "labels",
+  //       stylers: [{ color: "#f5f5f5" }],
+  //     },
+  //     {
+  //       featureType: "poi.attraction", // Tô màu nổi bật cho địa điểm du lịch
+  //       elementType: "labels",
+  //       stylers: [{ color: "#ffcc00" }],
+  //     },
+  //     {
+  //       featureType: "poi.school", // Hiển thị trường học với màu xanh dương
+  //       elementType: "labels.text", 
+  //       stylers: [{ color: "#80bfff" }, { visibility: "on" }, {weight: "normal"}], // Dùng "{gamma: 2}" để tăng độ tương phản, giúp chữ rõ hơn.
+  //     },
+  //   ],
+  // });
+const mapOptions = ref({
+  styles: [], // Ban đầu không có style
+});
+
+const offpoi = () => {
+  mapOptions.value.styles = []
+  if(classPoi.value != null)
+    document.querySelector("." + classPoi.value).style.backgroundColor = "white"
+  
+  classPoi.value = null
+}
+
+  const toggleSchool = (poiData, colorData, classData) => {
+    if(classPoi.value != null)
+      document.querySelector("." + classPoi.value).style.backgroundColor = "white"
+
+    document.querySelector("." + classData).style.backgroundColor = "yellow"
+
+    classPoi.value = classData
+
+    zoomLevel.value = 13
+  mapOptions.value.styles = [
+      {
+        featureType: `poi.${poiData}`,
+        elementType: "labels",
+        stylers: [{ color: `#${colorData}` }, { weight: "bold" }],
+      },
+    ];
+};
   const logout = async () => {
     isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
@@ -1099,6 +1201,8 @@ const btnSearch = ref(null)
 const isLoading = ref(false)
 const { proxy } = getCurrentInstance();
 const hostName = proxy?.hostname;
+
+
 // Danh sách ảnh
 const images = ref([
   "https://png.pngtree.com/png-clipart/20230417/original/pngtree-return-of-investment-flat-icon-png-image_9064391.png",
@@ -1226,33 +1330,88 @@ const marker1 = ref({
     scaledSize: { width: 40, height: 40 }
 });
 
-const searchStatus1 = (classData) => {
+const searchStatus1 = async (classData) => {
+  isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+
   if(btnSearch.value != null)
     document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
     
   document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
   btnSearch.value = classData
-  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 1)
+
+  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode1?page=1&pageSize=20000', getToken())
+  if(res.data.success){
+    locations.value = res.data.content.data.map(m => ({
+            ...m,
+            coordinates: { lat: m.latitude, lng: m.longitude }
+        }))
+
+        zoomLevel.value = 13
+        isPhanTrang.value = false
+  }
+  
+  // routePath.value = []
+  routeDistance.value = null
+  isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
+
+  return locations.value
+}
+
+const searchStatus2 = async (classData) => {
+  if(btnSearch.value != null)
+    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+    
+  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+
+  btnSearch.value = classData
+  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode2?page=1&pageSize=20000', getToken())
+  if(res.data.success){
+    locations.value = res.data.content.data.map(m => ({
+            ...m,
+            coordinates: { lat: m.latitude, lng: m.longitude }
+        }))
+
+        zoomLevel.value = 13
+        isPhanTrang.value = false
+  }
   // routePath.value = []
   routeDistance.value = null
   return locations.value
 }
 
-const searchStatus2 = (classData) => {
+const searchStatus3 = async (classData) => {
   if(btnSearch.value != null)
     document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
     
   document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
   btnSearch.value = classData
-  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 2)
+
+  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode3?page=1&pageSize=20000', getToken())
+  if(res.data.success){
+    locations.value = res.data.content.data.map(m => ({
+            ...m,
+            coordinates: { lat: m.latitude, lng: m.longitude }
+        }))
+
+        zoomLevel.value = 13
+        isPhanTrang.value = false
+  }
   // routePath.value = []
   routeDistance.value = null
   return locations.value
 }
 
-const searchStatus3 = (classData) => {
+const searchStatus5 = async (classData) => {
+  isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+
   if(btnSearch.value != null)
     document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
     
@@ -1260,23 +1419,23 @@ const searchStatus3 = (classData) => {
 
   btnSearch.value = classData
 
-  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 3)
+  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode0?page=1&pageSize=20000', getToken())
+  if(res.data.success){
+    locations.value = res.data.content.data.map(m => ({
+            ...m,
+            coordinates: { lat: m.latitude, lng: m.longitude }
+        }))
+
+        zoomLevel.value = 13
+        isPhanTrang.value = false
+  }
+  
   // routePath.value = []
   routeDistance.value = null
-  return locations.value
-}
 
-const searchStatus5 = (classData) => {
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
-
-  btnSearch.value = classData
-
-  locations.value = dataLoadStart.value.filter(x => x.isError == true && x.statusError === 0)
-  // routePath.value = []
-  routeDistance.value = null
+  isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
   return locations.value
 }
 
@@ -1304,6 +1463,8 @@ const searchStatus4 = (classData) => {
     
         locations.value = dataLoadStart.value.filter((location) => location.isError === false);
   }
+
+  isPhanTrang.value = false
   
   // routePath.value = []
   routeDistance.value = null
@@ -1325,6 +1486,7 @@ const AllData = () => {
   if(btnSearch.value != null)
     document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
 
+  isPhanTrang.value = true
   btnSearch.value = null
   return locations.value
 }
@@ -1534,31 +1696,57 @@ const clickDataLocation = (location, type, classData) => {
   // Đảm bảo hiển thị 2 chữ số cho giờ, phút, giây
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
+
+// Lấy vị trí hiện tại của người dùng (Không tự động cập nhật lại vị trí khi người dùng di chuyển) có thể sử dụng "SetInterval" để kiểm tra liên tục vị trí hiện tại của người dùng
+const getCurrentLocation = () => {
+  isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        currentLocation.value = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        mapCenter.value = currentLocation.value;
+      },
+      (error) => {
+        console.error("Lỗi khi lấy vị trí:", error);
+      }
+    );
+  }
+
+  isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
+};
   
-  // Lấy vị trí hiện tại của người dùng
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (position) => {
-          currentLocation.value = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          mapCenter.value = currentLocation.value;
-        },
-        (error) => {
-          console.error("Lỗi khi lấy vị trí:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 1000,   // Tăng thời gian timeout lên 10 giây
-          maximumAge: 0     // Luôn cập nhật vị trí mới nhất
-        }
-      );
-    }
+  // Lấy vị trí hiện tại của người dùng (Tự động cập nhật lại vị trí khi người dùng di chuyển)
+  // const getCurrentLocation = () => {
+  //   if (navigator.geolocation) {
+  //     navigator.geolocation.watchPosition(
+  //       (position) => {
+  //         currentLocation.value = {
+  //           lat: position.coords.latitude,
+  //           lng: position.coords.longitude,
+  //         };
+  //         mapCenter.value = currentLocation.value;
+  //       },
+  //       (error) => {
+  //         console.error("Lỗi khi lấy vị trí:", error);
+  //       },
+  //       {
+  //         enableHighAccuracy: true,
+  //         timeout: 1000,   // Tăng thời gian timeout lên 10 giây
+  //         maximumAge: 0     // Luôn cập nhật vị trí mới nhất
+  //       }
+  //     );
+  //   }
 
     
-  };
+  // };
 
   // Tính điểm giữa tuyến đường để hiển thị số km
 const midPoint = computed(() => {
@@ -1570,7 +1758,7 @@ const midPoint = computed(() => {
   
   onMounted(() => {
     findAllDataMap(valueE.value, page.value)
-    getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
+    // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
     startImageRotation()
     loadData()
     statusGiaoThong()

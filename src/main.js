@@ -19,7 +19,7 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(VueMap, {
     load: {
-        key: 'AIzaSyBkgBNM7Mtgg6I3SvhOlwZCgqp7vFAPrS8',
+        key: 'AIzaSyANT9F5ECcLaUhoq84sF6ZFGWn806iRIJk',
         // libraries: ['places', 'visualization'] // Để hỗ trợ tìm kiếm
         libraries: 'places',
         language: 'zh-TW'
