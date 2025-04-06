@@ -867,57 +867,75 @@ const offpoi = () => {
 
     if(!checkDataBoxattraction.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.attraction')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.attraction')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.attraction')
+
     }
 
     if(!checkDataBoxbusiness.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.business')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.business')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.business')
     }
     if(!checkDataBoxgovernment.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.government')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.government')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.government')
     }
     
     if(!checkDataBoxmedical.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.medical')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.medical')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.medical')
+      
     }
 
     if(!checkDataBoxpark.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.park')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.park')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.park')
     }
 
     if(!checkDataBoxplace_of_worship.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.place_of_worship')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.place_of_worship')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.place_of_worship')
     }
 
     if(!checkDataBoxschool.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.school')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.school')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.school')
     }
 
     if(!checkDataBoxsports_complex.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
-      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.sports_complex')
-      if(index !== -1) 
-        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.sports_complex')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.sports_complex')
     }
   
 };
