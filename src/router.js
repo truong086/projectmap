@@ -75,7 +75,7 @@ const routes = [
         "/AdminTemplate/assets/js/todolist.js",
         "/AdminTemplate/assets/js/dashboard.js"
       ],
-      requiresAuth: true, roleAdmin: ['Admin']
+      requiresAuth: true, roleAdmin: [1]
     },
     children: [
       {
@@ -102,7 +102,7 @@ const routes = [
     name: "home",
     component: mapdataPages, // Đăng ký trang đăng nhập
     meta: {
-        requiresAuth: true, roleAdmin: ['Admin']
+        requiresAuth: true, roleAdmin: [1, 2, 3]
       }
   },
   {
@@ -156,9 +156,9 @@ router.beforeEach((to, from, next) => {
   const auth = to.meta.requiresAuth;
   const roles = to.meta.roleAdmin;
   const token = counter.getToken;
-  const role = counter.getRole(0) || '';
+  const role = counter.getRole(0) || -1;
 
-  if (checkPaths && token) {
+  if (checkPaths && token && (!roles || roles.includes(role))) {
     next();
   }
   if (auth && !token) {

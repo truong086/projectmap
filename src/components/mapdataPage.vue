@@ -6,44 +6,26 @@
           登出
         </button>
 
-        <button @click="offpoi" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+        <!-- <button @click="offpoi" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
           Off Poi
-        </button>
+        </button> -->
 
-        <button @click="getCurrentLocation" style="position: absolute; top: 45px; z-index: 1000; right: 260px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+        <button @click="getCurrentLocation" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
           <i class="fa fa-street-view" aria-hidden="true"></i>
         </button>
 
-        <div style="position: absolute; text-align: right; right: 50px; z-index: 1000;">
-          <button @click="toggleSchool('attraction', 'FF4500', 'poi1')" class="poi1" style=" margin: 0 20px; top: 5px; z-index: 1000; right: 100px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
-            <i class="fa fa-camera-retro" aria-hidden="true"></i> attraction 
-          </button> 
+        <!-- Nút trong bản đồ -->
+       <div class="map-buttons" style="position: absolute; text-align: right; right: 100px; top: 10px; z-index: 1000;">
+        <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
+        <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
 
-          <button @click="toggleSchool('business', '191970', 'poi2')" class="poi2" style=" top: 5px; z-index: 1000; right: 120px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
-            <i class="fa fa-building" aria-hidden="true"></i>  business 
-          </button>
-
-          <button @click="toggleSchool('government', 'FF8C00', 'poi3')" class="poi3" style="top: 5px; z-index: 1000; right: 140px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
-            <i class="fa fa-university" aria-hidden="true"></i>  government 
-          </button>
-
-          <button @click="toggleSchool('medical', '000000', 'poi4')" class="poi4" style="top: 5px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
-            <i class="fa fa-medkit" aria-hidden="true"></i>  medical 
-          </button>
-
-          <button @click="toggleSchool('park', '8B0000', 'poi5')" class="poi5" style="top: 5px; z-index: 1000; right: 180px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
-            <i class="fa fa-pagelines" aria-hidden="true"></i> Park  
-          </button>
-          <button @click="toggleSchool('place_of_worship', 'DC143C', 'poi6')" class="poi6" style="top: 5px; z-index: 1000; right: 2000px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
-            <i class="fa fa-area-chart" aria-hidden="true"></i> Place of worship  
-          </button>
-          <button @click="toggleSchool('school', '80bfff', 'poi7')" class="poi7" style="top: 5px; z-index: 1000; right: 220px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 0;">
-            <i class="fa fa-graduation-cap" aria-hidden="true"></i> school  
-          </button>
-          <button @click="toggleSchool('sports_complex', '8A2BE2', 'poi8')" class="poi8" style="top: 5px; z-index: 1000; right: 240px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: white; border-radius: 5px; margin: 10px 20px;">
-            <i class="fa fa-child" aria-hidden="true"></i> sports complex  
-          </button>
-        </div>
+        <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
+        <button @click="searchStatus2('b2s')" style="margin: 0 10px;" class="b2s"><i style="color: red;" class="fa fa-exclamation-triangle" aria-hidden="true"></i> Search Data 2</button>
+        <button @click="searchStatus3('b3s')" class="b3s"><i style="color: yellow;" class="fa fa-handshake-o" aria-hidden="true"></i> Search Data 3</button>
+        <button @click="searchStatus5('b5s')" class="b5s" style="margin: 0 10px;">💦💤 Search Data 5</button>
+        <button @click="searchStatus4('b4s')" class="b4s">💌 Search Data 4</button>
+        <button @click="AllData" style="margin: 0 10px;">📍 All Location</button>
+      </div>
  <!-- Bản đồ -->
  <GMapMap
         ref="mapRefs"
@@ -473,19 +455,116 @@
           </div>
         </GMapInfoWindow>
       </GMapMarker>
+      
+      <!--Poi-->
+      <div style="position: absolute; top: 200px; left: 20px; border-radius: 10px; z-index: 1000; border: 1px solid black; width: 200px;">
+        <div style="display: flex;">
+          <button @click="chonAll" class="poi1" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+             All 
+          </button>
+          <input type="checkbox" @change="chonAll" v-model="checkDataBoxAll">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <button @click="toggleSchool('attraction', 'FF4500', 'poi1')" class="poi1" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-camera-retro" aria-hidden="true" ></i> attraction 
+          </button>
+              </td>
+              <td>
+                <input type="checkbox" @change="toggleSchool('attraction', 'FF4500', 'poi1')" v-model="checkDataBoxattraction">
+                <!-- <input type="checkbox" @change="toggleSchool('attraction', 'FF4500', 'poi1')" @click="checkDataBoxattraction = !checkDataBoxattraction"> -->
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('business', '191970', 'poi2')" class="poi2" style="display: block; padding: 10px 25px; z-index: 1000; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-building" aria-hidden="true"></i>  business 
+          </button>
+              </td>
+              <td>
+                <input type="checkbox" @change="toggleSchool('business', '191970', 'poi2')" v-model="checkDataBoxbusiness">
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('government', 'FF8C00', 'poi3')" class="poi3" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-university" aria-hidden="true"></i>  government 
+          </button>
+              </td>
 
-       <!-- Nút trong bản đồ -->
-       <div class="map-buttons">
-        <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
-        <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
+              <td>
+                <input type="checkbox" @change="toggleSchool('government', 'FF8C00', 'poi3')" v-model="checkDataBoxgovernment">
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('medical', '000000', 'poi4')" class="poi4" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-medkit" aria-hidden="true"></i>  medical 
+          </button>
+              </td>
+                <td>
+                <input type="checkbox" @change="toggleSchool('medical', '000000', 'poi4')" v-model="checkDataBoxmedical">
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('park', '8B0000', 'poi5')" class="poi5" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-pagelines" aria-hidden="true"></i> Park  
+          </button>
+              </td>
+                <td>
+                <input type="checkbox" @change="toggleSchool('park', '8B0000', 'poi5')" v-model="checkDataBoxpark">
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('place_of_worship', 'DC143C', 'poi6')" class="poi6" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-area-chart" aria-hidden="true"></i> Place of worship  
+          </button>
+              </td>
+                <td>
+                <input type="checkbox" @change="toggleSchool('place_of_worship', 'DC143C', 'poi6')" v-model="checkDataBoxplace_of_worship">
+              </td>
+              </tr>
+              
+              <tr>
+                <td>
+                <button @click="toggleSchool('school', '80bfff', 'poi7')" class="poi7" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-graduation-cap" aria-hidden="true"></i> school  
+          </button>
+              </td>
+                <td>
+                <input type="checkbox" @change="toggleSchool('school', '80bfff', 'poi7')" v-model="checkDataBoxschool">
+              </td>
+              </tr>
+              
+              <tr>
+              <td>
+                <button @click="toggleSchool('sports_complex', '8A2BE2', 'poi8')" class="poi8" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+            <i class="fa fa-child" aria-hidden="true"></i> sports complex  
+          </button>
+              </td>
 
-        <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
-        <button @click="searchStatus2('b2s')" class="b2s"><i style="color: red;" class="fa fa-exclamation-triangle" aria-hidden="true"></i> Search Data 2</button>
-        <button @click="searchStatus3('b3s')" class="b3s"><i style="color: yellow;" class="fa fa-handshake-o" aria-hidden="true"></i> Search Data 3</button>
-        <button @click="searchStatus5('b5s')" class="b5s">💦💤 Search Data 5</button>
-        <button @click="searchStatus4('b4s')" class="b4s">💌 Search Data 4</button>
-        <button @click="AllData">📍 All Location</button>
-      </div>
+              <td>
+                <input type="checkbox" @change="toggleSchool('sports_complex', '8A2BE2', 'poi8')" v-model="checkDataBoxsports_complex">
+              </td>
+            </tr>
+          </tbody>
+        </table>  
+        </div>
 
        <div style="position: absolute; padding: 10px; width: 300px; height: 400px; overflow: auto; background-color: rgba(255, 255, 255, 0.8); border: 1px solid black; top: 250px; right: 10px; border-radius: 10px;">
         <div v-if="zoomLevel >= 13">
@@ -639,6 +718,16 @@
     status: 4
   }])
 
+  const checkDataBoxattraction = ref(false)
+  const checkDataBoxbusiness = ref(false)
+  const checkDataBoxgovernment = ref(false)
+  const checkDataBoxmedical = ref(false)
+  const checkDataBoxpark = ref(false)
+  const checkDataBoxplace_of_worship = ref(false)
+  const checkDataBoxschool = ref(false)
+  const checkDataBoxsports_complex = ref(false)
+  const checkDataBoxAll = ref(false)
+
   const classPoi = ref(null)
   const isPhanTrang = ref(true)
 
@@ -681,30 +770,156 @@ const mapOptions = ref({
   styles: [], // Ban đầu không có style
 });
 
+const chonAll = ()=> {
+  if(checkDataBoxAll.value){
+    zoomLevel.value = 13
+    checkDataBoxattraction.value = true
+   checkDataBoxbusiness.value = true
+   checkDataBoxgovernment.value = true
+   checkDataBoxmedical.value = true
+   checkDataBoxpark.value = true
+   checkDataBoxplace_of_worship.value = true
+   checkDataBoxschool.value = true
+   checkDataBoxsports_complex.value = true
+
+   mapOptions.value.styles.push({
+        featureType: `poi.attraction`,
+        elementType: "labels",
+        stylers: [{ color: `#FF4500` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.business`,
+        elementType: "labels",
+        stylers: [{ color: `#191970` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.government`,
+        elementType: "labels",
+        stylers: [{ color: `#FF8C00` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.medical`,
+        elementType: "labels",
+        stylers: [{ color: `#000000` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.park`,
+        elementType: "labels",
+        stylers: [{ color: `#8B0000` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.place_of_worship`,
+        elementType: "labels",
+        stylers: [{ color: `#DC143C` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.school`,
+        elementType: "labels",
+        stylers: [{ color: `#80bfff` }, { weight: "bold" }],
+      },
+      {
+        featureType: `poi.sports_complex`,
+        elementType: "labels",
+        stylers: [{ color: `#8A2BE2` }, { weight: "bold" }],
+      }
+    )
+  }else{
+    offpoi()
+  }
+}
 const offpoi = () => {
+  
   mapOptions.value.styles = []
-  if(classPoi.value != null)
-    document.querySelector("." + classPoi.value).style.backgroundColor = "white"
+  // if(classPoi.value != null)
+  //   document.querySelector("." + classPoi.value).style.backgroundColor = "white"
   
   classPoi.value = null
+
+   checkDataBoxattraction.value = false
+   checkDataBoxbusiness.value = false
+   checkDataBoxgovernment.value = false
+   checkDataBoxmedical.value = false
+   checkDataBoxpark.value = false
+   checkDataBoxplace_of_worship.value = false
+   checkDataBoxschool.value = false
+   checkDataBoxsports_complex.value = false
+
+   
 }
 
   const toggleSchool = (poiData, colorData, classData) => {
-    if(classPoi.value != null)
-      document.querySelector("." + classPoi.value).style.backgroundColor = "white"
+    // if(classPoi.value != null)
+    //   document.querySelector("." + classPoi.value).style.backgroundColor = "transparent"
 
-    document.querySelector("." + classData).style.backgroundColor = "yellow"
+    // document.querySelector("." + classData).style.backgroundColor = "yellow"
 
     classPoi.value = classData
-
     zoomLevel.value = 13
-  mapOptions.value.styles = [
-      {
+    
+    const checkData = mapOptions.value.styles.find(x => x.featureType == `poi.${poiData}`)
+    if(checkData == null){
+      mapOptions.value.styles.push({
         featureType: `poi.${poiData}`,
         elementType: "labels",
         stylers: [{ color: `#${colorData}` }, { weight: "bold" }],
-      },
-    ];
+      })
+    }
+
+    if(!checkDataBoxattraction.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.attraction')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+
+    if(!checkDataBoxbusiness.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.business')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+    if(!checkDataBoxgovernment.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.government')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+    
+    if(!checkDataBoxmedical.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.medical')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+
+    if(!checkDataBoxpark.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.park')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+
+    if(!checkDataBoxplace_of_worship.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.place_of_worship')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+
+    if(!checkDataBoxschool.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.school')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+
+    if(!checkDataBoxsports_complex.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.sports_complex')
+      if(index !== -1) 
+        mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+    }
+  
 };
   const logout = async () => {
     isLoading.value = true;
@@ -1349,7 +1564,8 @@ const searchStatus1 = async (classData) => {
             coordinates: { lat: m.latitude, lng: m.longitude }
         }))
 
-        zoomLevel.value = 13
+        if(zoomLevel.value < 13)
+            zoomLevel.value = 13
         isPhanTrang.value = false
   }
   
@@ -1376,7 +1592,8 @@ const searchStatus2 = async (classData) => {
             coordinates: { lat: m.latitude, lng: m.longitude }
         }))
 
-        zoomLevel.value = 13
+        if(zoomLevel.value < 13)
+            zoomLevel.value = 13
         isPhanTrang.value = false
   }
   // routePath.value = []
@@ -1399,7 +1616,8 @@ const searchStatus3 = async (classData) => {
             coordinates: { lat: m.latitude, lng: m.longitude }
         }))
 
-        zoomLevel.value = 13
+        if(zoomLevel.value < 13)
+            zoomLevel.value = 13
         isPhanTrang.value = false
   }
   // routePath.value = []
@@ -1426,7 +1644,8 @@ const searchStatus5 = async (classData) => {
             coordinates: { lat: m.latitude, lng: m.longitude }
         }))
 
-        zoomLevel.value = 13
+        if(zoomLevel.value < 13)
+            zoomLevel.value = 13
         isPhanTrang.value = false
   }
   
@@ -1876,11 +2095,8 @@ body.loading {
   /* CSS để hiển thị 2 nút trên bản đồ */
 .map-buttons {
   position: absolute;
-  top: 200px;
-  left: 10px;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
 }
 
 .map-buttons button {

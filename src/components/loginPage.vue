@@ -103,6 +103,7 @@ import axios from 'axios';
       isLoading.value = false
       document.body.classList.remove('loading') // Xóa Lớp "loading"
       const DataToken = useCounterStore()
+      DataToken.clearStore()
     //   Toast.success("Đăng nhập thành công")
       DataToken.setToken(res.data.content.token)
       DataToken.setRole(res.data.content.role)

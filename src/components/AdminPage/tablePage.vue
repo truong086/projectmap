@@ -57,9 +57,14 @@
                           <option value="2">工程師正在維修中</option>
                           <option value="3">已完成維修</option>
                         </select>
+
+                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
+                          <option value="0">號誌正常</option>
+                          <option value="1">號誌設備故障</option>
+                          <option value="2">號誌停電</option>
+                        </select>
                       </div>
             </div>
-              
             </div>
 
             <div v-if="dataNewId.repairStatus == 2" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
@@ -81,6 +86,12 @@
                           <option value="1">已分配工程師</option>
                           <option value="2">工程師正在維修中</option>
                           <option value="3">已完成維修</option>
+                        </select>
+
+                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
+                          <option value="0">號誌正常</option>
+                          <option value="1">號誌設備故障</option>
+                          <option value="2">號誌停電</option>
                         </select>
             </div>
             </div>
@@ -241,7 +252,7 @@ const updateDataStatus = async (id) => {
   isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
   document.body.style.overflow = "hidden";
-  const res = await axios.put(hostName + '/api/RepairDetails/UpdateByAccout', {id: id, status: dataNewId.value.repairStatus}, getToken())
+  const res = await axios.put(hostName + '/api/RepairDetails/UpdateByAccout', {id: id, status: dataNewId.value.repairStatus, faultCodes: dataNewId.value.faultCodes}, getToken())
   if(res.data.success){
     alert("Success")
     if(dataNewId.value.repairStatus == 3 || dataNewId.value.repairStatus == 0)
