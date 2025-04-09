@@ -457,6 +457,11 @@
       </GMapMarker>
       
       <!--Poi-->
+      <div style="position: absolute; width: 350px; height: 100%; z-index: 1000; top: 0; background-color: #ffffff; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+        <div style="width: 100%; background-color: #4285f4; line-height: 50px; margin-top: -20px; color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+          <h3>Map Styles</h3>
+        </div>
+      </div>
       <div style="position: absolute; top: 200px; left: 20px; border-radius: 10px; z-index: 1000; border: 1px solid black; width: 200px;">
         <div style="display: flex;">
           <button @click="chonAll" class="poi1" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
@@ -474,92 +479,92 @@
           <tbody>
             <tr>
               <td>
-                <button @click="toggleSchool('attraction', 'FF4500', 'poi1')" class="poi1" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi1" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-camera-retro" aria-hidden="true" ></i> attraction 
           </button>
               </td>
               <td>
-                <input type="checkbox" @change="toggleSchool('attraction', 'FF4500', 'poi1')" v-model="checkDataBoxattraction">
+                <input type="checkbox" @change="toggleSchool('attraction', 'FF4500', 'poi1', checkDataBoxattraction)" v-model="checkDataBoxattraction">
                 <!-- <input type="checkbox" @change="toggleSchool('attraction', 'FF4500', 'poi1')" @click="checkDataBoxattraction = !checkDataBoxattraction"> -->
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('business', '191970', 'poi2')" class="poi2" style="display: block; padding: 10px 25px; z-index: 1000; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi2" style="display: block; padding: 10px 25px; z-index: 1000; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-building" aria-hidden="true"></i>  business 
           </button>
               </td>
               <td>
-                <input type="checkbox" @change="toggleSchool('business', '191970', 'poi2')" v-model="checkDataBoxbusiness">
+                <input type="checkbox" @change="toggleSchool('business', '191970', 'poi2', checkDataBoxbusiness)" v-model="checkDataBoxbusiness">
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('government', 'FF8C00', 'poi3')" class="poi3" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi3" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-university" aria-hidden="true"></i>  government 
           </button>
               </td>
 
               <td>
-                <input type="checkbox" @change="toggleSchool('government', 'FF8C00', 'poi3')" v-model="checkDataBoxgovernment">
+                <input type="checkbox" @change="toggleSchool('government', 'FF8C00', 'poi3', checkDataBoxgovernment)" v-model="checkDataBoxgovernment">
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('medical', '000000', 'poi4')" class="poi4" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi4" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-medkit" aria-hidden="true"></i>  medical 
           </button>
               </td>
                 <td>
-                <input type="checkbox" @change="toggleSchool('medical', '000000', 'poi4')" v-model="checkDataBoxmedical">
+                <input type="checkbox" @change="toggleSchool('medical', '000000', 'poi4', checkDataBoxmedical)" v-model="checkDataBoxmedical">
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('park', '8B0000', 'poi5')" class="poi5" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi5" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-pagelines" aria-hidden="true"></i> Park  
           </button>
               </td>
                 <td>
-                <input type="checkbox" @change="toggleSchool('park', '8B0000', 'poi5')" v-model="checkDataBoxpark">
+                <input type="checkbox" @change="toggleSchool('park', '8B0000', 'poi5', checkDataBoxpark)" v-model="checkDataBoxpark">
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('place_of_worship', 'DC143C', 'poi6')" class="poi6" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi6" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-area-chart" aria-hidden="true"></i> Place of worship  
           </button>
               </td>
                 <td>
-                <input type="checkbox" @change="toggleSchool('place_of_worship', 'DC143C', 'poi6')" v-model="checkDataBoxplace_of_worship">
+                <input type="checkbox" @change="toggleSchool('place_of_worship', 'DC143C', 'poi6', checkDataBoxplace_of_worship)" v-model="checkDataBoxplace_of_worship">
               </td>
               </tr>
               
               <tr>
                 <td>
-                <button @click="toggleSchool('school', '80bfff', 'poi7')" class="poi7" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi7" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-graduation-cap" aria-hidden="true"></i> school  
           </button>
               </td>
                 <td>
-                <input type="checkbox" @change="toggleSchool('school', '80bfff', 'poi7')" v-model="checkDataBoxschool">
+                <input type="checkbox" @change="toggleSchool('school', '80bfff', 'poi7', checkDataBoxschool)" v-model="checkDataBoxschool">
               </td>
               </tr>
               
               <tr>
               <td>
-                <button @click="toggleSchool('sports_complex', '8A2BE2', 'poi8')" class="poi8" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
+                <button class="poi8" style="display: block; z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: transparent; border-radius: 5px;">
             <i class="fa fa-child" aria-hidden="true"></i> sports complex  
           </button>
               </td>
 
               <td>
-                <input type="checkbox" @change="toggleSchool('sports_complex', '8A2BE2', 'poi8')" v-model="checkDataBoxsports_complex">
+                <input type="checkbox" @change="toggleSchool('sports_complex', '8A2BE2', 'poi8', checkDataBoxsports_complex)" v-model="checkDataBoxsports_complex">
               </td>
             </tr>
           </tbody>
@@ -742,7 +747,7 @@
   //     {
   //     featureType: "poi",
   //     elementType: "labels", // Ẩn tất cả nhãn POI
-  //     stylers: [{ visibility: "on" }]
+  //     stylers: [{ visibility: "off" }]
   //     },
   //     {
   //       featureType: "poi.park", // Hiển thị công viên với màu xanh lá
@@ -782,47 +787,61 @@ const chonAll = ()=> {
    checkDataBoxschool.value = true
    checkDataBoxsports_complex.value = true
 
-   mapOptions.value.styles.push({
+  //  const checkPOi = mapOptions.value.styles.find(x => x.featureType == `poi`)
+  //   if(checkPOi != null){
+  //     const updateData = checkPOi.stylers.find(x => x.visibility == "off")
+  //     if(updateData != null){
+  //       updateData.visibility = "on"
+  //     }
+  //   }else{
+  //     mapOptions.value.styles.push({
+  //       featureType: "poi",
+  //       elementType: "labels", // Ẩn tất cả nhãn POI
+  //       stylers: [{visibility: "on"}, { visibility: "on" }]
+  //     })
+  //   }
+
+   mapOptions.value.styles = [{
         featureType: `poi.attraction`,
         elementType: "labels",
-        stylers: [{ color: `#FF4500` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#FF4500` }, { weight: "bold" }],
       },
       {
         featureType: `poi.business`,
         elementType: "labels",
-        stylers: [{ color: `#191970` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#191970` }, { weight: "bold" }],
       },
       {
         featureType: `poi.government`,
         elementType: "labels",
-        stylers: [{ color: `#FF8C00` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#FF8C00` }, { weight: "bold" }],
       },
       {
         featureType: `poi.medical`,
         elementType: "labels",
-        stylers: [{ color: `#000000` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#000000` }, { weight: "bold" }],
       },
       {
         featureType: `poi.park`,
         elementType: "labels",
-        stylers: [{ color: `#8B0000` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#8B0000` }, { weight: "bold" }],
       },
       {
         featureType: `poi.place_of_worship`,
         elementType: "labels",
-        stylers: [{ color: `#DC143C` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#DC143C` }, { weight: "bold" }],
       },
       {
         featureType: `poi.school`,
         elementType: "labels",
-        stylers: [{ color: `#80bfff` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#80bfff` }, { weight: "bold" }],
       },
       {
         featureType: `poi.sports_complex`,
         elementType: "labels",
-        stylers: [{ color: `#8A2BE2` }, { weight: "bold" }],
+        stylers: [{visibility: "on"}, { color: `#8A2BE2` }, { weight: "bold" }],
       }
-    )
+    ]
   }else{
     offpoi()
   }
@@ -844,10 +863,17 @@ const offpoi = () => {
    checkDataBoxschool.value = false
    checkDataBoxsports_complex.value = false
 
+   poiStart()
    
 }
-
-  const toggleSchool = (poiData, colorData, classData) => {
+const poiStart = () => {
+  mapOptions.value.styles = [{
+      featureType: "poi",
+      elementType: "labels", // Ẩn tất cả nhãn POI
+      stylers: [{ visibility: "off" }]
+    }]
+}
+  const toggleSchool = (poiData, colorData, classData, isCheck) => {
     // if(classPoi.value != null)
     //   document.querySelector("." + classPoi.value).style.backgroundColor = "transparent"
 
@@ -861,17 +887,164 @@ const offpoi = () => {
       mapOptions.value.styles.push({
         featureType: `poi.${poiData}`,
         elementType: "labels",
-        stylers: [{ color: `#${colorData}` }, { weight: "bold" }],
+        stylers: [{ visibility: "on" }, { color: `#${colorData}` }, { weight: "bold" }],
       })
+    }else{
+      if(isCheck){
+        onPoiModel()
+      }
     }
 
-    if(!checkDataBoxattraction.value){
+    if(!isCheck)
+      offPoiModel()
+};
+
+const onPoiModel = () => {
+  if(checkDataBoxattraction.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
       // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.attraction')
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.attraction')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.attraction')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.attraction')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+
+    }
+
+    if(checkDataBoxbusiness.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.business')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.business')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.business')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+    if(checkDataBoxgovernment.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.government')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.government')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.government')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+    
+    if(checkDataBoxmedical.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.medical')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.medical')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.medical')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+      
+    }
+
+    if(checkDataBoxpark.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.park')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.park')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.park')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+
+    if(checkDataBoxplace_of_worship.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.place_of_worship')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.place_of_worship')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.place_of_worship')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+
+    if(checkDataBoxschool.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.school')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.school')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.school')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+
+    if(checkDataBoxsports_complex.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.sports_complex')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.sports_complex')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.sports_complex')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "off")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "on"
+        }
+      }
+    }
+}
+const offPoiModel = () => {
+  if(!checkDataBoxattraction.value){
+       // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
+      // const index = mapOptions.value.styles.findIndex(x => x.featureType == 'poi.attraction')
+      // if(index !== -1) 
+      //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
+
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.attraction')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.attraction')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility === "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+          // alert("Đã vào")
+        }
+      }
 
     }
 
@@ -881,7 +1054,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.business')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.business')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.business')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
     if(!checkDataBoxgovernment.value){
        // Tìm chỉ số của phần tử có giá trị 'poi.attraction'
@@ -889,7 +1069,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.government')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.government')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.government')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
     
     if(!checkDataBoxmedical.value){
@@ -898,7 +1085,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.medical')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.medical')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.medical')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
       
     }
 
@@ -908,7 +1102,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.park')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.park')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.park')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
 
     if(!checkDataBoxplace_of_worship.value){
@@ -917,7 +1118,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.place_of_worship')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.place_of_worship')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.place_of_worship')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
 
     if(!checkDataBoxschool.value){
@@ -926,7 +1134,14 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.school')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.school')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.school')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
 
     if(!checkDataBoxsports_complex.value){
@@ -935,10 +1150,16 @@ const offpoi = () => {
       // if(index !== -1) 
       //   mapOptions.value.styles.splice(index, 1) // Xóa 1 phần tử tại vị trí index
 
-      mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.sports_complex')
+      // mapOptions.value.styles = mapOptions.value.styles.filter(x => x.featureType !== 'poi.sports_complex')
+      const checkPOiOffattraction = mapOptions.value.styles.find(x => x.featureType == 'poi.sports_complex')
+      if(checkPOiOffattraction != null){
+        const updatePoiattraction = checkPOiOffattraction.stylers.find(x => x.visibility == "on")
+        if(updatePoiattraction != null){
+          updatePoiattraction.visibility = "off"
+        }
+      }
     }
-  
-};
+}
   const logout = async () => {
     isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
@@ -1999,7 +2220,7 @@ const midPoint = computed(() => {
     startImageRotation()
     loadData()
     statusGiaoThong()
-  
+    poiStart()
   });
 
   onUnmounted(() => {
