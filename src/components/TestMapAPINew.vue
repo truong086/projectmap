@@ -450,11 +450,9 @@
     </GMapMarker>
     
     <!--Poi-->
-    <div :style="'width: ' + isCheckShow == 1 ? '500' : '380' + 'px'" style="display: flex; position: absolute; overflow: auto; height: 95%; z-index: 1000; left: 5px; top: 10px; background-color: #ffffff; border-radius: 20px;">
-      
-      <div style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1);">
+    <div style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 95%; z-index: 1100; left: 5px; top: 10px; background-color: #ffffff; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">
         <div style="width: 80px; height: 30%; margin-top: 20px;">
-          <i style="font-size: 25px; cursor: pointer;" class="fa fa-free-code-camp" aria-hidden="true"></i>
+          <i @click="isShowHome = !isShowHome" style="font-size: 25px; cursor: pointer;" class="fa fa-free-code-camp" aria-hidden="true"></i>
           </div>
           <div style="height: 30%; flex-direction: column; display: flex;">
             <i @click="checkDataClassI('i1', 1)" style="opacity: 0.6; font-size: 20px; cursor: pointer;" class="fa fa-home i1" aria-hidden="true"></i>
@@ -468,6 +466,9 @@
           <i @click="logout" style="opacity: 0.6; cursor: pointer; font-size: 25px; margin-top: 80px;" class="fa fa-sign-out" aria-hidden="true"></i>
         </div>
         </div>
+    <div v-if="isShowHome" :style="'width: ' + isCheckShow == 1 ? '500' : '380' + 'px'" style="display: flex; position: absolute; overflow: auto; height: 95%; z-index: 1000; left: 85px; top: 10px; background-color: #F0F8FF; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+      
+      
       <div>
       <div v-if="isCheckShow == 1">
         <div style="text-align: left; padding-left: 55px; margin-top: 20px;">
@@ -678,7 +679,7 @@
         />
           </div>
   
-          <div style="margin: 0 15px;">
+          <div style="margin: 0 20px;">
             <GMapAutocomplete
             style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none;"
               v-model="searchAddressHome"
@@ -951,6 +952,7 @@ const mapOptions = ref({
 styles: [], // Ban đầu không có style
 });
 
+const isShowHome = ref(true)
 const mapStyles = ref({
     Standard: [
 {
