@@ -147,7 +147,7 @@
       v-if="location.statusError == 1"
         :position="location.coordinates"
         :label="location.address"
-        @click="showInfo(location.coordinates.lat)"
+        @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1s,
@@ -209,7 +209,7 @@
       v-if="location.statusError == 2"
         :position="location.coordinates"
         :label="location.address"
-        @click="showInfo(location.coordinates.lat)"
+        @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status2,
@@ -273,7 +273,7 @@
       v-if="location.statusError == 3"
         :position="location.coordinates"
         :label="location.address"
-        @click="showInfo(location.coordinates.lat)"
+        @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status3,
@@ -334,7 +334,7 @@
       <GMapMarker
         :position="location.coordinates"
         :label="location.managementUnit"
-        @click="showInfo(location.coordinates.lat)"
+        @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1,
@@ -4117,9 +4117,11 @@ const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 return R * c;
 };
 // Khi click vào marker, hiển thị thông tin
-const showInfo = (index) => {
+const showInfo = (index, data) => {
 classBtnOld.value = null
 selectedMarker.value = index;
+dataLocation.value = data
+  showDetails.value = true
 };
 
 const clickDataLocation = (location, type, classData) => {
