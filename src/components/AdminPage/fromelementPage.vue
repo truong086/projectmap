@@ -15,7 +15,7 @@
                     <h4 class="card-title">Default form</h4>
                     <p class="card-description"> Basic form layout </p>
                     <div style="margin: 10px 0;">
-                        <div v-if="dataNewId.id != null" style="width: 550px; height: 200px; background-color: rgba(255, 255, 255, 0.4); border-radius: 10px;">
+                        <div v-if="dataNewId.id != null" style="width: 550px; height: 200px; position: relative; background-color: rgba(255, 255, 255, 0.4); border-radius: 10px;">
                             <div v-if="dataNewId.isError">
             <div v-if="dataNewId.statusError == 0" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
               <h4>category Code: {{ dataNewId.categoryCode }}</h4>
@@ -84,24 +84,37 @@
             </div>
               
             </div>
-          </div>
-          <div v-else style="cursor: pointer; padding: 20px; margin-bottom: 10px;">
-            <h4>category Code: {{ dataNewId.categoryCode }}</h4>
-            
-            <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.longitude }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
-            </div>
-            </div>
-            
-          </div>
+                            </div>
+                          <div v-else style="cursor: pointer; padding: 20px; margin-bottom: 10px;">
+                            <h4>category Code: {{ dataNewId.categoryCode }}</h4>
+                            
+                            <div style="display: flex;">
+                              <div>
+                              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
+                              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.latitude }}</strong></p>
+                              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.longitude }}</strong></p>
+                            </div>
+                            <div>
+                              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
+                              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
+                              <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
+                            </div>
+                            </div>
+                            
+                          </div>
+
+                          <div style="position: absolute; top: 0; right: 0;">
+                            <GMapMap
+                                ref="mapRefs"
+                                :center="mapCenter"
+                                :zoom="zoomLevel"
+                                style="width: 170px; height: 200px; border-radius: 10px;"
+                                :options="mapOptions"
+                              >
+                              <GMapMarker :position="userLocation" />
+                            </GMapMap>
+                          </div>
+                          
                         </div>
                     </div>
                     <form class="forms-sample">
@@ -126,6 +139,25 @@
                         <label for="exampleInputPassword1">remark</label>
                         <input type="text" class="form-control" v-model="addData.remark" id="exampleInputPassword1" placeholder="remark">
                       </div>
+
+                      <div class="image-uploader">
+                          <input
+                            type="file"
+                            multiple
+                            @change="onFileChange"
+                            class="file-input"
+                          />
+
+                          <div class="preview-grid">
+                            <div
+                              v-for="(image, index) in previewImages"
+                              :key="index"
+                              class="image-card"
+                            >
+                              <img :src="image" alt="Preview" />
+                            </div>
+                          </div>
+                        </div>
                       
                       <button type="button" class="btn btn-primary me-2" @click="add">Submit</button>
                       <button class="btn btn-dark">Cancel</button>
@@ -259,7 +291,28 @@
   const locations = ref([])
   const store = useCounterStore();
   const route = useRoute()
+  const previewImages = ref([]);
+  const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
+  const zoomLevel = ref(21);
+  const selectedFiles = ref([])
+  const userLocation = ref(null)
 
+  /**
+   * 
+   * 'roadmap' – mặc định
+    'satellite' – vệ tinh
+    'hybrid' – vệ tinh + tên đường
+    'terrain' – địa hình
+   */
+  const mapOptions = {
+  mapTypeId: 'satellite',
+  disableDefaultUI: true,
+  draggable: false,
+  zoomControl: false,
+  scrollwheel: false,
+  disableDoubleClickZoom: true,
+  keyboardShortcuts: false,
+}
   const addData = ref({
     traff_id: 0,
     faultCodes: 0,
@@ -268,6 +321,56 @@
     remark: ""
   })
 
+  const add = async () => {
+  if(dataNewId.value.id == null)
+      return
+
+  isLoading.value = true;
+  document.body.classList.add("loading"); // Add Lớp "loading"
+  document.body.style.overflow = "hidden";
+
+  addData.value.traff_id = dataNewId.value.id
+  const form = new FormData()
+  form.append("traff_id", addData.value.traff_id)
+  form.append("FaultCodes", addData.value.faultCodes)
+  form.append("RepairStatus", addData.value.repairStatus)
+  form.append("user_id", addData.value.user_id)
+  form.append("Remark", addData.value.remark)
+  if(selectedFiles.value.length > 0){
+    selectedFiles.value.forEach((file) => {
+      form.append('images', file) // tên 'files' phải khớp bên backend
+    })
+  }
+  
+  const res = await axios.post(hostName + '/api/RepairDetails/Add', form, getToken())
+  if(res.data.success){
+    alert("Success")
+  }else{
+    alert(res.data.error)
+  }
+
+  isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
+}
+const onFileChange = (event) => {
+  const files = event.target.files
+  previewImages.value = []
+  selectedFiles.value = []
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    // if (!file.type.startsWith('image/')) continue
+
+    selectedFiles.value.push(file)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewImages.value.push(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+}
   onMounted(() => {
     findAllDataMap(valueE.value, page.value)
     if(route.query.id){
@@ -291,7 +394,17 @@ const findOneData = async (id) => {
   
   const res = await axios.get(hostName + `/api/TrafficEquipment/FindOneId?id=${id}`, getToken())
   if(res.data.success){
+
+    // <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.latitude }}</strong></p>
+    //                 <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.longitude }}</strong></p>
     dataNewId.value = res.data.content
+    
+    userLocation.value = {
+        lat: dataNewId.value.latitude,
+        lng: dataNewId.value.longitude,
+      }
+
+       mapCenter.value = { lat: dataNewId.value.latitude, lng: dataNewId.value.longitude };
     
     console.log("dataNewId.value", dataNewId.value)
   }
@@ -300,28 +413,15 @@ const findOneData = async (id) => {
   document.body.classList.remove("loading");
   document.body.style.overflow = "auto";
 }
-const add = async () => {
-  if(dataNewId.value.id == null)
-      return
 
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-
-  addData.value.traff_id = dataNewId.value.id
-  const res = await axios.post(hostName + '/api/RepairDetails/Add', addData.value, getToken())
-  if(res.data.success){
-    alert("Success")
-  }else{
-    alert(res.data.error)
-  }
-
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
-}
 const showDataMap = (location) => {
     dataNewId.value = location
+    userLocation.value = {
+        lat: dataNewId.value.latitude,
+        lng: dataNewId.value.longitude,
+      }
+
+       mapCenter.value = { lat: dataNewId.value.latitude, lng: dataNewId.value.longitude };
 }
 const getToken = () => {
     var token = store.getToken;
@@ -363,6 +463,37 @@ const findAllDataMap = async (searchData, pageData) => {
 </script>
 
 <style scoped>
+.image-uploader {
+  border-radius: 10px;
+  border: 1px dashed gray;
+  padding: 20px;
+  background: transparent;
+}
+
+.file-input {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 16px;
+  padding: 8px;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.image-card img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  object-fit: cover;
+}
+
+.image-card img:hover {
+  transform: scale(1.05);
+}
 /* Màn hình chờ */
 .loading-overlay {
   position: fixed;

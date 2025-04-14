@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import LoginPage from "./components/loginPage.vue";
-import mapdataPages from "./components/mapdatapages2Data.vue";
+import mapdataPages from "./components/TestMapAPINew.vue";
 import testAPIMapPages from "./components/testAPIMapPage.vue";
 import AdminPage from "./components/AdminPage/indexPage.vue";
 import dashboardPages from "./components/AdminPage/dashboardPage.vue";

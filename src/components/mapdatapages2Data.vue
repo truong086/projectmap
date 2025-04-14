@@ -1,91 +1,406 @@
 <template>
  
-    <div>
-      
-    <div style="position: relative;">
-      
+  <div>
+    
+  <div style="position: relative;">
+    
 
-        
- <!-- Bản đồ -->
- <GMapMap
-        ref="mapRefs"
-        :center="mapCenter"
-        :zoom="zoomLevel"
-        :options="{ styles: mapStyles[selectedTheme] }"
-        style="height: 100vh; width: 100%;"
-        map-type-id="roadmap"
-        @zoom_changed="onZoomChanged"
-        @center_changed="onCenterChanged"
-      >
+      
+<!-- Bản đồ -->
+<GMapMap
+      ref="mapRefs"
+      :center="mapCenter"
+      :zoom="zoomLevel"
+      :options="{ styles: mapStyles[selectedTheme] }"
+      style="height: 100vh; width: 100%;"
+      map-type-id="roadmap"
+      @zoom_changed="onZoomChanged"
+      @center_changed="onCenterChanged"
+    >
 
-      <GMapTrafficLayer />
-      <!-- "@zoom_changed" là bắt sự kiện khi người dùng phóng to, thu nhỏ bản đồ -->
-      <div v-if="checkData">
-    <GMapPolygon
-      v-for="(island, index) in boundaryCoordinates"
-      :key="index"
-      :paths="island"
-      :options="{
-        fillColor: '#FF0000',
-        fillOpacity: 0.3,
-        strokeColor: '#FF0000',
-        strokeWeight: 2,
-      }"
-    />
-  </div>
-  <div v-else>
-    <GMapPolygon
-    v-if="boundaryCoordinates.length > 0"
-    :paths="boundaryCoordinates"
-    :options="{ 
+    <GMapTrafficLayer />
+    <!-- "@zoom_changed" là bắt sự kiện khi người dùng phóng to, thu nhỏ bản đồ -->
+    <div v-if="checkData">
+  <GMapPolygon
+    v-for="(island, index) in boundaryCoordinates"
+    :key="index"
+    :paths="island"
+    :options="{
       fillColor: '#FF0000',
-      fillOpacity: 0,
+      fillOpacity: 0.3,
       strokeColor: '#FF0000',
       strokeWeight: 2,
     }"
   />
-  </div>
+</div>
+<div v-else>
+  <GMapPolygon
+  v-if="boundaryCoordinates.length > 0"
+  :paths="boundaryCoordinates"
+  :options="{ 
+    fillColor: '#FF0000',
+    fillOpacity: 0,
+    strokeColor: '#FF0000',
+    strokeWeight: 2,
+  }"
+/>
+</div>
+    
+      <!-- Marker cho tất cả vị trí tìm kiếm được -->
+      <GMapMarker
+        v-for="(location, index) in resolvedLocations"
+        :key="index"
+        :position="location.coordinates"
+        :label="location.address"
+        @click="showInfo(location.coordinates + '' + index)"
+        
+      >
+          <!-- Hiển thị thông tin khi bấm vào marker -->
+      <GMapInfoWindow
+        v-if="selectedMarker === location.coordinates + '' + index && showDistanceList"
+        :options="{ maxWidth: 250 }"
+        @closeclick="selectedMarker = null"
+      >
+        <div>
+          <h4>{{ location.name }}</h4>
+          <p>{{ location.details }}</p>
+
+          <button :class="'s1d' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1d' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12d' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13d' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14d' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15d' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16d' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's16d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17d' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18d' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+        </div>
+      </GMapInfoWindow>
+  </GMapMarker>
+  <!-- Marker cho tất cả vị trí tìm kiếm được -->
+   <div v-for="(location, index) in locations" :key="index">
+    <div v-if="zoomLevel >= 13">
+    <div v-if="location.isError">
+      <GMapMarker
+      v-if="location.statusError == 0"
+        :position="location.coordinates"
+        :label="location.address"
+        @click="showInfo(location.coordinates.lat)"
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status0,
+          scaledSize: { width: 40, height: 40 },
+          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
+
+        class="marker-icon"
+      >
+          <!-- Hiển thị thông tin khi bấm vào marker -->
+
+           <GMapInfoWindow
+                  v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                  :options="{ maxWidth: 250 }"
+                  @closeclick="selectedMarker = null"
+                  >
+                  <div>
+                    <h4>category Code: {{ location.categoryCode }}</h4>
+                      <p>IdentificationCode: {{ location.identificationCode }}</p>
+                      <p>Lat: {{ location.latitude }}</p>
+                      <p>Lng: {{ location.longitude }}</p>
+                      <p>signal Number: {{ location.signalNumber }}</p>
+                      <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                      <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                      <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+                      <div v-if="location.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                        <div v-for="(image, index) in location.images" :key="index">
+                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 50px; height: 50px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
+                                  <video
+                                @click="showImage(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 50px; height: 50px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                          </div>
+                        
+                      </div>
+                      <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                    </div>
+                  </GMapInfoWindow>
+     
+  </GMapMarker>
+      <GMapMarker
+      v-if="location.statusError == 1"
+        :position="location.coordinates"
+        :label="location.address"
+        @click="showInfo(location.coordinates.lat)"
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status1s,
+          scaledSize: { width: 40, height: 40 },
+          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
+
+        class="marker-icon"
+      >
+          <!-- Hiển thị thông tin khi bấm vào marker -->
+
+           <GMapInfoWindow
+                  v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                  :options="{ maxWidth: 250 }"
+                  @closeclick="selectedMarker = null"
+                  >
+                  <div>
+                    <h4>category Code: {{ location.categoryCode }}</h4>
+                      <p>IdentificationCode: {{ location.identificationCode }}</p>
+                      <p>Lat: {{ location.latitude }}</p>
+                      <p>Lng: {{ location.longitude }}</p>
+                      <p>signal Number: {{ location.signalNumber }}</p>
+                      <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                      <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+                      <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                      <div v-if="location.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                        <div v-for="(image, index) in location.images" :key="index">
+                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 50px; height: 50px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
+                                  <video
+                                @click="showImage(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 50px; height: 50px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                          </div>
+                        
+                      </div>
+                      <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                    </div>
+                  </GMapInfoWindow>
+     
+  </GMapMarker>
+  <GMapMarker
+      v-if="location.statusError == 2"
+        :position="location.coordinates"
+        :label="location.address"
+        @click="showInfo(location.coordinates.lat)"
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status2,
+          scaledSize: { width: 40, height: 40 },
+          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
+
+        class="marker-icon"
+      >
+          <!-- Hiển thị thông tin khi bấm vào marker -->
+
+           <GMapInfoWindow
+                  v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                  :options="{ maxWidth: 250 }"
+                  @closeclick="selectedMarker = null"
+                  >
+                  <div>
+                    <h4>category Code: {{ location.categoryCode }}</h4>
+                      <p>IdentificationCode: {{ location.identificationCode }}</p>
+                      <p>Lat: {{ location.latitude }}</p>
+                      <p>Lng: {{ location.longitude }}</p>
+                      <p>signal Number: {{ location.signalNumber }}</p>
+                      <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+
+                      <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
+                      <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                      <div v-if="location.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                        <div v-for="(image, index) in location.images" :key="index">
+                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 50px; height: 50px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
+                                  <video
+                                @click="showImage(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 50px; height: 50px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                          </div>
+                        
+                      </div>
+                      <button :class="'s2' + location.lat" @click="clickDataLocation(location, 'driving-car', 's2' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s22' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's22' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s23' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's23' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s24' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's24' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s25' + location.lat" @click="clickDataLocation(location, 'driving-car', 's25' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+                  
+                      <button :class="'s26' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's26' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s27' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's27' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s28' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's28' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                    </div>
+                  </GMapInfoWindow>
+     
+  </GMapMarker>
+
+  <GMapMarker
+      v-if="location.statusError == 3"
+        :position="location.coordinates"
+        :label="location.address"
+        @click="showInfo(location.coordinates.lat)"
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status3,
+          scaledSize: { width: 40, height: 40 },
+          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
+        class="marker-icon"
+      >
+           <GMapInfoWindow
+                  v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                  :options="{ maxWidth: 250 }"
+                  @closeclick="selectedMarker = null"
+                  >
+                  <div>
+                    <h4>category Code: {{ location.categoryCode }}</h4>
+                      <p>IdentificationCode: {{ location.identificationCode }}</p>
+                      <p>Lat: {{ location.latitude }}</p>
+                      <p>Lng: {{ location.longitude }}</p>
+                      <p>signal Number: {{ location.signalNumber }}</p>
+                      <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+
+                      <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+                      <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
+                      <div v-if="location.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                        <div v-for="(image, index) in location.images" :key="index">
+                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 50px; height: 50px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
+                                  <video
+                                @click="showImage(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 50px; height: 50px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                          </div>
+                        
+                      </div>
+                      <button :class="'s3' + location.lat" @click="clickDataLocation(location, 'driving-car', 's3' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s32' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's32' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s33' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's33' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s34' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's34' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s35' + location.lat" @click="clickDataLocation(location, 'driving-car', 's35' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+                      
+                      <button :class="'s36' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's36' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s37' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's37' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s38' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's38' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                    </div>
+                  </GMapInfoWindow>
+     
+  </GMapMarker>
+    </div>
+    <div v-else>
+      <GMapMarker
+        :position="location.coordinates"
+        :label="location.managementUnit"
+        @click="showInfo(location.coordinates.lat)"
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status1,
+          scaledSize: { width: 40, height: 40 },
+          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
+
+        class="marker-icon"
+      >
+          <!-- Hiển thị thông tin khi bấm vào marker -->
+
+           <GMapInfoWindow
+                  v-if="selectedMarker === location.coordinates.lat && showDistanceList"
+                  :options="{ maxWidth: 250 }"
+                  @closeclick="selectedMarker = null"
+                  >
+                  <div>
+                      <h4>category Code: {{ location.categoryCode }}</h4>
+                      <p>IdentificationCode: {{ location.identificationCode }}</p>
+                      <p>Lat: {{ location.latitude }}</p>
+                      <p>Lng: {{ location.longitude }}</p>
+                      <p>signal Number: {{ location.signalNumber }}</p>
+                      <p>Types Of Signal: {{ location.typesOfSignal }}</p>
+                      <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
+                      <div v-if="location.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                        <div v-for="(image, index) in location.images" :key="index">
+                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 50px; height: 50px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
+                                  <video
+                                @click="showImage(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 50px; height: 50px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                          </div>
+                        
+                      </div>
+                      <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+                    </div>
+                  </GMapInfoWindow>
+     
+  </GMapMarker>
+    </div>
       
-        <!-- Marker cho tất cả vị trí tìm kiếm được -->
-        <GMapMarker
-          v-for="(location, index) in resolvedLocations"
-          :key="index"
+
+    
+   </div>
+   <GMapMarker
+        v-if="location.status == 4"
           :position="location.coordinates"
           :label="location.address"
-          @click="showInfo(location.coordinates + '' + index)"
-          
-        >
-            <!-- Hiển thị thông tin khi bấm vào marker -->
-        <GMapInfoWindow
-          v-if="selectedMarker === location.coordinates + '' + index && showDistanceList"
-          :options="{ maxWidth: 250 }"
-          @closeclick="selectedMarker = null"
-        >
-          <div>
-            <h4>{{ location.name }}</h4>
-            <p>{{ location.details }}</p>
-
-            <button :class="'s1d' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1d' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s12d' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s13d' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s14d' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s15d' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-
-                        <button :class="'s16d' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's16d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s17d' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s18d' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-          </div>
-        </GMapInfoWindow>
-    </GMapMarker>
-    <!-- Marker cho tất cả vị trí tìm kiếm được -->
-     <div v-for="(location, index) in locations" :key="index">
-      <div v-if="zoomLevel >= 13">
-      <div v-if="location.isError">
-        <GMapMarker
-        v-if="location.statusError == 0"
-          :position="location.coordinates"
-          :label="location.address"
-          @click="showInfo(location.coordinates.lat)"
+          @click="zoomData(location.coordinates)"
           :icon="{
             // url: marker1.url, // Đây là đổi ảnh liên tục
             url: imageStatus.status0,
@@ -95,10727 +410,3054 @@
 
           class="marker-icon"
         >
-            <!-- Hiển thị thông tin khi bấm vào marker -->
-
-             <GMapInfoWindow
-                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                    :options="{ maxWidth: 250 }"
-                    @closeclick="selectedMarker = null"
-                    >
-                    <div>
-                      <h4>category Code: {{ location.categoryCode }}</h4>
-                        <p>IdentificationCode: {{ location.identificationCode }}</p>
-                        <p>Lat: {{ location.latitude }}</p>
-                        <p>Lng: {{ location.longitude }}</p>
-                        <p>signal Number: {{ location.signalNumber }}</p>
-                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
-                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
-                        <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
-                        <!-- <div v-if="location.images.length > 0">
-                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div> -->
-                        <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-
-                        <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
-                      </div>
-                    </GMapInfoWindow>
-       
-    </GMapMarker>
-        <GMapMarker
-        v-if="location.statusError == 1"
-          :position="location.coordinates"
-          :label="location.address"
-          @click="showInfo(location.coordinates.lat)"
-          :icon="{
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status1s,
-            scaledSize: { width: 40, height: 40 },
-            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }"
-
-          class="marker-icon"
-        >
-            <!-- Hiển thị thông tin khi bấm vào marker -->
-
-             <GMapInfoWindow
-                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                    :options="{ maxWidth: 250 }"
-                    @closeclick="selectedMarker = null"
-                    >
-                    <div>
-                      <h4>category Code: {{ location.categoryCode }}</h4>
-                        <p>IdentificationCode: {{ location.identificationCode }}</p>
-                        <p>Lat: {{ location.latitude }}</p>
-                        <p>Lng: {{ location.longitude }}</p>
-                        <p>signal Number: {{ location.signalNumber }}</p>
-                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
-                        <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
-                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
-                        <!-- <div v-if="location.images.length > 0">
-                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div> -->
-                        <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-
-                        <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
-                      </div>
-                    </GMapInfoWindow>
-       
-    </GMapMarker>
-    <GMapMarker
-        v-if="location.statusError == 2"
-          :position="location.coordinates"
-          :label="location.address"
-          @click="showInfo(location.coordinates.lat)"
-          :icon="{
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status2,
-            scaledSize: { width: 40, height: 40 },
-            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }"
-
-          class="marker-icon"
-        >
-            <!-- Hiển thị thông tin khi bấm vào marker -->
-
-             <GMapInfoWindow
-                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                    :options="{ maxWidth: 250 }"
-                    @closeclick="selectedMarker = null"
-                    >
-                    <div>
-                      <h4>category Code: {{ location.categoryCode }}</h4>
-                        <p>IdentificationCode: {{ location.identificationCode }}</p>
-                        <p>Lat: {{ location.latitude }}</p>
-                        <p>Lng: {{ location.longitude }}</p>
-                        <p>signal Number: {{ location.signalNumber }}</p>
-                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
-
-                        <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
-                        <!-- <div v-if="location.images.length > 0">
-                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div> -->
-                        <button :class="'s2' + location.lat" @click="clickDataLocation(location, 'driving-car', 's2' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s22' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's22' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s23' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's23' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s24' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's24' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s25' + location.lat" @click="clickDataLocation(location, 'driving-car', 's25' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-                    
-                        <button :class="'s26' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's26' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s27' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's27' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s28' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's28' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
-                      </div>
-                    </GMapInfoWindow>
-       
-    </GMapMarker>
-
-    <GMapMarker
-        v-if="location.statusError == 3"
-          :position="location.coordinates"
-          :label="location.address"
-          @click="showInfo(location.coordinates.lat)"
-          :icon="{
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status3,
-            scaledSize: { width: 40, height: 40 },
-            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }"
-          class="marker-icon"
-        >
-             <GMapInfoWindow
-                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                    :options="{ maxWidth: 250 }"
-                    @closeclick="selectedMarker = null"
-                    >
-                    <div>
-                      <h4>category Code: {{ location.categoryCode }}</h4>
-                        <p>IdentificationCode: {{ location.identificationCode }}</p>
-                        <p>Lat: {{ location.latitude }}</p>
-                        <p>Lng: {{ location.longitude }}</p>
-                        <p>signal Number: {{ location.signalNumber }}</p>
-                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
-
-                        <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
-                        <p v-if="location.account_user != null && location.account_user != ''">User Name: {{ location.account_user }}</p>
-                        <!-- <div v-if="location.images.length > 0">
-                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div> -->
-                        <button :class="'s3' + location.lat" @click="clickDataLocation(location, 'driving-car', 's3' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s32' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's32' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s33' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's33' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s34' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's34' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s35' + location.lat" @click="clickDataLocation(location, 'driving-car', 's35' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-                        
-                        <button :class="'s36' + location.lat" @click="clickDataLocation(location, 'wheelchair ', 's36' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s37' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's37' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s38' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's38' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
-                      </div>
-                    </GMapInfoWindow>
-       
-    </GMapMarker>
-      </div>
-      <div v-else>
-        <GMapMarker
-          :position="location.coordinates"
-          :label="location.managementUnit"
-          @click="showInfo(location.coordinates.lat)"
-          :icon="{
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status1,
-            scaledSize: { width: 40, height: 40 },
-            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }"
-
-          class="marker-icon"
-        >
-            <!-- Hiển thị thông tin khi bấm vào marker -->
-
-             <GMapInfoWindow
-                    v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                    :options="{ maxWidth: 250 }"
-                    @closeclick="selectedMarker = null"
-                    >
-                    <div>
-                        <h4>category Code: {{ location.categoryCode }}</h4>
-                        <p>IdentificationCode: {{ location.identificationCode }}</p>
-                        <p>Lat: {{ location.latitude }}</p>
-                        <p>Lng: {{ location.longitude }}</p>
-                        <p>signal Number: {{ location.signalNumber }}</p>
-                        <p>Types Of Signal: {{ location.typesOfSignal }}</p>
-                        <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
-                        <!-- <div v-if="location.images.length > 0">
-                          <img v-for="(item, index) in location.images" :key="index" @click="showImage(item)"  :src="item" style="width: 50px; height: 50px; border-radius: 50%;" alt="">
-                        </div> -->
-                        <button :class="'s1' + location.lat" @click="clickDataLocation(location, 'driving-car', 's1' + location.lat)" style="margin-top: 20px; width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
-                        <button :class="'s12' + location.lat" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
-                        <button :class="'s13' + location.lat" @click="clickDataLocation(location, 'foot-walking', 's13' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
-                        <button :class="'s14' + location.lat" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
-                        <button :class="'s15' + location.lat" @click="clickDataLocation(location, 'driving-car', 's15' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
-
-                        <button :class="'s16' + location.lat" @click="clickDataLocation(location, 'wheelchair', 's16' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
-                        <button :class="'s17' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
-                        <button :class="'s18' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
-                        <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
-                      </div>
-                    </GMapInfoWindow>
-       
-    </GMapMarker>
-      </div>
-        
-
       
-     </div>
-     <GMapMarker
-          v-if="location.status == 4"
-            :position="location.coordinates"
-            :label="location.address"
-            @click="zoomData(location.coordinates)"
-            :icon="{
-              // url: marker1.url, // Đây là đổi ảnh liên tục
-              url: imageStatus.status0,
-              scaledSize: { width: 40, height: 40 },
-              anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
-            }"
-
-            class="marker-icon"
-          >
-        
-      </GMapMarker>
-    </div>
-        <!-- Marker cho vị trí hiện tại -->
-        <GMapMarker
-          :position="currentLocation"
-          label="Bạn"
-          :icon="{
-            url: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
-            scaledSize: { width: 40, height: 40 }
-          }"
-        />
-  
-        <!-- Đường đi -->
-        <GMapPolyline
-          v-if="routePath.length > 0 && selectedTransport !== 'airplane'"
-          :path="routePath"
-          :options="{
-            strokeColor: '#A52A2A', // Màu đường
-            strokeOpacity: 1.0,
-            strokeWeight: 5
-          }"
-        />
-
-          <!-- Hiển thị số km trên bản đồ -->
+    </GMapMarker>
+  </div>
+      <!-- Marker cho vị trí hiện tại -->
       <GMapMarker
-        v-if="routeDistance && showDistance"
-        :position="midPoint"
-        label="📏"
-         @click="showDistance = !showDistance"
-      >
-        <GMapInfoWindow>
-          <div>
-            <p>Travel Distance: <strong>{{ routeDistance.toFixed(2) }} km</strong></p> 
-            <p>Travel Time: <strong>{{ showTimeDiChuyen }}</strong></p> 
-          </div>
-        </GMapInfoWindow>
-      </GMapMarker>
-      
-      <!--Poi-->
-      <div style="position: absolute; width: 350px; overflow: auto; height: 100%; z-index: 1000; top: 0; background-color: #ffffff; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
-        
-        <div style="width: 100%; background-color: #4285f4; line-height: 50px; margin-top: -20px; color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
-          <div style="display: flex; justify-content: center;">
-            <h3>Map Styles</h3>
-            <div style="margin: 15px 20px;" @click="isCheckShow = !isCheckShow">
-              <i style="cursor: pointer;" class="fa fa-sign-language" aria-hidden="true"></i>
-              </div>
-          </div>
-          
+        :position="currentLocation"
+        label="Bạn"
+        :icon="{
+          url: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
+          scaledSize: { width: 40, height: 40 }
+        }"
+      />
+
+      <!-- Đường đi -->
+      <GMapPolyline
+        v-if="routePath.length > 0 && selectedTransport !== 'airplane'"
+        :path="routePath"
+        :options="{
+          strokeColor: '#A52A2A', // Màu đường
+          strokeOpacity: 1.0,
+          strokeWeight: 5
+        }"
+      />
+
+        <!-- Hiển thị số km trên bản đồ -->
+    <GMapMarker
+      v-if="routeDistance && showDistance"
+      :position="midPoint"
+      label="📏"
+       @click="showDistance = !showDistance"
+    >
+      <GMapInfoWindow>
+        <div>
+          <p>Travel Distance: <strong>{{ routeDistance.toFixed(2) }} km</strong></p> 
+          <p>Travel Time: <strong>{{ showTimeDiChuyen }}</strong></p> 
         </div>
-
-        <div v-if="!isCheckShow">
-          <div style="text-align: left; padding-left: 55px; margin-top: 20px;">
-            <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
-            <p style="font-weight: bold; opacity: 0.8;">Search Data</p>
-            
+      </GMapInfoWindow>
+    </GMapMarker>
+    
+    <!--Poi-->
+    <div style="position: absolute; width: 350px; overflow: auto; height: 100%; z-index: 1000; top: 0; background-color: #ffffff; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+      
+      <div style="width: 100%; background-color: #4285f4; line-height: 50px; margin-top: -20px; color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+        <div style="display: flex; justify-content: center;">
+          <h3>Map Styles</h3>
+          <div style="margin: 15px 20px;" @click="isCheckShow = !isCheckShow">
+            <i style="cursor: pointer;" class="fa fa-sign-language" aria-hidden="true"></i>
             </div>
-          <!-- Nút trong bản đồ -->
-       <div class="map-buttons" style="display: flex; flex-wrap: wrap; z-index: 1000; margin: 10px 15px;">
-        <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
-        <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
-
-        <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
-        <button @click="searchStatus2('b2s')" style="margin: 0 10px;" class="b2s"><i style="color: red;" class="fa fa-exclamation-triangle" aria-hidden="true"></i> Search Data 2</button>
-        <button @click="searchStatus3('b3s')" class="b3s"><i style="color: yellow;" class="fa fa-handshake-o" aria-hidden="true"></i> Search Data 3</button>
-        <button @click="searchStatus5('b5s')" class="b5s" style="margin: 0 10px;">💦💤 Search Data 5</button>
-        <button @click="searchStatus4('b4s')" class="b4s">💌 Search Data 4</button>
-        <button @click="AllData" style="margin: 0 10px;">📍 All Location</button>
+        </div>
+        
       </div>
 
-      <div>
+      <div v-if="!isCheckShow">
         <div style="text-align: left; padding-left: 55px; margin-top: 20px;">
-            <i class="fa fa-space-shuttle" aria-hidden="true" style="font-size: 30px;"></i>
-            <p style="font-weight: bold; opacity: 0.8;">Data Input</p>
-            
-            </div>
-          <div style="display: flex; margin: 15px 0;">
-            <div>
-              <GMapAutocomplete
-              style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none;"
-              v-model="searchAddress"
-              type="text"
-              placeholder="Address to Find..."
-              @place_changed="searchLocation"
-        />
+          <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
+          <p style="font-weight: bold; opacity: 0.8;">Search Data</p>
+          
           </div>
+        <!-- Nút trong bản đồ -->
+     <div class="map-buttons" style="display: flex; flex-wrap: wrap; z-index: 1000; margin: 10px 15px;">
+      <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
+      <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
 
+      <button @click="searchStatus1('b1s')" class="b1s"><i style="color: greenyellow;" class="fa fa-check" aria-hidden="true"></i> Search Data 1</button>
+      <button @click="searchStatus2('b2s')" style="margin: 0 10px;" class="b2s"><i style="color: red;" class="fa fa-exclamation-triangle" aria-hidden="true"></i> Search Data 2</button>
+      <button @click="searchStatus3('b3s')" class="b3s"><i style="color: yellow;" class="fa fa-handshake-o" aria-hidden="true"></i> Search Data 3</button>
+      <button @click="searchStatus5('b5s')" class="b5s" style="margin: 0 10px;">💦💤 Search Data 5</button>
+      <button @click="searchStatus4('b4s')" class="b4s">💌 Search Data 4</button>
+      <button @click="AllData" style="margin: 0 10px;">📍 All Location</button>
+    </div>
+
+    <div>
+      <div style="text-align: left; padding-left: 55px; margin-top: 20px;">
+          <i class="fa fa-space-shuttle" aria-hidden="true" style="font-size: 30px;"></i>
+          <p style="font-weight: bold; opacity: 0.8;">Data Input</p>
+          
+          </div>
+        <div style="display: flex; margin: 15px 0;">
           <div>
             <GMapAutocomplete
             style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none;"
-              v-model="searchAddressHome"
-              type="text"
-              placeholder="Home Address..."
-              @place_changed="searchHomeData"
-        />
-
-          </div>
-          </div>
-          <!-- Nút hiển thị lại số km -->
-        <button v-if="routeDistance" @click="showDistance = !showDistance" style="padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer; margin: 0 10px;">
-          <!-- {{ showDistance ? "Ẩn khoảng cách" : "Hiện khoảng cách" }} -->
-
-          <span v-if="showDistance">
-            <i class="fa fa-envelope-open-o" aria-hidden="true"></i>
-          </span>
-          <span v-else>
-            <i class="fa fa-eye-slash" aria-hidden="true"></i>
-          </span>
-        </button>
-
-        <button v-if="locations.length > 0" @click="showDistanceList = !showDistanceList" style="padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer;">
-          <!-- {{ showDistanceList ? "Ẩn Data" : "Hiện Data" }} -->
-          <span v-if="showDistanceList">
-            <i class='fa fa-id-card-o' aria-hidden='true'></i>
-          </span>
-          <span v-else>
-            <i class="fa fa-eye-slash" aria-hidden="true"></i>
-          </span>
-        </button>
-
-        <button @click="toggleTraffic" style="margin-bottom: 10px; padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer;">
-          {{ trafficVisible ? "關閉交通" : "開放交通" }}
-        </button>
-
-        <div v-if="routeDistance">
-          <p><strong>Travel Distance:</strong> {{ routeDistance.toFixed(2) }} km</p>
+            v-model="searchAddress"
+            type="text"
+            placeholder="Address to Find..."
+            @place_changed="searchLocation"
+      />
         </div>
 
-        <div v-if="showTimeDiChuyen">
-          <p><strong>Travel Time:</strong> {{ showTimeDiChuyen }} Time</p>
-        </div>
-
-
-        <div v-if="showTimeDiChuyenKm">
-          <p><strong>Travel Distance KM:</strong> {{ showTimeDiChuyenKm }} km</p>
-        </div>
-    </div>  
-
-    <div>
-      <button @click="logout" style="z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
-          登出
-        </button>
-
-        <!-- <button @click="offpoi" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
-          Off Poi
-        </button> -->
-
-        <button @click="getCurrentLocation" style="z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 10px;">
-          <i class="fa fa-street-view" aria-hidden="true"></i>
-        </button>
-      </div>
-          </div>
-
-        <div v-if="isCheckShow">
-        
         <div>
-        <div class="range-container" style="width: 200px;">
-          <div style="text-align: left;">
-            <i class="fa fa-linode" aria-hidden="true" style="font-size: 35px;"></i>
-            <p style="font-weight: bold; opacity: 0.8;">Adjust density of features</p>
-            </div>
-      <div
-        v-for="(value, index) in ranges"
-        :key="index"
-        class="range-wrapper"
-      >
-        <label v-if="index == 0" style="color: grey; opacity: 0.8;">Roads</label>
-        <label v-if="index == 1" style="color: grey; opacity: 0.8;">Landmarks</label>
-        <label v-if="index == 2" style="color: grey; opacity: 0.8;">Labels</label>
-        <div class="range-track">
-          <input
-            type="range"
-            min="0"
-            max="4"
-            value="4"
-            step="1"
-            v-model="ranges[index]"
-            @input="updatePoiStyle(ranges[index], index)"
-            class="styled-range"
-          />
+          <GMapAutocomplete
+          style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none;"
+            v-model="searchAddressHome"
+            type="text"
+            placeholder="Home Address..."
+            @place_changed="searchHomeData"
+      />
+
         </div>
+        </div>
+        <!-- Nút hiển thị lại số km -->
+      <button v-if="routeDistance" @click="showDistance = !showDistance" style="padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer; margin: 0 10px;">
+        <!-- {{ showDistance ? "Ẩn khoảng cách" : "Hiện khoảng cách" }} -->
+
+        <span v-if="showDistance">
+          <i class="fa fa-envelope-open-o" aria-hidden="true"></i>
+        </span>
+        <span v-else>
+          <i class="fa fa-eye-slash" aria-hidden="true"></i>
+        </span>
+      </button>
+
+      <button v-if="locations.length > 0" @click="showDistanceList = !showDistanceList" style="padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer;">
+        <!-- {{ showDistanceList ? "Ẩn Data" : "Hiện Data" }} -->
+        <span v-if="showDistanceList">
+          <i class='fa fa-id-card-o' aria-hidden='true'></i>
+        </span>
+        <span v-else>
+          <i class="fa fa-eye-slash" aria-hidden="true"></i>
+        </span>
+      </button>
+
+      <button @click="toggleTraffic" style="margin-bottom: 10px; padding: 5px 10px; border: 3px dashed violet; background-color: transparent; outline: none; cursor: pointer;">
+        {{ trafficVisible ? "關閉交通" : "開放交通" }}
+      </button>
+
+      <div v-if="routeDistance">
+        <p><strong>Travel Distance:</strong> {{ routeDistance.toFixed(2) }} km</p>
       </div>
+
+      <div v-if="showTimeDiChuyen">
+        <p><strong>Travel Time:</strong> {{ showTimeDiChuyen }} Time</p>
+      </div>
+
+
+      <div v-if="showTimeDiChuyenKm">
+        <p><strong>Travel Distance KM:</strong> {{ showTimeDiChuyenKm }} km</p>
+      </div>
+  </div>  
+
+  <div>
+    <button @click="logout" style="z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+        登出
+      </button>
+
+      <!-- <button @click="offpoi" style="position: absolute; top: 45px; z-index: 1000; right: 160px; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 0;">
+        Off Poi
+      </button> -->
+
+      <button @click="getCurrentLocation" style="z-index: 1000; padding: 10px 25px; outline: none; cursor: pointer; border: none; background-color: aqua; border-radius: 5px; margin: 10px 10px;">
+        <i class="fa fa-street-view" aria-hidden="true"></i>
+      </button>
     </div>
         </div>
-        <div class="theme-selector">
-          <div style="text-align: left; padding-left: 55px; margin: 15px 0;">
-            <i class="fa fa-snowflake-o" aria-hidden="true" style="font-size: 35px;"></i>
-            <p style="font-weight: bold; opacity: 0.8;">Select theme</p>
-            </div>
-          <table style="margin: 10px 0;">
-            <tbody>
-              <tr v-for="(style, name) in mapStyles" :key="name">
-                <td style="width: 200px;">{{ name }}</td>
-                <td>
-                  <input
-          type="radio"
-          name="mapTheme"
-          :value="name"
-          v-model="selectedTheme"
+
+      <div v-if="isCheckShow">
+      
+      <div>
+      <div class="range-container" style="width: 200px;">
+        <div style="text-align: left;">
+          <i class="fa fa-linode" aria-hidden="true" style="font-size: 35px;"></i>
+          <p style="font-weight: bold; opacity: 0.8;">Adjust density of features</p>
+          </div>
+    <div
+      v-for="(value, index) in ranges"
+      :key="index"
+      class="range-wrapper"
+    >
+      <label v-if="index == 0" style="color: grey; opacity: 0.8;">Roads</label>
+      <label v-if="index == 1" style="color: grey; opacity: 0.8;">Landmarks</label>
+      <label v-if="index == 2" style="color: grey; opacity: 0.8;">Labels</label>
+      <div class="range-track">
+        <input
+          type="range"
+          min="0"
+          max="4"
+          value="4"
+          step="1"
+          v-model="ranges[index]"
+          @input="updatePoiStyle(ranges[index], index)"
+          class="styled-range"
         />
+      </div>
+    </div>
+  </div>
+      </div>
+      <div class="theme-selector">
+        <div style="text-align: left; padding-left: 55px; margin: 15px 0;">
+          <i class="fa fa-snowflake-o" aria-hidden="true" style="font-size: 35px;"></i>
+          <p style="font-weight: bold; opacity: 0.8;">Select theme</p>
+          </div>
+        <table style="margin: 10px 0;">
+          <tbody>
+            <tr v-for="(style, name) in mapStyles" :key="name">
+              <td style="width: 200px;">{{ name }}</td>
+              <td>
+                <input
+        type="radio"
+        name="mapTheme"
+        :value="name"
+        v-model="selectedTheme"
+      />
+                </td>
+                <td>
+                  <div style="margin-bottom: 50px;"></div>
                   </td>
-                  <td>
-                    <div style="margin-bottom: 50px;"></div>
-                    </td>
-                </tr>
-              </tbody>
-            </table>
-     
-      </div>
-
+              </tr>
+            </tbody>
+          </table>
+   
     </div>
-      </div>
 
-       <div style="position: absolute; padding: 10px; width: 350px; height: 500px; overflow: auto; background-color: rgba(255, 255, 255, 0.6); border: 1px solid black; top: 100px; right: 10px; border-radius: 10px;">
-        <div v-if="zoomLevel >= 13">
-          <div v-for="(location, index) in locations" :key="index">
-          <div v-if="location.isError">
-            <div v-if="location.statusError == 0" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-              <h4>category Code: {{ location.categoryCode }}</h4>
-              <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
-            </div>
-            </div>
-             
-            </div>
-            
-            <div v-if="location.statusError == 1" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-              <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
-            </div>
-            </div>
-              
-            </div>
+  </div>
+    </div>
 
-            <div v-if="location.statusError == 2" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-              <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-            </div>
-            </div>
-              
-            </div>
-
-            <div v-if="location.statusError == 3" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-              <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
-            </div>
-            </div>
-              
-            </div>
-          </div>
-          <div v-else style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;" @click="showDataMap(location.coordinates)">
+     <div style="position: absolute; padding: 10px; width: 350px; height: 500px; overflow: auto; background-color: rgba(255, 255, 255, 0.6); border: 1px solid black; top: 100px; right: 10px; border-radius: 10px;">
+      <div v-if="zoomLevel >= 13">
+        <div v-for="(location, index) in locations" :key="index">
+        <div v-if="location.isError">
+          <div v-if="location.statusError == 0" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
             <h4>category Code: {{ location.categoryCode }}</h4>
-            
             <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-            </div>
             <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
-            </div>
-            </div>
+            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+          </div>
+          <div>
+            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+            <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+          </div>
+          </div>
+           
+          </div>
+          
+          <div v-if="location.statusError == 1" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+            <div style="display: flex;">
+            <div>
+            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+          </div>
+          <div>
+            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+            <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+          </div>
+          </div>
+            
+          </div>
+
+          <div v-if="location.statusError == 2" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+            <div style="display: flex;">
+            <div>
+            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+          </div>
+          <div>
+            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+            <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
+          </div>
+          </div>
+            
+          </div>
+
+          <div v-if="location.statusError == 3" @click="showDataMap(location.coordinates)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
+            <div style="display: flex;">
+            <div>
+            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+          </div>
+          <div>
+            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+            <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+          </div>
+          </div>
             
           </div>
         </div>
+        <div v-else style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;" @click="showDataMap(location.coordinates)">
+          <h4>category Code: {{ location.categoryCode }}</h4>
+          
+          <div style="display: flex;">
+            <div>
+            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
+            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
+            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+          </div>
+          <div>
+            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
+            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
+            <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
+          </div>
+          </div>
+          
         </div>
-        <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
-       </div>
-      </GMapMap>
-    </div>
-     
-    <div v-if="selectedImage" class="image-modal" @click.self="closeImage">
-      <img :src="selectedImage" class="image-full" alt="Full Image" />
-    </div>
-    </div>
+      </div>
+      </div>
+      <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
+     </div>
+    </GMapMap>
+  </div>
+   
+  <div v-if="selectedImage" class="image-modal" @click.self="closeImage">
+    <div v-if="getFileType(selectedImage) === 'image'">
+      <img width="800px" :src="selectedImage" class="image-full" alt="Full Image" />
+      </div>
+    
+    <div v-else-if=" getFileType(selectedImage) === 'video'">
+        <video
+                                @click="showImage(selectedImage)"
+                                style="width: 800px;"
+                                controls
+                                    :src="selectedImage"
+                                  />
+        </div>
+    
+  </div>
+  </div>
 
-    <div v-if="isLoading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p>載入中......</p>
-    </div>
-  </template>
-  
-  <script setup>
-  /* global google */
-  // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-  import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch } from "vue";
-  import axios from "axios";
-  import PagesTotal from "./PageList/PagesTotal.vue";
-  import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
-  import { useRouter } from "vue-router";
-  import {useCounterStore} from '../store'
+  <div v-if="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>載入中......</p>
+  </div>
+</template>
 
-  // Vị trí trung tâm bản đồ (Hồ Chí Minh)
-  const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
-  const zoomLevel = ref(6);
-  const valueE = ref("")
-  const page = ref(1)
-  const totalPage = ref(0)
-  const pageSize = ref(5)
-  const store = useCounterStore()
-  const router = useRouter()
-  // Vị trí hiện tại của người dùng
-  const currentLocation = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
-  
-  // Danh sách địa chỉ và vị trí đã giải mã
-  const resolvedLocations = ref([]);
-  const searchAddress = ref("");
-  const searchAddressHome = ref("");
-  const selectedLocation = ref(null); // Địa điểm được chọn để tìm đường đi
-  const routePath = ref([]);
-  const routeDistance = ref(null); // Lưu khoảng cách quãng đường
-  // Khóa API của OpenRouteService
-  const apiKey = "5b3ce3597851110001cf6248bd48b134d5f8443fb2a538a1554ee87e";
-  const showDistance = ref(true);
-  const showDistanceList = ref(true);
-  const showTimeDiChuyen = ref(null);
-  const showTimeDiChuyenKm = ref(null);
-  const boundaryCoordinates = ref([]);
-  const selectedTheme = ref('Standard')
-  // const intervalData = ref(null)
-  const checkData = ref(false)
-  const selectedImage = ref(null)
-  const trafficLayer = ref(null)
-  const sonumber = ref(4)
-  const trafficVisible = ref(false); // Trạng thái bật/tắt giao thông
-  const TaiNanCenter = ref([{
-    // 22.998670465166924, 120.22384000412357
-    coordinates: { lat: 22.998670465166924, lng: 120.22384000412357 },
-    status: 4
-  }])
-  const isCheckShow = ref(false)
-  const ranges = ref([0, 0, 0])
+<script setup>
+/* global google */
+// eslint-disable-next-line vue/no-side-effects-in-computed-properties
+import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch } from "vue";
+import axios from "axios";
+import PagesTotal from "./PageList/PagesTotal.vue";
+import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
+import { useRouter } from "vue-router";
+import {useCounterStore} from '../store'
 
-  const isPhanTrang = ref(true)
+// Vị trí trung tâm bản đồ (Hồ Chí Minh)
+const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
+const zoomLevel = ref(6);
+const valueE = ref("")
+const page = ref(1)
+const totalPage = ref(0)
+const pageSize = ref(5)
+const store = useCounterStore()
+const router = useRouter()
+// Vị trí hiện tại của người dùng
+const currentLocation = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
 
-  // const mapOptions = ref({
-  //   /*
-  //     "labels.text": Chỉnh toàn bộ chữ trong nhãn.
-  //     "labels.text.fill": Chỉ chỉnh màu chữ.
-  //     "weight": "bold": Làm chữ đậm.
-  //   */
-  //   disableDefaultUI: true,
-  //   styles: [
-  //     {
-  //     featureType: "poi",
-  //     elementType: "labels", // Ẩn tất cả nhãn POI
-  //     stylers: [{ visibility: "off" }]
-  //     },
-  //     {
-  //       featureType: "poi.park", // Hiển thị công viên với màu xanh lá
-  //       elementType: "labels",
-  //       stylers: [{ color: "#a0e99b" }, { visibility: "on" }],
-  //     },
-  //     {
-  //       featureType: "poi.business", // Làm mờ các khu vực kinh doanh
-  //       elementType: "labels",
-  //       stylers: [{ color: "#f5f5f5" }, { visibility: "on" }],
-  //     },
-  //     {
-  //       featureType: "poi.attraction", // Tô màu nổi bật cho địa điểm du lịch
-  //       elementType: "labels",
-  //       stylers: [{ color: "#ffcc00" }, { visibility: "on" }],
-  //     },
-  //     {
-  //       featureType: "poi.school", // Hiển thị trường học với màu xanh dương
-  //       elementType: "labels.text", 
-  //       stylers: [{ color: "#80bfff" }, { visibility: "on" }, {weight: "normal"}], // Dùng "{gamma: 2}" để tăng độ tương phản, giúp chữ rõ hơn.
-  //     },
-  //   ],
-  // });
+// Danh sách địa chỉ và vị trí đã giải mã
+const resolvedLocations = ref([]);
+const searchAddress = ref("");
+const searchAddressHome = ref("");
+const selectedLocation = ref(null); // Địa điểm được chọn để tìm đường đi
+const routePath = ref([]);
+const routeDistance = ref(null); // Lưu khoảng cách quãng đường
+// Khóa API của OpenRouteService
+const apiKey = "5b3ce3597851110001cf6248bd48b134d5f8443fb2a538a1554ee87e";
+const showDistance = ref(true);
+const showDistanceList = ref(true);
+const showTimeDiChuyen = ref(null);
+const showTimeDiChuyenKm = ref(null);
+const boundaryCoordinates = ref([]);
+const selectedTheme = ref('Standard')
+// const intervalData = ref(null)
+const checkData = ref(false)
+const selectedImage = ref(null)
+const trafficLayer = ref(null)
+const sonumber = ref(4)
+const trafficVisible = ref(false); // Trạng thái bật/tắt giao thông
+const TaiNanCenter = ref([{
+  coordinates: { lat: 22.998670465166924, lng: 120.22384000412357 },
+  status: 4
+}])
+
+const getFileType = (url) => {
+  const extension = url.split('.').pop().toLowerCase()
+
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) return 'image'
+  if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video'
+  if (['pdf'].includes(extension)) return 'pdf'
+  if (['doc', 'docx'].includes(extension)) return 'word'
+  if (['xls', 'xlsx'].includes(extension)) return 'excel'
+
+  return 'other'
+}
+const isCheckShow = ref(false)
+const ranges = ref([0, 0, 0])
+
+const isPhanTrang = ref(true)
+
+// const mapOptions = ref({
+//   /*
+//     "labels.text": Chỉnh toàn bộ chữ trong nhãn.
+//     "labels.text.fill": Chỉ chỉnh màu chữ.
+//     "weight": "bold": Làm chữ đậm.
+//   */
+//   disableDefaultUI: true,
+//   styles: [
+//     {
+//     featureType: "poi",
+//     elementType: "labels", // Ẩn tất cả nhãn POI
+//     stylers: [{ visibility: "off" }]
+//     },
+//     {
+//       featureType: "poi.park", // Hiển thị công viên với màu xanh lá
+//       elementType: "labels",
+//       stylers: [{ color: "#a0e99b" }, { visibility: "on" }],
+//     },
+//     {
+//       featureType: "poi.business", // Làm mờ các khu vực kinh doanh
+//       elementType: "labels",
+//       stylers: [{ color: "#f5f5f5" }, { visibility: "on" }],
+//     },
+//     {
+//       featureType: "poi.attraction", // Tô màu nổi bật cho địa điểm du lịch
+//       elementType: "labels",
+//       stylers: [{ color: "#ffcc00" }, { visibility: "on" }],
+//     },
+//     {
+//       featureType: "poi.school", // Hiển thị trường học với màu xanh dương
+//       elementType: "labels.text", 
+//       stylers: [{ color: "#80bfff" }, { visibility: "on" }, {weight: "normal"}], // Dùng "{gamma: 2}" để tăng độ tương phản, giúp chữ rõ hơn.
+//     },
+//   ],
+// });
 const mapOptions = ref({
-  styles: [], // Ban đầu không có style
+styles: [], // Ban đầu không có style
 });
 
 const mapStyles = ref({
-      Standard: [
-  {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.school",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.government",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.place_of_worship",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.sports_complex",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.medical",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-],
-      Retro: [
-      {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#ebe3cd"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#523735"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#f5f1e6"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#c9b2a6"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#dcd2be"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#ae9e90"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "landscape.natural",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#dfd2ae"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#dfd2ae"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#93817c"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry.fill",
-    stylers: [
-      {
-        color: "#a5b076"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#447530"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#f5f1e6"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    stylers: [
-      {
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#fdfcf8"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#f8c967"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#e9bc62"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway.controlled_access",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#e98d58"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway.controlled_access",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#db8555"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#806b63"
-      }
-    ]
-  },
-  {
-    featureType: "transit.line",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#dfd2ae"
-      }
-    ]
-  },
-  {
-    featureType: "transit.line",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#8f7d77"
-      }
-    ]
-  },
-  {
-    featureType: "transit.line",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#ebe3cd"
-      }
-    ]
-  },
-  {
-    featureType: "transit.station",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#dfd2ae"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry.fill",
-    stylers: [
-      {
-        color: "#b9d3c2"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#92998d"
-      }
-    ]
-  }
-]
-,
-      Silver: [
-  {
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#f5f5f5"
-      }
-    ]
-  },
-  {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#616161"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#f5f5f5"
-      }
-    ]
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
+    Standard: [
+{
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative",
+  elementType: "geometry",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
   featureType: "administrative.land_parcel",
   stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#bdbdbd",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#eeeeee",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#757575",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#e5e5e5",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#9e9e9e",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#ffffff",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#757575",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#dadada",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#616161",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#9e9e9e",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit.line",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#e5e5e5",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit.station",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#eeeeee",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#c9c9c9",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    
-  }
-],
-      Dark: [
-  {
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#212121"
-      }
-    ]
-  },
-  {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#757575"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#212121"
-      }
-    ]
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#757575",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.country",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#9e9e9e",
-        
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#bdbdbd",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#757575",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#181818",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#616161",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#1b1b1b",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.fill",
-    stylers: [
-      {
-        color: "#2c2c2c",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#8a8a8a",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#373737",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#3c3c3c",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway.controlled_access",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#4e4e4e",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#616161",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#757575",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#000000",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#3d3d3d",
-        visibility: "on"
-      }
-    ]
-  }
-],
-      Night: [
-  {
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#242f3e"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#746855"
-      }
-    ]
-  },
-  {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#242f3e"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#d59563",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#d59563",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#263c3f",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#6b9a76",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#38414e",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#212a37",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#9ca5b3",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#746855",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#1f2835",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#f3d19c",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#2f3948",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit.station",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#d59563",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#17263c",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#515c6d",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#17263c",
-        visibility: "on"
-      }
-    ]
-  }
-],
-      Aubergine: [
-  {
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#1d2c4d"
-      }
-    ]
-  },
-  {
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [ 
-      {
-        color: "#8ec3b9"
-      }
-    ]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#1a3646"
-      }
-    ]
-  },
-  
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.neighborhood",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.country",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#4b6878",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.land_parcel",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#64779e",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "administrative.province",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#4b6878",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "landscape.man_made",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#334e87",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "landscape.natural",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#023e58",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#283d6a",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#6f9ba5",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#1d2c4d",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.business",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry.fill",
-    stylers: [
-      {
-        color: "#023e58",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#3C7680",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#304a7d",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#98a5be",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#1d2c4d",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#2c6675",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [
-      {
-        color: "#255763",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#b0d5ce",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#023e58",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.local",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "labels",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "road.arterial",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#98a5be",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit",
-    elementType: "labels.text.stroke",
-    stylers: [
-      {
-        color: "#1d2c4d",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit.line",
-    elementType: "geometry.fill",
-    stylers: [
-      {
-        color: "#283d6a",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "transit.station",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#3a4762",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text",
-    stylers: [
-      {
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#0e1626",
-        visibility: "on"
-      }
-    ]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [
-      {
-        color: "#4e6d70",
-        visibility: "on"
-      }
-    ]
-  }
-],
-    })
-const poiStart = () => {
-  mapOptions.value.styles = [{
-      featureType: "poi",
-      elementType: "labels", // Ẩn tất cả nhãn POI
-      stylers: [{ visibility: "off" }]
-    }]
-}
-  const logout = async () => {
-    isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-    const res = await axios.post(hostName + '/api/User/Logout', {}, getToken())
-    store.clearStore()
-    if(res.data.success){
-      
-      router.push("/login")
+    {
+      visibility: "on"
     }
-
-    isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
-  }
-  // Danh sách địa điểm với thông tin chi tiết
-  const locations = ref([]);
-
- const updatePoiStyle = (data, index) => {
-  // const findOneData = mapStyles.value.find(element => 
-  //   Object.prototype.hasOwnProperty.call(element, selectedTheme.value)
-  // );
-
-  const findOneData = mapStyles.value[selectedTheme.value]
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.school",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.government",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.place_of_worship",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.sports_complex",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.medical",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+],
+    Retro: [
+    {
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#ebe3cd"
+    }
+  ]
+},
+{
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#523735"
+    }
+  ]
+},
+{
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#f5f1e6"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#c9b2a6"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#dcd2be"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#ae9e90"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "landscape.natural",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#dfd2ae"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#dfd2ae"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#93817c"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "geometry.fill",
+  stylers: [
+    {
+      color: "#a5b076"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#447530"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#f5f1e6"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  stylers: [
+    {
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#fdfcf8"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#f8c967"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#e9bc62"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway.controlled_access",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#e98d58"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway.controlled_access",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#db8555"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#806b63"
+    }
+  ]
+},
+{
+  featureType: "transit.line",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#dfd2ae"
+    }
+  ]
+},
+{
+  featureType: "transit.line",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#8f7d77"
+    }
+  ]
+},
+{
+  featureType: "transit.line",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#ebe3cd"
+    }
+  ]
+},
+{
+  featureType: "transit.station",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#dfd2ae"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "geometry.fill",
+  stylers: [
+    {
+      color: "#b9d3c2"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#92998d"
+    }
+  ]
+}
+]
+,
+    Silver: [
+{
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#f5f5f5"
+    }
+  ]
+},
+{
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#616161"
+    }
+  ]
+},
+{
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#f5f5f5"
+    }
+  ]
+},
+{
+  featureType: "administrative",
+  elementType: "geometry",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+featureType: "administrative.land_parcel",
+stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#bdbdbd",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#eeeeee",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#757575",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#e5e5e5",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#9e9e9e",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#ffffff",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#757575",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#dadada",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#616161",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#9e9e9e",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit.line",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#e5e5e5",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit.station",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#eeeeee",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#c9c9c9",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.fill",
   
+}
+],
+    Dark: [
+{
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#212121"
+    }
+  ]
+},
+{
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#757575"
+    }
+  ]
+},
+{
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#212121"
+    }
+  ]
+},
+{
+  featureType: "administrative",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#757575",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.country",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#9e9e9e",
+      
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.locality",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#bdbdbd",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#757575",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#181818",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#616161",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#1b1b1b",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry.fill",
+  stylers: [
+    {
+      color: "#2c2c2c",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#8a8a8a",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#373737",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#3c3c3c",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway.controlled_access",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#4e4e4e",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#616161",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#757575",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#000000",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#3d3d3d",
+      visibility: "on"
+    }
+  ]
+}
+],
+    Night: [
+{
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#242f3e"
+    }
+  ]
+},
+{
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#746855"
+    }
+  ]
+},
+{
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#242f3e"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative",
+  elementType: "geometry",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.locality",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#d59563",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#d59563",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#263c3f",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#6b9a76",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#38414e",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#212a37",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#9ca5b3",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#746855",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#1f2835",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#f3d19c",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#2f3948",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit.station",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#d59563",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#17263c",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#515c6d",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#17263c",
+      visibility: "on"
+    }
+  ]
+}
+],
+    Aubergine: [
+{
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#1d2c4d"
+    }
+  ]
+},
+{
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  elementType: "labels.text.fill",
+  stylers: [ 
+    {
+      color: "#8ec3b9"
+    }
+  ]
+},
+{
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#1a3646"
+    }
+  ]
+},
+
+{
+  featureType: "administrative",
+  elementType: "geometry",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.neighborhood",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.country",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#4b6878",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.land_parcel",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#64779e",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "administrative.province",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#4b6878",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "landscape.man_made",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#334e87",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "landscape.natural",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#023e58",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#283d6a",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#6f9ba5",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#1d2c4d",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.business",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "geometry.fill",
+  stylers: [
+    {
+      color: "#023e58",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.icon",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "poi.park",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#3C7680",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#304a7d",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#98a5be",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#1d2c4d",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#2c6675",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "geometry.stroke",
+  stylers: [
+    {
+      color: "#255763",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#b0d5ce",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#023e58",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.local",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.highway",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  elementType: "labels",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "road.arterial",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#98a5be",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit",
+  elementType: "labels.text.stroke",
+  stylers: [
+    {
+      color: "#1d2c4d",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit.line",
+  elementType: "geometry.fill",
+  stylers: [
+    {
+      color: "#283d6a",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "transit.station",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#3a4762",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text",
+  stylers: [
+    {
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "geometry",
+  stylers: [
+    {
+      color: "#0e1626",
+      visibility: "on"
+    }
+  ]
+},
+{
+  featureType: "water",
+  elementType: "labels.text.fill",
+  stylers: [
+    {
+      color: "#4e6d70",
+      visibility: "on"
+    }
+  ]
+}
+],
+  })
+const poiStart = () => {
+mapOptions.value.styles = [{
+    featureType: "poi",
+    elementType: "labels", // Ẩn tất cả nhãn POI
+    stylers: [{ visibility: "off" }]
+  }]
+}
+const logout = async () => {
+  isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
+  const res = await axios.post(hostName + '/api/User/Logout', {}, getToken())
+  store.clearStore()
+  if(res.data.success){
+    
+    router.push("/login")
+  }
+
+  isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
+}
+// Danh sách địa điểm với thông tin chi tiết
+const locations = ref([]);
+
+const checkDataPoiOptions = (dataPoi, labels, status) => {
+  const findOneData = mapStyles.value[selectedTheme.value]
   if(findOneData != null){
     findOneData.forEach(item => {
-      if(selectedTheme.value == "Standard"){
-      if(data == 4 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
+      if(item.featureType && item.featureType.includes(dataPoi)){
+           findOneData.forEach(item =>{
+            if(item.featureType && item.featureType.includes(dataPoi)){
+              const dataAdds = item.stylers.some(styler => "visibility" in styler)
+              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
+                if(item.elementType == labels){
                   if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
+                    item.stylers.push({visibility: `${status}`})
+                    
+                  }else{
+                      item.stylers.forEach(items => {
+                        items.visibility = `${status}`
+                      })
+                    }
                 }
+              }else if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
+                if(!dataAdds){
+                    item.stylers.push({visibility: `${status}`})
+                    
+                  }else{
+                      item.stylers.forEach(items => {
+                        items.visibility = `${status}`
+                      })
+                    }
               }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }
-      else if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                          
-                        })
-
-                      }
-                }
-              }
-            });
-          }
-        
-          
-      }else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.government")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.government")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.government")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.government")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.sports_complex")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.sports_complex")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.medical")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.medical")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }else if(data == 0 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.government")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.government")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.sports_complex")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.sports_complex")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.medical")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.medical")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-          
-      }else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.government")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.government")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.place_of_worship")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.sports_complex")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.sports_complex")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.medical")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.medical")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-          if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
-        if(item.featureType && item.featureType.includes("road.arterial")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.school")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.school")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.highway")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }
-
-      else if(data == 4 && index == 1){
-        if(item.featureType && item.featureType.includes("administrative")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
+            }
+          });
         }
 
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
 
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-      }else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
+        else if(item.elementType && item.elementType.includes(labels)){
+           findOneData.forEach(item =>{
+            if(item.elementType && item.elementType.includes(labels)){
+              const dataAdds = item.stylers.some(styler => "visibility" in styler)
+              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
+                if(item.elementType == labels){
                   if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  
+                    item.stylers.push({visibility: `${status}`})
+                    
+                  }else{
+                      item.stylers.forEach(items => {
+                        items.visibility = `${status}`
+                      })
+                    }
                 }
+                
               }
-            });
-          }
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
+            }
+          });
         }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-      }else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
-        if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-      }else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
-        if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-      }else if(data == 0 && index == 1){
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("administrative")){
-          const updatePois = item.stylers.find(x => x.visibility == 'on')
-          if(updatePois != null){
-            updatePois.visibility = 'off'
-          }
-        }
-      }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  
-                }
-              }
-            });
-          }
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-      }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
-        if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-      }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
-        if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-        if(item.featureType && item.featureType.includes("poi")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("poi.business")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-          const updatePois = item.stylers.find(x => x.visibility == 'off')
-          if(updatePois != null){
-            updatePois.visibility = 'on'
-          }
-        }
-      }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
-        if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-      }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
-        if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-      }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
-        if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-      }else if(data == 0 && index == 2){
-        if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-      }else if(data == 4 && index == 2){
-        if(item.featureType && item.featureType.includes("road.local")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-             findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-      }
+    })
+    
   }
+
+  
+}
+const updatePoiStyle = (data, index) => {
+// const findOneData = mapStyles.value.find(element => 
+//   Object.prototype.hasOwnProperty.call(element, selectedTheme.value)
+// );
+
+const findOneData = mapStyles.value[selectedTheme.value]
+
+if(findOneData != null){
+  findOneData.forEach(() => {
+    if(selectedTheme.value == "Standard"){
+    if(data == 4 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("poi.school", "labels", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("road", "", "on")
+
+      checkDataPoiOptions("poi.government", "labels", "on")
+      checkDataPoiOptions("poi.place_of_worship", "labels", "on")
+      checkDataPoiOptions("road.sports_complex", "labels", "on")
+      checkDataPoiOptions("road.medical", "labels", "on")
+
+    }
+    else if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("poi.school", "labels", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+        
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("poi.school", "labels", "off")
+      checkDataPoiOptions("poi.government", "labels", "off")
+      checkDataPoiOptions("poi.place_of_worship", "labels", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("poi.school", "labels", "off")
+      checkDataPoiOptions("poi.government", "labels", "off")
+      checkDataPoiOptions("poi.place_of_worship", "labels", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.sports_complex", "labels", "off")
+      checkDataPoiOptions("road.medical", "labels", "off")
+      checkDataPoiOptions("road", "", "off")
+
+    }else if(data == 0 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("poi.school", "labels", "off")
+      checkDataPoiOptions("poi.government", "labels", "off")
+      checkDataPoiOptions("poi.place_of_worship", "labels", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.sports_complex", "labels", "off")
+      checkDataPoiOptions("road.medical", "labels", "off")
+      checkDataPoiOptions("road", "", "off")
+
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("poi.school", "labels", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road", "", "off")
       
-    else if(selectedTheme.value == "Retro"){
-       if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
-        
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("poi.school", "labels", "on")
+      checkDataPoiOptions("poi.government", "labels", "on")
+      checkDataPoiOptions("poi.place_of_worship", "labels", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("poi.school", "labels", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+    }
 
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
+    else if(data == 4 && index == 1){
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("administrative", "geometry", "on")
+      checkDataPoiOptions("poi", "", "on")
+    }else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
+      // checkDataPoiOptions("road", "labels.icon", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
+      // checkDataPoiOptions("road", "labels.icon", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("poi", "", "off")
+
+    }else if(data == 0 && index == 1){
+      // checkDataPoiOptions("road", "labels.icon", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("poi", "", "off")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
+      // checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("poi", "", "on")
+      checkDataPoiOptions("transit", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
+      // checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+
+
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){ 
+      // checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("poi", "", "on")
+      checkDataPoiOptions("administrative", "", "on")
+    }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("", "labels", "off")
+
+    }else if(data == 0 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("", "labels", "off")
+    }else if(data == 4 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("", "labels", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("", "labels", "on")
+
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+    }
+}
+    
+  else if(selectedTheme.value == "Retro"){
+     if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.highway", "", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      
         
-          
+    }
+    else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.highway", "", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      
+        
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.highway", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      
+        
+    }else if(data == 0 && index == 0){
+      checkDataPoiOptions("road.highway", "", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road", "", "off")
+
+    }else if(data == 4 && index == 0){
+      checkDataPoiOptions("road.highway", "", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.highway", "labels", "on")
+
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road.highway", "", "on")
+      checkDataPoiOptions("road.local", "", "on")
+    }else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+
+    }else if(data == 0 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("poi", "", "off")
+      checkDataPoiOptions("transit", "", "off")
+    }else if(data == 4 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("poi", "", "on")
+      checkDataPoiOptions("transit", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
+      checkDataPoiOptions("poi.business", "labels", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+    }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("road.local", "labels", "off")
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("water", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("", "labels", "off")
+
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("water", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("", "labels", "off")
+    }else if(data == 0 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("road.local", "labels", "off")
+      checkDataPoiOptions("water", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("", "labels", "off")
+    }else if(data == 4 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("water", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("", "labels", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("road.local", "labels", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("administrative.neighborhood", "labels.text", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("", "labels.text", "on")
+
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("road.local", "labels", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("administrative.neighborhood", "labels.text", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("", "labels.text", "on")
+      checkDataPoiOptions("", "labels", "on")
+      checkDataPoiOptions("road.arterial", "labels", "on")
+    }
+}else{
+  if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
+    checkDataPoiOptions("", "labels.icon", "off")
+    checkDataPoiOptions("road.local", "", "off")
+    checkDataPoiOptions("administrative.land_parcel", "", "off")
+    checkDataPoiOptions("road.arterial", "labels", "off")
+    checkDataPoiOptions("road.highway", "labels", "off")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("", "labels.icon", "off")
+    checkDataPoiOptions("road.local", "", "off")
+    checkDataPoiOptions("administrative.land_parcel", "", "off")
+    checkDataPoiOptions("road.arterial", "labels", "off")
+    checkDataPoiOptions("road.arterial", "", "off")
+    checkDataPoiOptions("road.highway", "labels", "off")
       }
-      else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
-        
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-              
-              
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-        
-          
-      }else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
-        
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-              
-              
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-
-          console.log("Đã vào", findOneData)
-        }
-        
-          
+      else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
+        checkDataPoiOptions("", "labels.icon", "off")
+    checkDataPoiOptions("road.local", "", "off")
+    checkDataPoiOptions("administrative.land_parcel", "", "off")
+    checkDataPoiOptions("road.arterial", "labels", "off")
+    checkDataPoiOptions("road.arterial", "", "off")
+    checkDataPoiOptions("road.highway", "labels", "off")
+    checkDataPoiOptions("road", "", "off")
       }else if(data == 0 && index == 0){
-        
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-              
-              
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-
-          console.log("Đã vào", findOneData)
-        }
-        
-          
+        checkDataPoiOptions("", "labels.icon", "off")
+    checkDataPoiOptions("road.local", "", "off")
+    checkDataPoiOptions("administrative.land_parcel", "", "off")
+    checkDataPoiOptions("road.arterial", "labels", "off")
+    checkDataPoiOptions("road.arterial", "", "off")
+    checkDataPoiOptions("road.highway", "labels", "off")
+    checkDataPoiOptions("road", "", "off")
       }else if(data == 4 && index == 0){
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-              
-              
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-            
-          });
-
-          console.log("Đã vào", findOneData)
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+    checkDataPoiOptions("road.local", "", "on")
+    checkDataPoiOptions("administrative.land_parcel", "", "on")
+    checkDataPoiOptions("road.arterial", "labels", "on")
+    checkDataPoiOptions("road.arterial", "", "on")
+    checkDataPoiOptions("road.highway", "labels", "on")
+    checkDataPoiOptions("road", "", "on")
       }else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+    checkDataPoiOptions("road.local", "", "on")
+    checkDataPoiOptions("administrative.land_parcel", "", "on")
+    checkDataPoiOptions("road.arterial", "labels", "on")
+    checkDataPoiOptions("road.highway", "labels", "on")
       }else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-              
-              
-            }
-            
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+    checkDataPoiOptions("road.local", "", "on")
+    checkDataPoiOptions("administrative.land_parcel", "", "on")
+    checkDataPoiOptions("road.arterial", "labels", "on")
+    checkDataPoiOptions("road.arterial", "", "on")
+    checkDataPoiOptions("road.highway", "labels", "on")
       }else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              console.log("Data Item", item)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.highway")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'on'
-                })
-              }
-              }
-            }
-            
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+    checkDataPoiOptions("road.local", "", "on")
+    checkDataPoiOptions("administrative.land_parcel", "", "on")
+    checkDataPoiOptions("road.arterial", "labels", "on")
+    checkDataPoiOptions("road.arterial", "", "on")
+    checkDataPoiOptions("road.highway", "labels", "on")
+    checkDataPoiOptions("road", "", "on")
       }else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("poi.park", "labels.text", "off")
+        checkDataPoiOptions("poi.business", "", "off")
 
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
       }else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("poi.park", "labels.text", "off")
+        checkDataPoiOptions("poi.business", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("road", "labels.icon", "off")
+        checkDataPoiOptions("transit", "", "off")
       }else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("transit")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("poi.park", "labels.text", "off")
+        checkDataPoiOptions("poi.business", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("poi", "", "off")
+        checkDataPoiOptions("road", "labels.icon", "off")
+        checkDataPoiOptions("transit", "", "off")
+        checkDataPoiOptions("administrative", "geometry", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
       }else if(data == 0 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-              }else{
-                  item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("transit")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("poi.park", "labels.text", "off")
+        checkDataPoiOptions("poi.business", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("poi", "", "off")
+        checkDataPoiOptions("road", "labels.icon", "off")
+        checkDataPoiOptions("transit", "", "off")
+        checkDataPoiOptions("administrative", "geometry", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
       }else if(data == 4 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-              }else{
-                  item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("transit")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-      }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("transit")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("transit")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-      }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("poi.park", "labels.text", "on")
+        checkDataPoiOptions("poi.business", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("poi", "", "on")
+        checkDataPoiOptions("road", "labels.icon", "on")
+        checkDataPoiOptions("transit", "", "on")
+        checkDataPoiOptions("administrative", "geometry", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
       }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
-        if(item.featureType && item.featureType.includes("poi.business")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.business")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi.park")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi.park")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("poi.park", "labels.text", "on")
+        checkDataPoiOptions("poi.business", "", "on")
+      }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("poi.park", "labels.text", "on")
+        checkDataPoiOptions("poi.business", "", "on")
+        checkDataPoiOptions("road", "labels.icon", "on")
+        checkDataPoiOptions("transit", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+      }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("poi.park", "labels.text", "on")
+        checkDataPoiOptions("poi.business", "", "on")
+        checkDataPoiOptions("road", "labels.icon", "on")
+        checkDataPoiOptions("transit", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("poi", "", "on")
+        checkDataPoiOptions("administrative", "geometry", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
       }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("road.local", "labels", "off")
       }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("road.local", "labels", "off")
+        checkDataPoiOptions("road", "labels", "off")
+        checkDataPoiOptions("water", "labels.text", "off")
+        checkDataPoiOptions("administrative.neighborhood", "", "off")
       }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("road.local", "labels", "off")
+        checkDataPoiOptions("road", "labels", "off")
+        checkDataPoiOptions("water", "labels.text", "off")
+        checkDataPoiOptions("administrative.neighborhood", "", "off")
       }else if(data == 0 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "off")
+        checkDataPoiOptions("", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+        checkDataPoiOptions("administrative.land_parcel", "", "off")
+        checkDataPoiOptions("poi", "labels.text", "off")
+        checkDataPoiOptions("road.local", "labels", "off")
+        checkDataPoiOptions("road", "labels", "off")
+        checkDataPoiOptions("water", "labels.text", "off")
+        checkDataPoiOptions("administrative.neighborhood", "", "off")
       }else if(data == 4 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("road.local", "labels", "on")
+        checkDataPoiOptions("road", "labels", "on")
+        checkDataPoiOptions("water", "labels.text", "on")
+        checkDataPoiOptions("administrative.neighborhood", "", "on")
       }else if(sonumber.value < data && data !== 0 && data == 1 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("road.local", "labels", "on")
+        
       }else if(sonumber.value < data && data !== 0 && data == 2 && index == 2){
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("road.local", "labels", "on")
+        checkDataPoiOptions("water", "labels.text", "on")
+        checkDataPoiOptions("road", "labels", "on")
+        checkDataPoiOptions("administrative.neighborhood", "", "on")
       }else if(sonumber.value < data && data !== 0 && data == 3 && index == 2){
-        if(item.elementType && item.elementType.includes("labels.icon")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels.icon")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.arterial")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "on"})
-                }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                    })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("poi")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("poi")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("water")){
-           findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("water")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels.text"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                  }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'on'
-                  })
-                  }
-                }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
-
-        if(item.elementType && item.elementType.includes("labels")){
-          
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                console.log("Đã vào", item.elementType)
-                if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                
-              }
-            }
-          });
-        }
+        checkDataPoiOptions("", "labels.icon", "on")
+        checkDataPoiOptions("", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+        checkDataPoiOptions("administrative.land_parcel", "", "on")
+        checkDataPoiOptions("poi", "labels.text", "on")
+        checkDataPoiOptions("road.local", "labels", "on")
+        checkDataPoiOptions("water", "labels.text", "on")
+        checkDataPoiOptions("road", "labels", "on")
+        checkDataPoiOptions("administrative.neighborhood", "", "on")
+        
       }
-  }else{
-    if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
-        
-      if(item.elementType && item.elementType.includes("labels.icon")){
-           findOneData.forEach(item =>{
-            if(item.elementType && item.elementType.includes("labels.icon")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                if(item.elementType == "labels.icon"){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                    
-                  }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                }
-                
-              }
-            }
-          });
-        }
-        
+}
+    
+});
 
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
+sonumber.value = data
 
-        if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                  item.stylers.push({visibility: "off"})
-                }else{
-                item.stylers.forEach(items => {
-                  items.visibility = 'off'
-                })
-              }
-              }
-            }
-            
-          });
-        }
-        
-        if(item.featureType && item.featureType.includes("road.arterial")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.arterial")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                    }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
+}
+}
+const mapRefs = ref(null)
+const dataLoadStart = ref([
 
-        if(item.featureType && item.featureType.includes("road.highway")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.highway")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(item.elementType == "labels"){
-                  if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                    }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                }
-                
-              }
-            }
-            
-          });
-        }
-
-        if(item.featureType && item.featureType.includes("road.local")){
-          findOneData.forEach(item =>{
-            if(item.featureType && item.featureType.includes("road.local")){
-              const dataAdds = item.stylers.some(styler => "visibility" in styler)
-              if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                    }else{
-                    item.stylers.forEach(items => {
-                      items.visibility = 'off'
-                    })
-                  }
-                
-              }
-            }
-            
-          });
-        }
-      }
-      else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }
-        else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(data == 0 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "off"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'off'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(data == 4 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
-        
-        if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-          
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                    item.stylers.push({visibility: "on"})
-                  }else{
-                  item.stylers.forEach(items => {
-                    items.visibility = 'on'
-                  })
-                }
-                }
-              }
-              
-            });
-          }
-          
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.arterial")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.arterial")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.highway")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.highway")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-  
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                }
-              }
-              
-            });
-          }
-        }else if(data == 0 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                }
-              }
-              
-            });
-          }
-        }else if(data == 4 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi.park")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.park")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("poi.business")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi.business")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("transit")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("transit")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "geometry"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                }
-              }
-              
-            });
-          }
-        }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                  if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                    if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                }
-                    
-                    
-                  }
-                
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-                }
-                
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-          if(item.featureType && item.featureType.includes("water")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                }
-                } 
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(data == 0 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "off"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'off'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-                }
-                
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-          if(item.featureType && item.featureType.includes("water")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                }
-                } 
-                
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "off"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'off'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(data == 4 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-                }
-                
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                if(Array.isArray(item.stylers)){
-                  const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                }
-                } 
-                
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(sonumber.value < data && data !== 0 && data == 1 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(sonumber.value < data && data !== 0 && data == 2 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("pwateroi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }else if(sonumber.value < data && data !== 0 && data == 3 && index == 2){
-          if(item.elementType && item.elementType.includes("labels.icon")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels.icon")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels.icon"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.elementType && item.elementType.includes("labels")){
-             findOneData.forEach(item =>{
-              if(item.elementType && item.elementType.includes("labels")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "featureType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                      item.stylers.push({visibility: "on"})
-                      
-                    }else{
-                        item.stylers.forEach(items => {
-                          items.visibility = 'on'
-                        })
-                      }
-                  }
-                  
-                }
-              }
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("poi")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("poi")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("water")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("water")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels.text"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road.local")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road.local")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("road")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("road")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(item.elementType == "labels"){
-                    if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.land_parcel")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-            findOneData.forEach(item =>{
-              if(item.featureType && item.featureType.includes("administrative.neighborhood")){
-                const dataAdds = item.stylers.some(styler => "visibility" in styler)
-                if(!Object.prototype.hasOwnProperty.call(item, "elementType")){
-                  if(!dataAdds){
-                        item.stylers.push({visibility: "on"})
-                      }else{
-                      item.stylers.forEach(items => {
-                        items.visibility = 'on'
-                      })
-                    }
-                  
-                }
-              }
-              
-            });
-          }
-
-          
-        }
-  }
-      // if(data == 0 && index == 0){
-      //     if(item.elementType == selectedTheme.value){
-      
-      //     }
-      //   }
-      
-  });
-
-  sonumber.value = data
-  
-  }
- }
-  const mapRefs = ref(null)
-  const dataLoadStart = ref([
-  
 ])
 
 // const statusGiaoThong = () => {
@@ -10828,169 +3470,169 @@ const poiStart = () => {
 //     }, 500);
 //   }
 
-  const statusGiaoThong = () => {
-    const checkMapLoaded = setInterval(() => {
-    if (mapRefs.value?.$mapObject) {
-      clearInterval(checkMapLoaded);
-      trafficLayer.value = new google.maps.TrafficLayer();
-    }
-  }, 500);
+const statusGiaoThong = () => {
+  const checkMapLoaded = setInterval(() => {
+  if (mapRefs.value?.$mapObject) {
+    clearInterval(checkMapLoaded);
+    trafficLayer.value = new google.maps.TrafficLayer();
   }
+}, 500);
+}
 
-  const toggleTraffic = () => {
-  if (trafficLayer.value) {
-    trafficVisible.value = !trafficVisible.value;
-    trafficLayer.value.setMap(trafficVisible.value ? mapRefs.value.$mapObject : null);
-  }
+const toggleTraffic = () => {
+if (trafficLayer.value) {
+  trafficVisible.value = !trafficVisible.value;
+  trafficLayer.value.setMap(trafficVisible.value ? mapRefs.value.$mapObject : null);
+}
 };
 const showDataMap = (location) => {
-  mapCenter.value = location
-    // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
-    zoomLevel.value = 13
-    selectedMarker.value = location.lat
-    showDistanceList.value = !showDistanceList.value
+mapCenter.value = location
+  // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
+  zoomLevel.value = 13
+  selectedMarker.value = location.lat
+  showDistanceList.value = !showDistanceList.value
 }
 
 const clickDataUpdate = (id) => {
-  router.push({path: "/admin/fromelementPages", query: {id: id}})
+router.push({path: "/admin/fromelementPages", query: {id: id}})
 }
 
 // Hàm tính khoảng cách giữa 2 điểm (Haversine Formula)
 const getDistance = (lat1, lng1, lat2, lng2) => {
-  // alert("Đã vào")
-      const R = 6371; // Bán kính Trái Đất (km)
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLng = (lng2 - lng1) * (Math.PI / 180);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) *
-          Math.cos(lat2 * (Math.PI / 180)) *
-          Math.sin(dLng / 2) *
-          Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      
-      console.log("Km", R * c)
-      return R * c; // Khoảng cách (km)
-    };
+// alert("Đã vào")
+    const R = 6371; // Bán kính Trái Đất (km)
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+    console.log("Km", R * c)
+    return R * c; // Khoảng cách (km)
+  };
 
-    // Biến timeout để debounce
+  // Biến timeout để debounce
 let centerChangeTimeout = null;
 
-    const onCenterChanged = () => {
-      if (centerChangeTimeout) clearTimeout(centerChangeTimeout);
+  const onCenterChanged = () => {
+    if (centerChangeTimeout) clearTimeout(centerChangeTimeout);
 
-  centerChangeTimeout = setTimeout(() => {
-    if (mapRefs.value) {
-      const center = mapRefs.value.$mapObject.getCenter();
-      const newCenter = { lat: center.lat(), lng: center.lng() };
+centerChangeTimeout = setTimeout(() => {
+  if (mapRefs.value) {
+    const center = mapRefs.value.$mapObject.getCenter();
+    const newCenter = { lat: center.lat(), lng: center.lng() };
 
-      // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
-      if (
-        Math.abs(newCenter.lat - mapCenter.value.lat) > 0.001 ||
-        Math.abs(newCenter.lng - mapCenter.value.lng) > 0.001
-      ) {
-        mapCenter.value = { lat: center.lat(), lng: center.lng() };
-        onZoomChanged()
-        console.log("Cập nhật vị trí:", mapCenter.value);
-      }
+    // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
+    if (
+      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.001 ||
+      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.001
+    ) {
+      mapCenter.value = { lat: center.lat(), lng: center.lng() };
+      onZoomChanged()
+      console.log("Cập nhật vị trí:", mapCenter.value);
     }
-  }, 300); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
-    }
+  }
+}, 300); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
+  }
 const onZoomChanged = () => {
-  zoomLevel.value = mapRefs.value.$mapObject.getZoom();
-  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+zoomLevel.value = mapRefs.value.$mapObject.getZoom();
+mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
 
-    if (zoomLevel.value < 13) {
-      // Khi thu nhỏ bản đồ -> chỉ hiển thị các Quận
-      locations.value = TaiNanCenter.value;
-    } else {
-      // Nếu zoom >= 18 thì cập nhật danh sách điểm
-      if (zoomLevel.value >= 13) {
-        // mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-        // locations.value = dataLoadStart.value.filter((location) => {
-        //   const distance = getDistance(
-        //     mapCenter.value.lat,
-        //     mapCenter.value.lng,
-        //     location.coordinates.lat,
-        //     location.coordinates.lng
-        //   );
-        //   console.log(distance)
-        //   return distance <= 1; // Lấy các điểm trong bán kính 1km
-        // });
+  if (zoomLevel.value < 13) {
+    // Khi thu nhỏ bản đồ -> chỉ hiển thị các Quận
+    locations.value = TaiNanCenter.value;
+  } else {
+    // Nếu zoom >= 18 thì cập nhật danh sách điểm
+    if (zoomLevel.value >= 13) {
+      // mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      // locations.value = dataLoadStart.value.filter((location) => {
+      //   const distance = getDistance(
+      //     mapCenter.value.lat,
+      //     mapCenter.value.lng,
+      //     location.coordinates.lat,
+      //     location.coordinates.lng
+      //   );
+      //   console.log(distance)
+      //   return distance <= 1; // Lấy các điểm trong bán kính 1km
+      // });
 
-        // console.log(locations.value)
-        if(btnSearch.value == null){
-         // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
-         mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-        locations.value = dataLoadStart.value.filter((location) => {
-          const distance = getDistance(
-            mapCenter.value.lat,
-            mapCenter.value.lng,
-            location.coordinates.lat,
-            location.coordinates.lng
-          );
-          console.log(distance)
-          return distance <= 1; // Lấy các điểm trong bán kính 1km
-        });
+      // console.log(locations.value)
+      if(btnSearch.value == null){
+       // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+       mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      locations.value = dataLoadStart.value.filter((location) => {
+        const distance = getDistance(
+          mapCenter.value.lat,
+          mapCenter.value.lng,
+          location.coordinates.lat,
+          location.coordinates.lng
+        );
+        console.log(distance)
+        return distance <= 1; // Lấy các điểm trong bán kính 1km
+      });
+     }
+
+     else{
+       if(btnSearch.value == 'b1s'){
+         searchStatus1(btnSearch.value)
+       }else if(btnSearch.value == 'b2s'){
+         searchStatus2(btnSearch.value)
+       }else if(btnSearch.value == 'b3s'){
+         searchStatus3(btnSearch.value)
+       }else if(btnSearch.value == 'b4s'){
+         searchStatus4(btnSearch.value)
+       }else if(btnSearch.value == 'b5s'){
+         searchStatus5(btnSearch.value)
        }
-
-       else{
-         if(btnSearch.value == 'b1s'){
-           searchStatus1(btnSearch.value)
-         }else if(btnSearch.value == 'b2s'){
-           searchStatus2(btnSearch.value)
-         }else if(btnSearch.value == 'b3s'){
-           searchStatus3(btnSearch.value)
-         }else if(btnSearch.value == 'b4s'){
-           searchStatus4(btnSearch.value)
-         }else if(btnSearch.value == 'b5s'){
-           searchStatus5(btnSearch.value)
-         }
-        }
-      } else {
-        locations.value = []; // Nếu zoom < 18 thì ẩn hết điểm
       }
-      //  if(btnSearch.value == null){
-      //    // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
-      //    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-      //   locations.value = dataLoadStart.value.filter((location) => {
-      //     const distance = getDistance(
-      //       mapCenter.value.lat,
-      //       mapCenter.value.lng,
-      //       location.coordinates.lat,
-      //       location.coordinates.lng
-      //     );
-      //     console.log(distance)
-      //     return distance <= 1; // Lấy các điểm trong bán kính 1km
-      //   });
-      //  }else{
-      //    if(btnSearch.value == 'b1s'){
-      //      searchStatus1(btnSearch.value)
-      //    }else if(btnSearch.value == 'b2s'){
-      //      searchStatus2(btnSearch.value)
-      //    }else if(btnSearch.value == 'b3s'){
-      //      searchStatus3(btnSearch.value)
-      //    }else if(btnSearch.value == 'b4s'){
-      //      searchStatus4(btnSearch.value)
-      //    }else if(btnSearch.value == 'b5s'){
-      //      searchStatus5(btnSearch.value)
-      //    }
-      //  }
-          
+    } else {
+      locations.value = []; // Nếu zoom < 18 thì ẩn hết điểm
     }
+    //  if(btnSearch.value == null){
+    //    // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+    //    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+    //   locations.value = dataLoadStart.value.filter((location) => {
+    //     const distance = getDistance(
+    //       mapCenter.value.lat,
+    //       mapCenter.value.lng,
+    //       location.coordinates.lat,
+    //       location.coordinates.lng
+    //     );
+    //     console.log(distance)
+    //     return distance <= 1; // Lấy các điểm trong bán kính 1km
+    //   });
+    //  }else{
+    //    if(btnSearch.value == 'b1s'){
+    //      searchStatus1(btnSearch.value)
+    //    }else if(btnSearch.value == 'b2s'){
+    //      searchStatus2(btnSearch.value)
+    //    }else if(btnSearch.value == 'b3s'){
+    //      searchStatus3(btnSearch.value)
+    //    }else if(btnSearch.value == 'b4s'){
+    //      searchStatus4(btnSearch.value)
+    //    }else if(btnSearch.value == 'b5s'){
+    //      searchStatus5(btnSearch.value)
+    //    }
+    //  }
+        
   }
+}
 
-  const zoomData = (data) => {
-    mapCenter.value = data
-    // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
-    zoomLevel.value = 13
-  }
+const zoomData = (data) => {
+  mapCenter.value = data
+  // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
+  zoomLevel.value = 13
+}
 const imageStatus = ref({
-  status0: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-  status1: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-  status1s: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-  status2: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-  status3: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+status0: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+status1: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+status1s: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+status2: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+status3: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
 
 })
 // Lưu marker đang được chọn
@@ -11009,824 +3651,823 @@ const hostName = proxy?.hostname;
 
 // Danh sách ảnh
 const images = ref([
-  "https://png.pngtree.com/png-clipart/20230417/original/pngtree-return-of-investment-flat-icon-png-image_9064391.png",
-  "https://tse1.mm.bing.net/th?id=OIP.hJVb5niyA8--b88zKGj5zwHaHa&pid=Api&P=0&h=220",
-  "https://tse4.mm.bing.net/th?id=OIP.cdbGAINaMlm8uBalZf3QgAHaHa&pid=Api&P=0&h=220",
-  "https://png.pngtree.com/png-clipart/20230508/original/pngtree-megaphone-icon-png-image_9150343.png",
-  "https://img.lovepik.com/free-png/20211108/lovepik-sunlight-png-image_400507026_wh1200.png",
-  "https://cdn-icons-png.flaticon.com/512/25/25694.png"
+"https://png.pngtree.com/png-clipart/20230417/original/pngtree-return-of-investment-flat-icon-png-image_9064391.png",
+"https://tse1.mm.bing.net/th?id=OIP.hJVb5niyA8--b88zKGj5zwHaHa&pid=Api&P=0&h=220",
+"https://tse4.mm.bing.net/th?id=OIP.cdbGAINaMlm8uBalZf3QgAHaHa&pid=Api&P=0&h=220",
+"https://png.pngtree.com/png-clipart/20230508/original/pngtree-megaphone-icon-png-image_9150343.png",
+"https://img.lovepik.com/free-png/20211108/lovepik-sunlight-png-image_400507026_wh1200.png",
+"https://cdn-icons-png.flaticon.com/512/25/25694.png"
 ]);
 
 watch(page.value, (newPage) => {
-  findAllDataMap(valueE.value, newPage)
-  })
+findAllDataMap(valueE.value, newPage)
+})
 
-  const changeReload = (event) =>{
-    pageSize.value = event
-    findAllDataMap(valueE.value, page.value)
-  }
+const changeReload = (event) =>{
+  pageSize.value = event
+  findAllDataMap(valueE.value, page.value)
+}
 const getToken = () => {
 
-  var result = {
-    headers: { Authorization: `Bearer ${store.getToken}` },
-  };
-  return result;
+var result = {
+  headers: { Authorization: `Bearer ${store.getToken}` },
+};
+return result;
 };
 const findAllDataMap = async (searchData, pageData) => {
-    isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-    const res = searchData == "" ? await axios.get(hostName + `/api/TrafficEquipment/FindAll?page=${pageData}&pageSize=${pageSize.value}`, getToken())
-    : await axios.get(hostName + `/api/TrafficEquipment/FindAll?name=${searchData}&page=${pageData}&pageSize=${pageSize.value}`, getToken())
+  isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
+  const res = searchData == "" ? await axios.get(hostName + `/api/TrafficEquipment/FindAll?page=${pageData}&pageSize=${pageSize.value}`, getToken())
+  : await axios.get(hostName + `/api/TrafficEquipment/FindAll?name=${searchData}&page=${pageData}&pageSize=${pageSize.value}`, getToken())
 
-    if(res.data.success){
-        dataLoadStart.value = res.data.content.data.map(m => ({
-            ...m,
-            coordinates: { lat: m.latitude, lng: m.longitude }
-        }))
+  if(res.data.success){
+      dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
 
-        mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-        locations.value = dataLoadStart.value.filter((location) => {
-          const distance = getDistance(
-            mapCenter.value.lat,
-            mapCenter.value.lng,
-            location.coordinates.lat,
-            location.coordinates.lng
-          );
-          console.log(distance)
-          return distance <= 1; // Lấy các điểm trong bán kính 1km
-        });
+      mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      locations.value = dataLoadStart.value.filter((location) => {
+        const distance = getDistance(
+          mapCenter.value.lat,
+          mapCenter.value.lng,
+          location.coordinates.lat,
+          location.coordinates.lng
+        );
+        console.log(distance)
+        return distance <= 1; // Lấy các điểm trong bán kính 1km
+      });
 
-        // console.log(dataLoadStart.value)
-        // locations.value = dataLoadStart.value
-        page.value = res.data.content.page;
-        totalPage.value = res.data.content.totalPages;
-    }
-    console.log(res)
-    isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
+      // console.log(dataLoadStart.value)
+      // locations.value = dataLoadStart.value
+      page.value = res.data.content.page;
+      totalPage.value = res.data.content.totalPages;
+  }
+  console.log(res)
+  isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
 }
 
 // Hàm lấy ranh giới từ tên quận
 const fetchOSMBoundary = async () => {
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-  
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchAddress.value)}&format=json&polygon_geojson=1`
-    );
-    const data = await response.json();
-    console.log("Nominatim Data:", data);
+isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
+
+try {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchAddress.value)}&format=json&polygon_geojson=1`
+  );
+  const data = await response.json();
+  console.log("Nominatim Data:", data);
 
 if (data.length > 0 && data[0].geojson) {
-    const combinedCoordinates =
-  data && // Kiểm data tồn tại
-  data.length > 0 && // Kiểm data có phần tử
-  data[0].geojson && // Kiểm geojson tồn tại
-  data[0].geojson.coordinates // Kiểm coordinates tồn tại
-    ? data[0].geojson.coordinates.length > 1 // Kiểm tra số lượng lớp
-      ? data[0].geojson.coordinates
-          .map((islandLayer) => {
-                return islandLayer[0].map(([lng, lat]) => ({
-                lat: parseFloat(lat),
-                lng: parseFloat(lng),
-                }));
-            })
-      : data[0].geojson.coordinates[0].map(([lng, lat]) => ({
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-        }))
-    : []; 
+  const combinedCoordinates =
+data && // Kiểm data tồn tại
+data.length > 0 && // Kiểm data có phần tử
+data[0].geojson && // Kiểm geojson tồn tại
+data[0].geojson.coordinates // Kiểm coordinates tồn tại
+  ? data[0].geojson.coordinates.length > 1 // Kiểm tra số lượng lớp
+    ? data[0].geojson.coordinates
+        .map((islandLayer) => {
+              return islandLayer[0].map(([lng, lat]) => ({
+              lat: parseFloat(lat),
+              lng: parseFloat(lng),
+              }));
+          })
+    : data[0].geojson.coordinates[0].map(([lng, lat]) => ({
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+      }))
+  : []; 
 console.log("Danh sách các đảo:", combinedCoordinates);
-  
-  // Gán vào biến để vẽ
-  boundaryCoordinates.value = combinedCoordinates;
 
-  checkData.value = data[0].geojson.coordinates.length > 1 ? true : false
-  // Cập nhật tâm bản đồ
-  mapCenter.value = {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon),
-  };
+// Gán vào biến để vẽ
+boundaryCoordinates.value = combinedCoordinates;
+
+checkData.value = data[0].geojson.coordinates.length > 1 ? true : false
+// Cập nhật tâm bản đồ
+mapCenter.value = {
+  lat: parseFloat(data[0].lat),
+  lng: parseFloat(data[0].lon),
+};
 }
-  } catch (error) {
-    console.error("Lỗi:", error);
-  }
+} catch (error) {
+  console.error("Lỗi:", error);
+}
 
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
+isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
 };
 const loadData = () => {
-  locations.value = dataLoadStart.value
+locations.value = dataLoadStart.value
 }
-// const showImage = (image) => {
-//   selectedImage.value = image; // Hiển thị ảnh khi click
-// };
+const showImage = (image) => {
+  selectedImage.value = image; // Hiển thị ảnh khi click
+};
 const closeImage = () => {
-  selectedImage.value = null; // Đóng popup khi click ngoài
+selectedImage.value = null; // Đóng popup khi click ngoài
 };
 const marker1 = ref({
-    url: images.value[0],
-    scaledSize: { width: 40, height: 40 }
+  url: images.value[0],
+  scaledSize: { width: 40, height: 40 }
 });
 
 const searchStatus1 = async (classData) => {
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
+isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
 
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
-
-  btnSearch.value = classData
-
-  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode1?page=1&pageSize=20000', getToken())
-  if(res.data.success){
-    locations.value = res.data.content.data.map(m => ({
-            ...m,
-            coordinates: { lat: m.latitude, lng: m.longitude }
-        }))
-
-        if(zoomLevel.value < 13)
-            zoomLevel.value = 13
-        isPhanTrang.value = false
-  }
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
   
-  // routePath.value = []
-  // routeDistance.value = null
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
+document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
-  return locations.value
+btnSearch.value = classData
+
+const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode1?page=1&pageSize=20000', getToken())
+if(res.data.success){
+  locations.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+
+      if(zoomLevel.value < 13)
+          zoomLevel.value = 13
+      isPhanTrang.value = false
+}
+
+// routePath.value = []
+// routeDistance.value = null
+isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
+
+return locations.value
 }
 
 const searchStatus2 = async (classData) => {
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+  
+document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
-  btnSearch.value = classData
-  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode2?page=1&pageSize=20000', getToken())
-  if(res.data.success){
-    locations.value = res.data.content.data.map(m => ({
-            ...m,
-            coordinates: { lat: m.latitude, lng: m.longitude }
-        }))
+btnSearch.value = classData
+const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode2?page=1&pageSize=20000', getToken())
+if(res.data.success){
+  locations.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
 
-        if(zoomLevel.value < 13)
-            zoomLevel.value = 13
-        isPhanTrang.value = false
-  }
-  // routePath.value = []
-  // routeDistance.value = null
-  return locations.value
+      if(zoomLevel.value < 13)
+          zoomLevel.value = 13
+      isPhanTrang.value = false
+}
+// routePath.value = []
+// routeDistance.value = null
+return locations.value
 }
 
 const searchStatus3 = async (classData) => {
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+  
+document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
-  btnSearch.value = classData
+btnSearch.value = classData
 
-  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode3?page=1&pageSize=20000', getToken())
-  if(res.data.success){
-    locations.value = res.data.content.data.map(m => ({
-            ...m,
-            coordinates: { lat: m.latitude, lng: m.longitude }
-        }))
+const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode3?page=1&pageSize=20000', getToken())
+if(res.data.success){
+  locations.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
 
-        if(zoomLevel.value < 13)
-            zoomLevel.value = 13
-        isPhanTrang.value = false
-  }
-  // routePath.value = []
-  // routeDistance.value = null
-  return locations.value
+      if(zoomLevel.value < 13)
+          zoomLevel.value = 13
+      isPhanTrang.value = false
+}
+// routePath.value = []
+// routeDistance.value = null
+return locations.value
 }
 
 const searchStatus5 = async (classData) => {
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
+isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
 
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
-
-  btnSearch.value = classData
-
-  const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode0?page=1&pageSize=20000', getToken())
-  if(res.data.success){
-    locations.value = res.data.content.data.map(m => ({
-            ...m,
-            coordinates: { lat: m.latitude, lng: m.longitude }
-        }))
-
-        if(zoomLevel.value < 13)
-            zoomLevel.value = 13
-        isPhanTrang.value = false
-  }
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
   
-  // routePath.value = []
-  // routeDistance.value = null
+document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
 
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
-  return locations.value
+btnSearch.value = classData
+
+const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode0?page=1&pageSize=20000', getToken())
+if(res.data.success){
+  locations.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+
+      if(zoomLevel.value < 13)
+          zoomLevel.value = 13
+      isPhanTrang.value = false
+}
+
+// routePath.value = []
+// routeDistance.value = null
+
+isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
+return locations.value
 }
 
 const searchStatus4 = (classData) => {
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
-    
-  document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
-
-  btnSearch.value = classData
-
-  if(pageSize.value >= 500){
-    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-        locations.value = dataLoadStart.value.filter((location) => {
-          const distance = getDistance(
-            mapCenter.value.lat,
-            mapCenter.value.lng,
-            location.coordinates.lat,
-            location.coordinates.lng
-          );
-          console.log(distance)
-          return distance <= 1 && location.isError === false; // Lấy các điểm trong bán kính 1km
-        });
-  }else{
-    
-        locations.value = dataLoadStart.value.filter((location) => location.isError === false);
-  }
-
-  isPhanTrang.value = false
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
   
-  // routePath.value = []
-  // routeDistance.value = null
-  return locations.value
+document.querySelector("." + classData).style.backgroundColor = '#FF8C00'
+
+btnSearch.value = classData
+
+if(pageSize.value >= 500){
+  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      locations.value = dataLoadStart.value.filter((location) => {
+        const distance = getDistance(
+          mapCenter.value.lat,
+          mapCenter.value.lng,
+          location.coordinates.lat,
+          location.coordinates.lng
+        );
+        console.log(distance)
+        return distance <= 1 && location.isError === false; // Lấy các điểm trong bán kính 1km
+      });
+}else{
+  
+      locations.value = dataLoadStart.value.filter((location) => location.isError === false);
+}
+
+isPhanTrang.value = false
+
+// routePath.value = []
+// routeDistance.value = null
+return locations.value
 }
 
 const AllData = () => {
-  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-        locations.value = dataLoadStart.value.filter((location) => {
-          const distance = getDistance(
-            mapCenter.value.lat,
-            mapCenter.value.lng,
-            location.coordinates.lat,
-            location.coordinates.lng
-          );
-          console.log(distance)
-          return distance <= 1; // Lấy các điểm trong bán kính 1km
-        });
-  if(btnSearch.value != null)
-    document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
+mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      locations.value = dataLoadStart.value.filter((location) => {
+        const distance = getDistance(
+          mapCenter.value.lat,
+          mapCenter.value.lng,
+          location.coordinates.lat,
+          location.coordinates.lng
+        );
+        console.log(distance)
+        return distance <= 1; // Lấy các điểm trong bán kính 1km
+      });
+if(btnSearch.value != null)
+  document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
 
-  isPhanTrang.value = true
-  btnSearch.value = null
-  return locations.value
+isPhanTrang.value = true
+btnSearch.value = null
+return locations.value
 }
 // Hàm đổi ảnh mỗi giây
 const startImageRotation = () => {
-  let index = 0;
-  intervalId.value = setInterval(() => {
-    index = (index + 1) % images.value.length; // Chuyển ảnh tiếp theo
-    marker1.value.url = images.value[index];
-  }, 100);
+let index = 0;
+intervalId.value = setInterval(() => {
+  index = (index + 1) % images.value.length; // Chuyển ảnh tiếp theo
+  marker1.value.url = images.value[index];
+}, 100);
 };
 
 // const midPoint = ref(null)
 // Công thức tính khoảng cách đường chim bay (Haversine)
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Bán kính Trái Đất (km)
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+const R = 6371; // Bán kính Trái Đất (km)
+const dLat = (lat2 - lat1) * (Math.PI / 180);
+const dLon = (lon2 - lon1) * (Math.PI / 180);
+const a =
+  Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  Math.cos(lat1 * (Math.PI / 180)) *
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+return R * c;
 };
 // Khi click vào marker, hiển thị thông tin
 const showInfo = (index) => {
-  classBtnOld.value = null
-  selectedMarker.value = index;
+classBtnOld.value = null
+selectedMarker.value = index;
 };
 
 const clickDataLocation = (location, type, classData) => {
-    selectedLocation.value = location
-    selectedTransport.value = type
+  selectedLocation.value = location
+  selectedTransport.value = type
 
-    if(classBtnOld.value != null)
-        document.querySelector("." + classBtnOld.value).style.backgroundColor = 'white'
-    
-    document.querySelector("." + classData).style.backgroundColor = 'yellow'
+  if(classBtnOld.value != null)
+      document.querySelector("." + classBtnOld.value).style.backgroundColor = 'white'
+  
+  document.querySelector("." + classData).style.backgroundColor = 'yellow'
 
-    classBtnOld.value = classData
-    getDirections()
+  classBtnOld.value = classData
+  getDirections()
 }
-  // Chuyển địa chỉ thành tọa độ
-  const geocodeAddress = async (address) => {
-    return new Promise((resolve, reject) => {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address }, (results, status) => {
-        if (status === "OK" && results.length > 0) {
-          const location = results[0].geometry.location;
-          resolve({ lat: location.lat(), lng: location.lng() });
-        } else {
-          console.error(`Không tìm thấy địa chỉ: ${address}`);
-          reject(status);
-        }
-      });
-    });
-  };
-  
-  const searchHomeData = async (dataSearch) => {
-
-    searchAddressHome.value = dataSearch.name
-
-    if (!searchAddressHome.value) {
-      alert("Vui lòng nhập địa chỉ!");
-      return;
-    }
-
-    routePath.value = []
-        routeDistance.value = null
-  
-    try {
-      const coordinates = await geocodeAddress(searchAddressHome.value);
-  
-      // Cập nhật bản đồ
-      mapCenter.value = coordinates;
-      currentLocation.value = coordinates
-      zoomLevel.value = 15;
-  
-      // Xóa ô input
-      searchAddressHome.value = "";
-    } catch (error) {
-      alert("Không tìm thấy địa chỉ, vui lòng thử lại!");
-    }
-  }
-  // Tìm kiếm địa chỉ mới
-  const searchLocation = async (dataSearch) => {
-    searchAddress.value = dataSearch.name
-    console.log("Data Name ", dataSearch)
-    if (!searchAddress.value) {
-      alert("Vui lòng nhập địa chỉ!");
-      return;
-    }
-  
-    try {
-      const coordinates = await geocodeAddress(searchAddress.value);
-  
-      // Thêm địa chỉ mới vào danh sách
-      resolvedLocations.value.push({
-        address: searchAddress.value,
-        coordinates,
-      });
-  
-      fetchOSMBoundary()
-      // Cập nhật bản đồ
-      mapCenter.value = coordinates;
-      zoomLevel.value = 15;
-  
-      // Xóa ô input
-      searchAddress.value = "";
-      
-    } catch (error) {
-      alert("Không tìm thấy địa chỉ, vui lòng thử lại!");
-    }
-  };
-  
-  // Tìm đường đến vị trí đã chọn
-  const getDirections = async () => {
-    if (!selectedLocation.value) {
-      alert("Vui lòng chọn một địa điểm!");
-      return;
-    }
-
-    const start = currentLocation.value; // Bắt đầu từ vị trí hiện tại
-    const end = selectedLocation.value.coordinates; // Điểm đến đã chọn
-
-    if (selectedTransport.value === "airplane") {
-    // Tính khoảng cách đường bay
-    const distanceKm = haversineDistance(start.lat, start.lng, end.lat, end.lng);
-    routeDistance.value = distanceKm
-
-    // midPoint.value = {
-    //   lat: (start.lat + end.lat) / 2,
-    //   lng: (start.lng + end.lng) / 2,
-    // };
-
-    showTimeDiChuyen.value = calculateFlightTime(start, end)
-    return
-    }
-
-    isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-    const url = `https://api.openrouteservice.org/v2/directions/${selectedTransport.value}?api_key=${apiKey}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`;
-  
-    try {
-      const response = await axios.get(url);
-      if (response.data.features && response.data.features.length > 0) {
-        const route = response.data.features[0];
-         const coordinates  = response.data.features[0].geometry.coordinates.map(coord => ({
-          lat: coord[1],
-          lng: coord[0]
-        }));
-
-        routePath.value = coordinates
-        // Lấy khoảng cách (mét) và đổi sang km
-      routeDistance.value = route.properties.segments[0].distance / 1000;
-      showTimeDiChuyenKm.value = route.properties.segments[0].distance / 1000
-      showTimeDiChuyen.value = formatTime(route.properties.segments[0].duration)
-
-    //   const midIndex = Math.floor(coordinates.length / 2);
-    //   midPoint.value = coordinates[midIndex];
+// Chuyển địa chỉ thành tọa độ
+const geocodeAddress = async (address) => {
+  return new Promise((resolve, reject) => {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === "OK" && results.length > 0) {
+        const location = results[0].geometry.location;
+        resolve({ lat: location.lat(), lng: location.lng() });
       } else {
-        console.error("Không tìm thấy tuyến đường nào!");
-        routePath.value = []
-        routeDistance.value = null
+        console.error(`Không tìm thấy địa chỉ: ${address}`);
+        reject(status);
       }
-    } catch (error) {
-      console.error("Lỗi khi lấy đường đi:", error);
+    });
+  });
+};
+
+const searchHomeData = async (dataSearch) => {
+
+  searchAddressHome.value = dataSearch.name
+
+  if (!searchAddressHome.value) {
+    alert("Vui lòng nhập địa chỉ!");
+    return;
+  }
+
+  routePath.value = []
+      routeDistance.value = null
+
+  try {
+    const coordinates = await geocodeAddress(searchAddressHome.value);
+
+    // Cập nhật bản đồ
+    mapCenter.value = coordinates;
+    currentLocation.value = coordinates
+    zoomLevel.value = 15;
+
+    // Xóa ô input
+    searchAddressHome.value = "";
+  } catch (error) {
+    alert("Không tìm thấy địa chỉ, vui lòng thử lại!");
+  }
+}
+// Tìm kiếm địa chỉ mới
+const searchLocation = async (dataSearch) => {
+  searchAddress.value = dataSearch.name
+  console.log("Data Name ", dataSearch)
+  if (!searchAddress.value) {
+    alert("Vui lòng nhập địa chỉ!");
+    return;
+  }
+
+  try {
+    const coordinates = await geocodeAddress(searchAddress.value);
+
+    // Thêm địa chỉ mới vào danh sách
+    resolvedLocations.value.push({
+      address: searchAddress.value,
+      coordinates,
+    });
+
+    fetchOSMBoundary()
+    // Cập nhật bản đồ
+    mapCenter.value = coordinates;
+    zoomLevel.value = 15;
+
+    // Xóa ô input
+    searchAddress.value = "";
+    
+  } catch (error) {
+    alert("Không tìm thấy địa chỉ, vui lòng thử lại!");
+  }
+};
+
+// Tìm đường đến vị trí đã chọn
+const getDirections = async () => {
+  if (!selectedLocation.value) {
+    alert("Vui lòng chọn một địa điểm!");
+    return;
+  }
+
+  const start = currentLocation.value; // Bắt đầu từ vị trí hiện tại
+  const end = selectedLocation.value.coordinates; // Điểm đến đã chọn
+
+  if (selectedTransport.value === "airplane") {
+  // Tính khoảng cách đường bay
+  const distanceKm = haversineDistance(start.lat, start.lng, end.lat, end.lng);
+  routeDistance.value = distanceKm
+
+  // midPoint.value = {
+  //   lat: (start.lat + end.lat) / 2,
+  //   lng: (start.lng + end.lng) / 2,
+  // };
+
+  showTimeDiChuyen.value = calculateFlightTime(start, end)
+  return
+  }
+
+  isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
+  const url = `https://api.openrouteservice.org/v2/directions/${selectedTransport.value}?api_key=${apiKey}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`;
+
+  try {
+    const response = await axios.get(url);
+    if (response.data.features && response.data.features.length > 0) {
+      const route = response.data.features[0];
+       const coordinates  = response.data.features[0].geometry.coordinates.map(coord => ({
+        lat: coord[1],
+        lng: coord[0]
+      }));
+
+      routePath.value = coordinates
+      // Lấy khoảng cách (mét) và đổi sang km
+    routeDistance.value = route.properties.segments[0].distance / 1000;
+    showTimeDiChuyenKm.value = route.properties.segments[0].distance / 1000
+    showTimeDiChuyen.value = formatTime(route.properties.segments[0].duration)
+
+  //   const midIndex = Math.floor(coordinates.length / 2);
+  //   midPoint.value = coordinates[midIndex];
+    } else {
+      console.error("Không tìm thấy tuyến đường nào!");
       routePath.value = []
       routeDistance.value = null
     }
+  } catch (error) {
+    console.error("Lỗi khi lấy đường đi:", error);
+    routePath.value = []
+    routeDistance.value = null
+  }
 
-    isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
-  };
-
-  const calculateFlightTime = (start, end) => {
-  const radius = 6371; // Bán kính trái đất (km)
-  const lat1 = start.lat * (Math.PI / 180); // Chuyển đổi độ sang radian
-  const lat2 = end.lat * (Math.PI / 180); // Chuyển đổi độ sang radian
-  const deltaLat = (end.lat - start.lat) * (Math.PI / 180);
-  const deltaLon = (end.lng - start.lng) * (Math.PI / 180);
-
-  const a =
-    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) *
-    Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  const distance = radius * c; // Khoảng cách giữa hai điểm (km)
-  const flightSpeed = 900; // Tốc độ máy bay trung bình (km/h)
-  const flightTime = distance / flightSpeed; // Thời gian bay (giờ)
-
-  console.log(`Thời gian bay ước tính: ${flightTime.toFixed(2)} giờ`);
-
-  return flightTime.toFixed(2)
+  isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
 };
 
-  const formatTime = (seconds) => {
-  // Làm tròn giây để bỏ phần thập phân
-  const roundedSeconds = Math.floor(seconds); // Chỉ lấy phần nguyên của giây
+const calculateFlightTime = (start, end) => {
+const radius = 6371; // Bán kính trái đất (km)
+const lat1 = start.lat * (Math.PI / 180); // Chuyển đổi độ sang radian
+const lat2 = end.lat * (Math.PI / 180); // Chuyển đổi độ sang radian
+const deltaLat = (end.lat - start.lat) * (Math.PI / 180);
+const deltaLon = (end.lng - start.lng) * (Math.PI / 180);
 
-  // Tính toán giờ, phút, giây
-  const hours = Math.floor(roundedSeconds / 3600); // Lấy phần nguyên của số giờ
-  const minutes = Math.floor((roundedSeconds % 3600) / 60); // Lấy phần nguyên của phút
-  const remainingSeconds = roundedSeconds % 60; // Lấy phần dư còn lại là giây
+const a =
+  Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+  Math.cos(lat1) * Math.cos(lat2) *
+  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  // Đảm bảo hiển thị 2 chữ số cho giờ, phút, giây
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+const distance = radius * c; // Khoảng cách giữa hai điểm (km)
+const flightSpeed = 900; // Tốc độ máy bay trung bình (km/h)
+const flightTime = distance / flightSpeed; // Thời gian bay (giờ)
+
+console.log(`Thời gian bay ước tính: ${flightTime.toFixed(2)} giờ`);
+
+return flightTime.toFixed(2)
+};
+
+const formatTime = (seconds) => {
+// Làm tròn giây để bỏ phần thập phân
+const roundedSeconds = Math.floor(seconds); // Chỉ lấy phần nguyên của giây
+
+// Tính toán giờ, phút, giây
+const hours = Math.floor(roundedSeconds / 3600); // Lấy phần nguyên của số giờ
+const minutes = Math.floor((roundedSeconds % 3600) / 60); // Lấy phần nguyên của phút
+const remainingSeconds = roundedSeconds % 60; // Lấy phần dư còn lại là giây
+
+// Đảm bảo hiển thị 2 chữ số cho giờ, phút, giây
+return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
 // Lấy vị trí hiện tại của người dùng (Không tự động cập nhật lại vị trí khi người dùng di chuyển) có thể sử dụng "SetInterval" để kiểm tra liên tục vị trí hiện tại của người dùng
 const getCurrentLocation = () => {
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
+isLoading.value = true;
+document.body.classList.add("loading"); // Add Lớp "loading"
+document.body.style.overflow = "hidden";
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        currentLocation.value = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        mapCenter.value = currentLocation.value;
-      },
-      (error) => {
-        console.error("Lỗi khi lấy vị trí:", error);
-      }
-    );
-  }
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      currentLocation.value = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      mapCenter.value = currentLocation.value;
+    },
+    (error) => {
+      console.error("Lỗi khi lấy vị trí:", error);
+    }
+  );
+}
 
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
+isLoading.value = false;
+document.body.classList.remove("loading");
+document.body.style.overflow = "auto";
 };
+
+// Lấy vị trí hiện tại của người dùng (Tự động cập nhật lại vị trí khi người dùng di chuyển)
+// const getCurrentLocation = () => {
+//   if (navigator.geolocation) {
+//     navigator.geolocation.watchPosition(
+//       (position) => {
+//         currentLocation.value = {
+//           lat: position.coords.latitude,
+//           lng: position.coords.longitude,
+//         };
+//         mapCenter.value = currentLocation.value;
+//       },
+//       (error) => {
+//         console.error("Lỗi khi lấy vị trí:", error);
+//       },
+//       {
+//         enableHighAccuracy: true,
+//         timeout: 1000,   // Tăng thời gian timeout lên 10 giây
+//         maximumAge: 0     // Luôn cập nhật vị trí mới nhất
+//       }
+//     );
+//   }
+
   
-  // Lấy vị trí hiện tại của người dùng (Tự động cập nhật lại vị trí khi người dùng di chuyển)
-  // const getCurrentLocation = () => {
-  //   if (navigator.geolocation) {
-  //     navigator.geolocation.watchPosition(
-  //       (position) => {
-  //         currentLocation.value = {
-  //           lat: position.coords.latitude,
-  //           lng: position.coords.longitude,
-  //         };
-  //         mapCenter.value = currentLocation.value;
-  //       },
-  //       (error) => {
-  //         console.error("Lỗi khi lấy vị trí:", error);
-  //       },
-  //       {
-  //         enableHighAccuracy: true,
-  //         timeout: 1000,   // Tăng thời gian timeout lên 10 giây
-  //         maximumAge: 0     // Luôn cập nhật vị trí mới nhất
-  //       }
-  //     );
-  //   }
+// };
 
-    
-  // };
-
-  // Tính điểm giữa tuyến đường để hiển thị số km
+// Tính điểm giữa tuyến đường để hiển thị số km
 const midPoint = computed(() => {
-  if (!routePath.value.length) return null;
+if (!routePath.value.length) return null;
 
-  const midIndex = Math.floor(routePath.value.length / 2);
-  return routePath.value[midIndex];
+const midIndex = Math.floor(routePath.value.length / 2);
+return routePath.value[midIndex];
 });
-  
-  onMounted(() => {
-    findAllDataMap(valueE.value, page.value)
-    // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
-    startImageRotation()
-    loadData()
-    statusGiaoThong()
-    poiStart()
-  });
 
-  onUnmounted(() => {
-    // clearInterval(intervalId.value)
-    console.log("Hello World")
-  })
-  </script>
+onMounted(() => {
+  findAllDataMap(valueE.value, page.value)
+  // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
+  startImageRotation()
+  loadData()
+  statusGiaoThong()
+  poiStart()
+});
+
+onUnmounted(() => {
+  // clearInterval(intervalId.value)
+  console.log("Hello World")
+})
+</script>
 
 
 <style>
-  @keyframes thei1 {
-    0%{
-      transform: scale(1.1);
-      color: red;
-    }
-
-    50%{
-      transform: scale(1.2);
-      color: yellow;
-    }
-
-    100%{
-      transform: scale(1);
-      color: yellowgreen;
-    }
+@keyframes thei1 {
+  0%{
+    transform: scale(1.1);
+    color: red;
   }
 
-  @keyframes thei2 {
-    0%{
-      transform: scale(1.1);
-      color: blue;
-    }
-
-    50%{
-      transform: scale(1.2);
-      color: greenyellow;
-    }
-
-    100%{
-      transform: scale(1);
-      color: violet;
-    }
+  50%{
+    transform: scale(1.2);
+    color: yellow;
   }
+
+  100%{
+    transform: scale(1);
+    color: yellowgreen;
+  }
+}
+
+@keyframes thei2 {
+  0%{
+    transform: scale(1.1);
+    color: blue;
+  }
+
+  50%{
+    transform: scale(1.2);
+    color: greenyellow;
+  }
+
+  100%{
+    transform: scale(1);
+    color: violet;
+  }
+}
 </style>
 
-  <style scoped>
+<style scoped>
 .theme-selector label {
-  margin-right: 10px;
+margin-right: 10px;
 }
-  .range-container {
-    max-width: 600px;
-    margin: auto;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-    background: #f9f9f9;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  }
-  
-  .range-wrapper label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-  
-  .range-track {
-    position: relative;
-  }
-  
-  .styled-range {
-    width: 100%;
-    height: 8px;
-    appearance: none;
-    background: transparent;
-    position: relative;
-    z-index: 2;
-  }
-  
-  /* Custom track */
-  .styled-range::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 8px;
-    background: #ddd;
-    border-radius: 4px;
-    position: relative;
-  }
-  
-  .styled-range::-moz-range-track {
-    height: 8px;
-    background: #ddd;
-    border-radius: 4px;
-  }
-  
-  /* Custom thumb */
-  .styled-range::-webkit-slider-thumb {
-    appearance: none;
-    height: 20px;
-    width: 20px;
-    background: #4caf50;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    margin-top: -6px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    position: relative;
-    z-index: 3;
-  }
-  
-  .styled-range::-moz-range-thumb {
-    height: 20px;
-    width: 20px;
-    background: #4caf50;
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: pointer;
-    position: relative;
-    z-index: 3;
-  }
-  
-  /* Tick marks – simulate inside input */
-  .range-track::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 8px;
-    transform: translateY(-50%);
-    background-image: linear-gradient(to right,
-      transparent 0%,
-      transparent 24.5%,
-      #999 25%,
-      transparent 25.5%,
-      transparent 49.5%,
-      #999 50%,
-      transparent 50.5%,
-      transparent 74.5%,
-      #999 75%,
-      transparent 75.5%,
-      transparent 100%);
-    background-repeat: no-repeat;
-    z-index: 1000;
-    pointer-events: none;
-    border-radius: 4px;
-  }
+.range-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  background: #f9f9f9;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.range-wrapper label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.range-track {
+  position: relative;
+}
+
+.styled-range {
+  width: 100%;
+  height: 8px;
+  appearance: none;
+  background: transparent;
+  position: relative;
+  z-index: 2;
+}
+
+/* Custom track */
+.styled-range::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  background: #ddd;
+  border-radius: 4px;
+  position: relative;
+}
+
+.styled-range::-moz-range-track {
+  height: 8px;
+  background: #ddd;
+  border-radius: 4px;
+}
+
+/* Custom thumb */
+.styled-range::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: #4caf50;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  margin-top: -6px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
+}
+
+.styled-range::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: #4caf50;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
+}
+
+/* Tick marks – simulate inside input */
+.range-track::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 8px;
+  transform: translateY(-50%);
+  background-image: linear-gradient(to right,
+    transparent 0%,
+    transparent 24.5%,
+    #999 25%,
+    transparent 25.5%,
+    transparent 49.5%,
+    #999 50%,
+    transparent 50.5%,
+    transparent 74.5%,
+    #999 75%,
+    transparent 75.5%,
+    transparent 100%);
+  background-repeat: no-repeat;
+  z-index: 1000;
+  pointer-events: none;
+  border-radius: 4px;
+}
 /* Màn hình chờ */
 .loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  pointer-events: all; /* Kích hoạt lớp phủ ngăn tương tác */
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+justify-content: center;
+align-items: center;
+z-index: 1000;
+pointer-events: all; /* Kích hoạt lớp phủ ngăn tương tác */
 }
 
 /* Biểu tượng spinner */
 .spinner {
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+border: 4px solid #f3f3f3; /* Light grey */
+border-top: 4px solid #3498db; /* Blue */
+border-radius: 50%;
+width: 40px;
+height: 40px;
+animation: spin 1s linear infinite;
 }
 
 /* Hiệu ứng xoay */
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+0% {
+  transform: rotate(0deg);
+}
+100% {
+  transform: rotate(360deg);
+}
 }
 
 /* Ngăn người dùng thao tác khi đang load */
 body.loading {
-  pointer-events: none; /* Ngăn tất cả tương tác */
-  user-select: none; /* Ngăn chọn văn bản */
+pointer-events: none; /* Ngăn tất cả tương tác */
+user-select: none; /* Ngăn chọn văn bản */
 }
 
 .custom-marker {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%); /* Dịch chuyển tâm ảnh */
-  width: 40px;
-  height: 40px;
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%); /* Dịch chuyển tâm ảnh */
+width: 40px;
+height: 40px;
 }
 
 .custom-marker img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%; /* Bo tròn ảnh */
-  border: 2px solid white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+width: 100%;
+height: 100%;
+border-radius: 50%; /* Bo tròn ảnh */
+border: 2px solid white;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .marker-icon img {
-  border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+border-radius: 50%;
+border: 3px solid white;
+box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
-  /* CSS để hiển thị 2 nút trên bản đồ */
+/* CSS để hiển thị 2 nút trên bản đồ */
 .map-buttons {
-  z-index: 1000;
-  display: flex;
+z-index: 1000;
+display: flex;
 }
 
 .map-buttons button {
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-bottom: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 5px;
+background-color: white;
+border: 1px solid #ccc;
+padding: 10px;
+margin-bottom: 5px;
+cursor: pointer;
+font-weight: bold;
+border-radius: 5px;
 }
 
 .map-buttons button:hover {
-  background-color: #f0f0f0;
+background-color: #f0f0f0;
 }
 
 .image-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+background: rgba(0, 0, 0, 0.8);
+display: flex;
+justify-content: center;
+align-items: center;
+z-index: 1000;
 }
 
 .image-full {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.3s ease;
+max-width: 90%;
+max-height: 90%;
+border-radius: 8px;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+animation: fadeIn 0.3s ease;
 }
 </style>
 
-  

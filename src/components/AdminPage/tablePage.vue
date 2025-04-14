@@ -17,105 +17,191 @@
                     <h4 class="card-title">Basic Table</h4>
                     <p class="card-description"> Add class <code>.table</code>
                     </p>
-                    <div style="margin: 10px 0;">
+                    <div style="margin: 10px 0; display: flex;">
                         <div v-if="dataNewId.id != null" style="width: 550px; height: 200px; background-color: rgba(255, 255, 255, 0.4); border-radius: 10px;">
                             <div>
-            <div v-if="dataNewId.repairStatus == 0" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
-              <h4>category Code: {{ dataNewId.categoryCode }}</h4>
-              <div style="display: flex;">
-                <div>
-                    <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
-                    <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
-                    <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
-                </div>
-                <div>
-                    <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
-                    <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
-                    <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
-                </div>
-              </div>
-             
-            </div>
-            
-            <div v-if="dataNewId.repairStatus == 1" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
-                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
-                <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
-            </div>
-            <div>
-              <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
-                          <option value="0">尚未確認</option>
-                          <option value="1">已分配工程師</option>
-                          <option value="2">工程師正在維修中</option>
-                          <option value="3">已完成維修</option>
-                        </select>
+                            <div v-if="dataNewId.repairStatus == 0" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                              <h4>category Code: {{ dataNewId.categoryCode }}</h4>
+                              <div style="display: flex;">
+                                <div>
+                                    <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
+                                    <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
+                                    <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
+                                    <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
+                                    <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+                                    <div v-if="dataNewId.images.length > 0 && dataNewId.images != null">
+                                              <div  v-for="(image, indexImage) in dataNewId.images" :key="indexImage">
+                                                <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
+                                                <div v-if="image != null && getFileType(image) === 'video'" @click="expandVideo(image)">
+                                                  <video
+                                                @click="expandVideo(image)"
+                                                    autoplay
+                                                    muted
+                                                    loop
+                                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
+                                                    :src="image"
+                                                  />
+                                                </div>
+                                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                                              </div>
+                                            </div>
+                                  </div>
+                              </div>
+                            
+                            </div>
+                            
+                            <div v-if="dataNewId.repairStatus == 1" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
+                                <div style="display: flex;">
+                              <div>
+                              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
+                              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
+                              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
+                            </div>
+                            <div>
+                              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
+                              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
+                              <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+                              
+                            </div>
+                            <div>
+                              <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
+                                          <option value="0">尚未確認</option>
+                                          <option value="1">已分配工程師</option>
+                                          <option value="2">工程師正在維修中</option>
+                                          <option value="3">已完成維修</option>
+                                        </select>
 
-                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
-                          <option value="0">號誌正常</option>
-                          <option value="1">號誌設備故障</option>
-                          <option value="2">號誌停電</option>
-                        </select>
-                      </div>
-            </div>
-            </div>
+                                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
+                                          <option value="0">號誌正常</option>
+                                          <option value="1">號誌設備故障</option>
+                                          <option value="2">號誌停電</option>
+                                        </select>
+                                        <div v-if="dataNewId.images.length > 0 && dataNewId.images != null" style="display: flex;">
+                                              <div  v-for="(image, indexImage) in dataNewId.images" :key="indexImage">
+                                                <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
+                                                <div v-if="image != null && getFileType(image) === 'video'" @click="expandVideo(image)">
+                                                  <video
+                                                @click="expandVideo(image)"
+                                                    autoplay
+                                                    muted
+                                                    loop
+                                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
+                                                    :src="image"
+                                                  />
+                                                </div>
+                                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                                              </div>
+                                            </div>
+                                      </div>
 
-            <div v-if="dataNewId.repairStatus == 2" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
-                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
-                <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-            </div>
-            <div>
-              <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
-                          <option value="0">尚未確認</option>
-                          <option value="1">已分配工程師</option>
-                          <option value="2">工程師正在維修中</option>
-                          <option value="3">已完成維修</option>
-                        </select>
+                                      
+                            </div>
+                            </div>
 
-                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
-                          <option value="0">號誌正常</option>
-                          <option value="1">號誌設備故障</option>
-                          <option value="2">號誌停電</option>
-                        </select>
-            </div>
-            </div>
-              
-            </div>
+                            <div v-if="dataNewId.repairStatus == 2" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
+                                <div style="display: flex;">
+                              <div>
+                              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
+                              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
+                              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
+                            </div>
+                            <div>
+                              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
+                              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
+                              <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
+                            </div>
+                            <div>
+                              <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
+                                          <option value="0">尚未確認</option>
+                                          <option value="1">已分配工程師</option>
+                                          <option value="2">工程師正在維修中</option>
+                                          <option value="3">已完成維修</option>
+                                        </select>
 
-            <div v-if="dataNewId.repairStatus == 3" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
-                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
-                <div style="display: flex;">
-              <div>
-              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
-              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
-              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
-            </div>
-            <div>
-              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
-              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
-              <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
-            </div>
-            </div>
-              
-            </div>
-          </div>
+                                        <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
+                                          <option value="0">號誌正常</option>
+                                          <option value="1">號誌設備故障</option>
+                                          <option value="2">號誌停電</option>
+                                        </select>
+
+                                        <div v-if="dataNewId.images.length > 0 && dataNewId.images != null" style="display: flex; margin: 0 50px;">
+                                              <div  v-for="(image, indexImage) in dataNewId.images" :key="indexImage">
+                                                <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
+                                                <div v-if="image != null && getFileType(image) === 'video'" @click="expandVideo(image)">
+                                                  <video
+                                                @click="expandVideo(image)"
+                                                    autoplay
+                                                    muted
+                                                    loop
+                                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
+                                                    :src="image"
+                                                  />
+                                                </div>
+                                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                                              </div>
+                                            </div>
+                            </div>
+                            </div>
+                              
+                            </div>
+
+                            <div v-if="dataNewId.repairStatus == 3" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                                <h4>category Code: {{ dataNewId.categoryCode }}</h4>
+                                <div style="display: flex;">
+                              <div>
+                              <p style="font-size: 12px;">IdentificationCode: <strong>{{ dataNewId.identificationCode }}</strong></p>
+                              <p style="font-size: 12px;">Lat: <strong>{{ dataNewId.lat }}</strong></p>
+                              <p style="font-size: 12px;">Lng: <strong>{{ dataNewId.log }}</strong></p>
+                            </div>
+                            <div>
+                              <p style="font-size: 12px;">signal Number: <strong>{{ dataNewId.signalNumber }}</strong></p>
+                              <p style="font-size: 12px;">Types Of Signal: <strong>{{ dataNewId.typesOfSignal }}</strong></p>
+                              <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+                              <div v-if="dataNewId.images.length > 0 && dataNewId.images != null">
+                                              <div  v-for="(image, indexImage) in dataNewId.images" :key="indexImage">
+                                                <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
+                                                <div v-if="image != null && getFileType(image) === 'video'" @click="expandVideo(image)">
+                                                  <video
+                                                @click="expandVideo(image)"
+                                                    autoplay
+                                                    muted
+                                                    loop
+                                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
+                                                    :src="image"
+                                                  />
+                                                </div>
+                                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                                              </div>
+                                            </div>
+                            </div>
+                            </div>
+                              
+                            </div>
+                          </div>
+
+                          
                         </div>
+
+                        <div>
+                            <GMapMap
+                                ref="mapRefs"
+                                :center="mapCenter"
+                                :zoom="zoomLevel"
+                                style="width: 500px; height: 200px; border-radius: 10px; margin-left: 30px;"
+                                :options="mapOptions"
+                              >
+                              <GMapMarker :position="userLocation" />
+                            </GMapMap>
+                          </div>
                     </div>
                   </div>
                 </div>
@@ -155,6 +241,23 @@
                               {{ item.log }}
                             </td>
                             <td style="color: white;"> {{ item.managementUnit }} </td>
+                            <td v-if="item.images.length > 0 && item.images != null">
+                              <div  v-for="(image, indexImage) in item.images" :key="indexImage">
+                                <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
+                                <div v-if="image != null && getFileType(image) === 'video'" @click="expandVideo(image)">
+                                  <video
+                                @click="expandVideo(image)"
+                                    autoplay
+                                    muted
+                                    loop
+                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
+                                    :src="image"
+                                  />
+                                </div>
+                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
+                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
+                              </div>
+                            </td>
                             <td style="color: white;"> {{ item.signalNumber }} </td>
                             <td style="color: white;"> {{ item.user_name }} </td>
                             <td style="color: white;"> 
@@ -207,6 +310,19 @@
                           </tr>
                         </tbody>
                       </table>
+
+                      <div v-if="expandedIndex !== null && getFileType(expandedIndex) === 'video'" class="modal-overlay" @click="closeModal">
+                          <div class="modal-content">
+                            <video v-if="getFileType(expandedIndex) === 'video'" :src="expandedIndex" controls></video>
+                          </div>
+                        </div>
+
+                       <!-- Modal khi phóng to video -->
+                        <div v-else-if="expandedIndex !== null && getFileType(expandedIndex) === 'image'" style="width: 500px; margin: 0 auto; top: 50%; left: 50%; transform: translate(-50%, -50%);" class="modal-overlay" @click="closeModal">
+                          <div class="modal-content">
+                            <img v-if=" getFileType(expandedIndex) === 'image'" :src="expandedIndex" alt="">
+                          </div>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -233,7 +349,19 @@
   const pageSize = ref(5)
   const dataLoadStart = ref([])
   const locations = ref([])
+  const userLocation = ref(null)
+  const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
+  const zoomLevel = ref(21);
   const store = useCounterStore();
+  const mapOptions = {
+  mapTypeId: 'satellite',
+  disableDefaultUI: true,
+  draggable: false,
+  zoomControl: false,
+  scrollwheel: false,
+  disableDoubleClickZoom: true,
+  keyboardShortcuts: false,
+}
 
   const dataNewId = ref({})
   onMounted(() => {
@@ -247,7 +375,28 @@
 const { proxy } = getCurrentInstance();
 const hostName = proxy?.hostname;
 const isLoading = ref(false)
+const expandedIndex = ref(null);
 
+// Mở modal phóng to video
+const expandVideo = (index) => {
+  expandedIndex.value = index;
+};
+
+// Đóng modal
+const closeModal = () => {
+  expandedIndex.value = null;
+};
+const getFileType = (url) => {
+  const extension = url.split('.').pop().toLowerCase()
+
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) return 'image'
+  if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video'
+  if (['pdf'].includes(extension)) return 'pdf'
+  if (['doc', 'docx'].includes(extension)) return 'word'
+  if (['xls', 'xlsx'].includes(extension)) return 'excel'
+
+  return 'other'
+}
 const updateDataStatus = async (id) => {
   isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
@@ -274,8 +423,14 @@ const updateData = async (id) => {
   const res = await axios.get(hostName + `/api/RepairDetails/FindOneId?id=${id}`, getToken())
   if(res.data.success){
     dataNewId.value = res.data.content
+    userLocation.value = {
+        lat: dataNewId.value.lat,
+        lng: dataNewId.value.log,
+      }
 
-    console.log(dataNewId.value)
+       mapCenter.value = { lat: dataNewId.value.lat, lng: dataNewId.value.log };
+
+       console.log("Data Id", dataNewId.value)
   }
 
   isLoading.value = false;
@@ -338,6 +493,53 @@ const findAllDataMap = async (searchData, pageData) => {
 </script>
 
 <style scoped>
+.video-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.modal-content video {
+  width: 80vw;
+  height: auto;
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.modal-content img {
+  width: 50vw;
+  height: auto;
+  max-width: 100%;
+  max-height: 50vh;
+}
+
+video {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+
 /* Màn hình chờ */
 .loading-overlay {
   position: fixed;
