@@ -16,6 +16,7 @@
       map-type-id="roadmap"
       @zoom_changed="onZoomChanged"
       @center_changed="onCenterChanged"
+      @idle="onIdle"
     >
 
     <GMapTrafficLayer />
@@ -80,11 +81,9 @@
   <!-- Marker cho tất cả vị trí tìm kiếm được -->
    <div v-for="(location, index) in locations" :key="index">
     <div v-if="zoomLevel >= 13">
-    <div v-if="location.isError">
+    <div v-if="location.isError && showMarkers">
       <GMapMarker
-      v-if="location.statusError == 0"
-        :position="location.coordinates"
-        :label="location.address"
+      v-if="location.statusError == 0 && showMarkers"
         @click="showInfo(location.coordinates.lat)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
@@ -96,7 +95,7 @@
         class="marker-icon"
       >
           <!-- Hiển thị thông tin khi bấm vào marker -->
-
+<!--
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                   :options="{ maxWidth: 250 }"
@@ -141,12 +140,11 @@
                       <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                     </div>
                   </GMapInfoWindow>
-     
+                -->
   </GMapMarker>
       <GMapMarker
-      v-if="location.statusError == 1"
+      v-if="location.statusError == 1 && showMarkers"
         :position="location.coordinates"
-        :label="location.address"
         @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
@@ -158,7 +156,7 @@
         class="marker-icon"
       >
           <!-- Hiển thị thông tin khi bấm vào marker -->
-
+          <!--
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                   :options="{ maxWidth: 250 }"
@@ -203,12 +201,11 @@
                       <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                     </div>
                   </GMapInfoWindow>
-     
+                -->
   </GMapMarker>
   <GMapMarker
-      v-if="location.statusError == 2"
+      v-if="location.statusError == 2 && showMarkers"
         :position="location.coordinates"
-        :label="location.address"
         @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
@@ -221,6 +218,7 @@
       >
           <!-- Hiển thị thông tin khi bấm vào marker -->
 
+          <!--
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                   :options="{ maxWidth: 250 }"
@@ -266,13 +264,13 @@
                       <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                     </div>
                   </GMapInfoWindow>
+                -->
      
   </GMapMarker>
 
   <GMapMarker
-      v-if="location.statusError == 3"
+      v-if="location.statusError == 3 && showMarkers"
         :position="location.coordinates"
-        :label="location.address"
         @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
@@ -282,6 +280,7 @@
         }"
         class="marker-icon"
       >
+      <!--
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                   :options="{ maxWidth: 250 }"
@@ -327,13 +326,14 @@
                       <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                     </div>
                   </GMapInfoWindow>
+                -->
      
   </GMapMarker>
     </div>
     <div v-else>
       <GMapMarker
+        v-if="showMarkers"
         :position="location.coordinates"
-        :label="location.managementUnit"
         @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
@@ -346,6 +346,7 @@
       >
           <!-- Hiển thị thông tin khi bấm vào marker -->
 
+          <!--
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
                   :options="{ maxWidth: 250 }"
@@ -389,6 +390,7 @@
                       <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
                     </div>
                   </GMapInfoWindow>
+                -->
      
   </GMapMarker>
     </div>
@@ -780,6 +782,7 @@
           <div>
             <p style="font-size: 16px;">IdentificationCode: <strong>{{ dataLocation?.identificationCode }}</strong></p>
             <p style="font-size: 16px;">Types Of Signal: <strong>{{ dataLocation?.typesOfSignal }}</strong></p>
+            <p style="font-size: 10px;">Types Of Signal: <strong>{{ dataLocation?.managementUnit }}</strong></p>
             </div>
 
             <div style="margin: 0 15px;">
@@ -851,7 +854,9 @@ import PagesTotal from "./PageList/PagesTotal.vue";
 import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
 import { useRouter } from "vue-router";
 import {useCounterStore} from '../store'
+import { useDebounceFn } from '@vueuse/core' // Giúp debounce dễ hơn
 
+const showMarkers = ref(false)
 // Vị trí trung tâm bản đồ (Hồ Chí Minh)
 const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
 const zoomLevel = ref(6);
@@ -3682,42 +3687,37 @@ centerChangeTimeout = setTimeout(() => {
 
     // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
     if (
-      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.001 ||
-      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.001
+      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.01 ||
+      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.01
     ) {
-      mapCenter.value = { lat: center.lat(), lng: center.lng() };
+      // mapCenter.value = { lat: center.lat(), lng: center.lng() };
       onZoomChanged()
       console.log("Cập nhật vị trí:", mapCenter.value);
     }
   }
-}, 300); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
+}, 500); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
   }
 const onZoomChanged = () => {
 zoomLevel.value = mapRefs.value.$mapObject.getZoom();
-mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+const center = mapRefs.value.$mapObject.getCenter();
+const newCenter = { lat: center.lat(), lng: center.lng() };
 
-  if (zoomLevel.value < 13) {
+    // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
+    if (
+      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.01 ||
+      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.01
+    ) {
+      mapCenter.value = { lat: center.lat(), lng: center.lng() };
+
+      if (zoomLevel.value < 13) {
     // Khi thu nhỏ bản đồ -> chỉ hiển thị các Quận
     locations.value = TaiNanCenter.value;
   } else {
     // Nếu zoom >= 18 thì cập nhật danh sách điểm
     if (zoomLevel.value >= 13) {
-      // mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-      // locations.value = dataLoadStart.value.filter((location) => {
-      //   const distance = getDistance(
-      //     mapCenter.value.lat,
-      //     mapCenter.value.lng,
-      //     location.coordinates.lat,
-      //     location.coordinates.lng
-      //   );
-      //   console.log(distance)
-      //   return distance <= 1; // Lấy các điểm trong bán kính 1km
-      // });
-
-      // console.log(locations.value)
       if(btnSearch.value == null){
+      
        // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
-       mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
       locations.value = dataLoadStart.value.filter((location) => {
         const distance = getDistance(
           mapCenter.value.lat,
@@ -3729,8 +3729,7 @@ mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs
         return distance <= 1; // Lấy các điểm trong bán kính 1km
       });
      }
-
-     else{
+      else{
        if(btnSearch.value == 'b1s'){
          searchStatus1(btnSearch.value)
        }else if(btnSearch.value == 'b2s'){
@@ -3743,37 +3742,28 @@ mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs
          searchStatus5(btnSearch.value)
        }
       }
+
     } else {
       locations.value = []; // Nếu zoom < 18 thì ẩn hết điểm
     }
-    //  if(btnSearch.value == null){
-    //    // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
-    //    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
-    //   locations.value = dataLoadStart.value.filter((location) => {
-    //     const distance = getDistance(
-    //       mapCenter.value.lat,
-    //       mapCenter.value.lng,
-    //       location.coordinates.lat,
-    //       location.coordinates.lng
-    //     );
-    //     console.log(distance)
-    //     return distance <= 1; // Lấy các điểm trong bán kính 1km
-    //   });
-    //  }else{
-    //    if(btnSearch.value == 'b1s'){
-    //      searchStatus1(btnSearch.value)
-    //    }else if(btnSearch.value == 'b2s'){
-    //      searchStatus2(btnSearch.value)
-    //    }else if(btnSearch.value == 'b3s'){
-    //      searchStatus3(btnSearch.value)
-    //    }else if(btnSearch.value == 'b4s'){
-    //      searchStatus4(btnSearch.value)
-    //    }else if(btnSearch.value == 'b5s'){
-    //      searchStatus5(btnSearch.value)
-    //    }
-    //  }
+    }
+
+  
         
   }
+
+  showMarkers.value = false
+  debounceZoomEnd() // Gọi debounce để chờ người dùng ngưng zoom
+}
+
+// Debounce khoảng 500ms
+const debounceZoomEnd = useDebounceFn(() => {
+  showMarkers.value = true
+}, 500)
+
+// Hoặc bạn có thể dùng event `idle` nếu bạn chỉ muốn hiển thị data khi map dừng di chuyển/zoom hẳn:
+const onIdle = () => {
+  showMarkers.value = true
 }
 
 const zoomData = (data) => {
