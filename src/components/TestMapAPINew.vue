@@ -796,9 +796,9 @@ const mapOptions = {
             <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i>
             
             </p>
-            <p v-else-if="dataLocation != null && dataLocation.statusError == 1 && dataLocation?.isError" style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
+            <p v-else-if="dataLocation != null && dataLocation.statusError == 1 && dataLocation?.isError" style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
             <p v-else-if="dataLocation != null && dataLocation.statusError == 2 && dataLocation?.isError" style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-            <p v-else-if="dataLocation != null && dataLocation.statusError == 3 && dataLocation?.isError" style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
+            <p v-else-if="dataLocation != null && dataLocation.statusError == 3 && dataLocation?.isError" style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
             <p v-else-if="dataLocation != null && !dataLocation?.isError" style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
             </div>
           <div style="margin: 10px 0;">
