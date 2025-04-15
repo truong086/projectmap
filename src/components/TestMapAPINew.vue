@@ -80,11 +80,12 @@
   </GMapMarker>
   <!-- Marker cho tất cả vị trí tìm kiếm được -->
    <div v-for="(location, index) in locations" :key="index">
-    <div v-if="zoomLevel >= 13">
-    <div v-if="location.isError && showMarkers">
+    <div v-if="zoomLevel >= 13 && showMarkers">
+    <div v-if="location.isError">
       <GMapMarker
       v-if="location.statusError == 0 && showMarkers"
-        @click="showInfo(location.coordinates.lat)"
+      :position="location.coordinates"
+        @click="showInfo(location.coordinates.lat, location)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status0,
@@ -394,9 +395,6 @@
      
   </GMapMarker>
     </div>
-      
-
-    
    </div>
    <GMapMarker
         v-if="location.status == 4"
@@ -4001,10 +3999,6 @@ return locations.value
 }
 
 const searchStatus5 = async (classData) => {
-isLoading.value = true;
-document.body.classList.add("loading"); // Add Lớp "loading"
-document.body.style.overflow = "hidden";
-
 // if(btnSearch.value != null)
 //   document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
   
@@ -4027,9 +4021,6 @@ if(res.data.success){
 // routePath.value = []
 // routeDistance.value = null
 
-isLoading.value = false;
-document.body.classList.remove("loading");
-document.body.style.overflow = "auto";
 return locations.value
 }
 
