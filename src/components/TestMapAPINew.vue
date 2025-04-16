@@ -901,7 +901,7 @@ const mapOptions = {
         <h3>輸入半徑 (Km)</h3>
         <input style="padding: 5px 5px; outline: none;" type="number" v-model.number="inputValue" min="0" placeholder="輸入半徑..." />
         <div style="display: flex;">
-          <button style="padding: 5px 25px; margin: 0 10px; outline: none; border: none;" @click="submitInput">Gửi</button>
+          <button style="padding: 5px 25px; margin: 0 10px; outline: none; border: none;" @click="submitInput">Send</button>
           <button style="padding: 5px 25px; outline: none; border: none;" @click="showInput = false">Canl</button>
           </div>
         
@@ -3660,8 +3660,13 @@ const submitInput = () => {
         console.log(distance)
         return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
       });
+
+      if(classI.value != null)
+          document.querySelector("." + classI.value).style.boxShadow = "none"
+
   zoomLevel.value = 13
   classI.value = null
+  btnSearch.value = null
   showInput.value = false
 }
 
@@ -3793,6 +3798,7 @@ let centerChangeTimeout = null;
     if (centerChangeTimeout) clearTimeout(centerChangeTimeout);
 
 centerChangeTimeout = setTimeout(() => {
+showDistanceList.value = false
   if (mapRefs.value) {
     const center = mapRefs.value.$mapObject.getCenter();
     const newCenter = { lat: center.lat(), lng: center.lng() };
@@ -4061,9 +4067,6 @@ const marker1 = ref({
 });
 
 const searchStatus1 = async (classData) => {
-isLoading.value = true;
-document.body.classList.add("loading"); // Add Lớp "loading"
-document.body.style.overflow = "hidden";
 
 // if(btnSearch.value != null)
 //   document.querySelector("." + btnSearch.value).style.backgroundColor = 'white'
@@ -4086,9 +4089,6 @@ if(res.data.success){
 
 // routePath.value = []
 // routeDistance.value = null
-isLoading.value = false;
-document.body.classList.remove("loading");
-document.body.style.overflow = "auto";
 
 return locations.value
 }
