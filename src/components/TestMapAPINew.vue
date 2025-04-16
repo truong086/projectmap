@@ -2574,7 +2574,7 @@ stylers: [
   ]
 }
 ],
-    Aubergine: [
+Aubergine: [
 {
   elementType: "geometry",
   stylers: [
@@ -3430,7 +3430,185 @@ if(findOneData != null){
       checkDataPoiOptions("", "labels", "on")
       checkDataPoiOptions("road.arterial", "labels", "on")
     }
-}else{
+}else if(selectedTheme.value == "Aubergine"){
+  if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road", "", "off")
+    }
+    else if(data == 0 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "off")
+      checkDataPoiOptions("road.highway", "labels", "off")
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("road.arterial", "", "off")
+      checkDataPoiOptions("road", "", "off")
+    }
+    else if(data == 4 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road", "", "on")
+    }
+    else if(sonumber.value < data && data !== 0 && data == 1 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+    }
+    else if(sonumber.value < data && data !== 0 && data == 2 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+    }
+    else if(sonumber.value < data && data !== 0 && data == 3 && index == 0){
+      checkDataPoiOptions("road.arterial", "labels", "on")
+      checkDataPoiOptions("road.highway", "labels", "on")
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("road.arterial", "", "on")
+      checkDataPoiOptions("road", "", "on")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 3 && index == 1){
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 2 && index == 1){
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("transit", "labels.text", "off")
+      checkDataPoiOptions("road", "labels.text", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+    }
+    else if(sonumber.value > data && data !== 0 && data == 1 && index == 1){
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("transit", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+      checkDataPoiOptions("road", "labels.text", "off")
+      checkDataPoiOptions("road", "labels.icon", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("poi", "", "off")
+      checkDataPoiOptions("administrative", "labels.text", "off")
+    }
+    else if(data == 0 && index == 1){
+      checkDataPoiOptions("poi.business", "", "off")
+      checkDataPoiOptions("poi.park", "labels.text", "off")
+      checkDataPoiOptions("transit", "labels.text", "off")
+      checkDataPoiOptions("transit", "", "off")
+      checkDataPoiOptions("road", "labels.text", "off")
+      checkDataPoiOptions("road", "labels.icon", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("poi", "", "off")
+      checkDataPoiOptions("administrative", "labels.text", "off")
+    }
+    else if(data == 4 && index == 1){
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("transit", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("road", "labels.text", "on")
+      checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("poi", "", "on")
+      checkDataPoiOptions("administrative", "labels.text", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 1){
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 1){
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("transit", "labels.text", "on")
+      checkDataPoiOptions("road", "labels.text", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 1){
+      checkDataPoiOptions("poi.business", "", "on")
+      checkDataPoiOptions("poi.park", "labels.text", "on")
+      checkDataPoiOptions("transit", "labels.text", "on")
+      checkDataPoiOptions("transit", "", "on")
+      checkDataPoiOptions("road", "labels.text", "on")
+      checkDataPoiOptions("road", "labels.icon", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("poi", "", "on")
+      checkDataPoiOptions("administrative", "labels.text", "on")
+    }else if(sonumber.value > data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+    }else if(sonumber.value > data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+    }else if(sonumber.value > data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+      checkDataPoiOptions("", "labels", "off")
+    }else if( data == 0 && index == 2){
+      checkDataPoiOptions("road.local", "", "off")
+      checkDataPoiOptions("poi", "labels.text", "off")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "off")
+      checkDataPoiOptions("administrative.land_parcel", "", "off")
+      checkDataPoiOptions("administrative.neighborhood", "", "off")
+      checkDataPoiOptions("road", "labels", "off")
+      checkDataPoiOptions("water", "labels.text", "off")
+      checkDataPoiOptions("", "labels", "off")
+    }
+    else if( data == 4 && index == 2){
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("", "labels", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 1 && index == 2){
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 2 && index == 2){
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+    }else if(sonumber.value < data && data !== 0 && data == 3 && index == 2){
+      checkDataPoiOptions("road.local", "", "on")
+      checkDataPoiOptions("poi", "labels.text", "on")
+      checkDataPoiOptions("administrative.land_parcel", "labels", "on")
+      checkDataPoiOptions("administrative.land_parcel", "", "on")
+      checkDataPoiOptions("administrative.neighborhood", "", "on")
+      checkDataPoiOptions("road", "labels", "on")
+      checkDataPoiOptions("water", "labels.text", "on")
+      checkDataPoiOptions("", "labels", "on")
+    }
+}
+
+else{
+  console.log("Select Name", selectedTheme.value)
   if(sonumber.value > data && data !== 0 && data == 3 && index == 0){
     checkDataPoiOptions("", "labels.icon", "off")
     checkDataPoiOptions("road.local", "", "off")
