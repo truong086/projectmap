@@ -4429,6 +4429,10 @@ classBtnOld.value = null
 selectedMarker.value = index;
 dataLocation.value = data
   showDetails.value = true
+  showDistanceList.value = true
+  mapCenter.value = data.coordinates
+  zoomLevel.value = 18
+  
 };
 
 const clickDataLocation = (location, type, classData) => {
