@@ -4313,7 +4313,7 @@ const showDataMap = (location, data) => {
 mapCenter.value = location
   // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
   mapCenter.value = location
-  zoomLevel.value = 15
+  // zoomLevel.value = 15
   selectedMarker.value = location.lat
   showDistanceList.value = true
 
