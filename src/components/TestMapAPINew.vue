@@ -1157,11 +1157,16 @@ const mapOptions = {
   </div>
    
   <div class="marquee-container" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%);" v-if="zoomLevel < 13">
+    <!--
     <div :class="['marquee-text', { paused: isPaused }]" style="color: red; font-weight: bold; font-size: 18px;">
-      大家好，請放大。
+      此縮放等級無法顯示號誌
     </div>
-
-    <button style="outline: none; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer;" @click="togglePause">{{ isPaused ? 'Run' : 'Stop' }}</button>
+  -->
+    <div :class="['marquee-text']" style="color: red; font-weight: bold; font-size: 18px;">
+      此縮放等級無法顯示號誌
+    </div>
+<!--
+    <button style="outline: none; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer;" @click="togglePause">{{ isPaused ? 'Run' : 'Stop' }}</button>-->
   </div>
   <div v-if="selectedImage" class="image-modal" @click.self="closeImage">
     <div v-if="getFileType(selectedImage) === 'image'">
@@ -1253,11 +1258,11 @@ const inputValue = ref(0)
 const dataSelect = ref(null)
 const showDetails = ref(false)
 
-const isPaused = ref(false)
+// const isPaused = ref(true)
 
-const togglePause = () => {
-  isPaused.value = !isPaused.value
-}
+// const togglePause = () => {
+//   isPaused.value = !isPaused.value
+// }
 const timkiemDataRoad = () => {
   if(!valueE.value){
     btnSearch.value = null
@@ -5130,7 +5135,7 @@ onUnmounted(() => {
 
 <style scoped>
 .marquee-container {
-  width: 30%;
+  width: 20%;
   overflow: hidden;
   background: white;
   border: 1px solid black;
@@ -5141,8 +5146,8 @@ onUnmounted(() => {
 .marquee-text {
   display: inline-block;
   white-space: nowrap;
-  padding-left: 100%;
-  animation: marquee 10s linear infinite;
+  /*padding-left: 100%;
+   animation: marquee 10s linear infinite; */
 }
 
 .paused {
