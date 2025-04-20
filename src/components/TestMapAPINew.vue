@@ -93,7 +93,12 @@ const mapOptions = {
       <GMapMarker
       v-if="location.statusError == 0 && showMarkers"
       :position="location.coordinates"
-        @click="showInfo(location.coordinates.lat, location)"
+        @click="showInfo(location.coordinates.lat, location, 
+        'status0_' + location.id + '_' + index, 
+        'div0_' + location.id + '_' + index, 
+        'divchu0_' + location.id + '_' + index, 
+        'details_' + location.id + '_' + index,
+        location.id, index)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status0,
@@ -119,7 +124,12 @@ const mapOptions = {
       <GMapMarker
       v-if="location.statusError == 1 && showMarkers"
         :position="location.coordinates"
-        @click="showInfo(location.coordinates.lat, location)"
+        @click="showInfo(location.coordinates.lat, location, 
+        'status1_' + location.id + '_' + index, 
+        'div1_' + location.id + '_' + index, 
+        'divchu1_' + location.id + '_' + index, 
+        'details1_' + location.id + '_' + index,
+        location.id, index)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1s,
@@ -190,7 +200,12 @@ const mapOptions = {
   <GMapMarker
       v-if="location.statusError == 2 && showMarkers"
         :position="location.coordinates"
-        @click="showInfo(location.coordinates.lat, location)"
+        @click="showInfo(location.coordinates.lat, location, 
+        'status2_' + location.id + '_' + index, 
+        'div2_' + location.id + '_' + index, 
+        'divchu2_' + location.id + '_' + index, 
+        'details2_' + location.id + '_' + index,
+        location.id, index)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status2,
@@ -266,7 +281,12 @@ const mapOptions = {
   <GMapMarker
       v-if="location.statusError == 3 && showMarkers"
         :position="location.coordinates"
-        @click="showInfo(location.coordinates.lat, location)"
+        @click="showInfo(location.coordinates.lat, location, 
+        'status3_' + location.id + '_' + index, 
+        'div3_' + location.id + '_' + index, 
+        'divchu3_' + location.id + '_' + index, 
+        'details3_' + location.id + '_' + index,
+        location.id, index)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status3,
@@ -339,7 +359,12 @@ const mapOptions = {
       <GMapMarker
         v-if="showMarkers"
         :position="location.coordinates"
-        @click="showInfo(location.coordinates.lat, location)"
+        @click="showInfo(location.coordinates.lat, location, 
+        'status4_' + location.id + '_' + index, 
+        'div4_' + location.id + '_' + index, 
+        'divchu4_' + location.id + '_' + index, 
+        'details4_' + location.id + '_' + index,
+        location.id, index)"
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1,
@@ -569,7 +594,7 @@ const mapOptions = {
       
         <div style="margin: 10px 0; padding: 10px; width: 400px; height: 550px; overflow: auto; background-color: #D3D3D3; top: 100px; right: 10px; border-radius: 10px;">
       <div v-if="zoomLevel >= 13">
-        <div v-for="(location, index) in locations" :key="index">
+        <div v-for="(location, index) in locations" :key="index" :ref="el => setItemRef(location.id, index, el)">
         <div v-if="location.isError">
           <div v-if="location.statusError == 0" :class="'div0_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
             cursor: 'pointer',
@@ -1263,6 +1288,23 @@ const showDetails = ref(false)
 // const togglePause = () => {
 //   isPaused.value = !isPaused.value
 // }
+
+const itemRefs = ref({}) // lưu ref theo id_index
+
+const setItemRef = (id, index, el) =>{
+  if (el) {
+    itemRefs.value[`${id}_${index}`] = el
+  }
+}
+
+const scrollToItem = (id, index) => {
+  const key = `${id}_${index}`
+  const el = itemRefs.value[key]
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 const timkiemDataRoad = () => {
   if(!valueE.value){
     btnSearch.value = null
@@ -4805,15 +4847,17 @@ const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 return R * c;
 };
 // Khi click vào marker, hiển thị thông tin
-const showInfo = (index, data) => {
+const showInfo = (index, data, classData, classDiv, classChu, divcon, locationId, indexId) => {
 classBtnOld.value = null
 selectedMarker.value = index;
 dataLocation.value = data
   showDetails.value = true
   showDistanceList.value = true
   mapCenter.value = data.coordinates
-  zoomLevel.value = 18
+  // zoomLevel.value = 18
   
+  showDataChon(classData, classDiv, classChu, divcon)
+  scrollToItem(locationId, indexId)
 };
 
 const clickDataLocation = (location, type, classData) => {
@@ -4827,6 +4871,7 @@ const clickDataLocation = (location, type, classData) => {
 
   classBtnOld.value = classData
   getDirections()
+  
 }
 // Chuyển địa chỉ thành tọa độ
 const geocodeAddress = async (address) => {
