@@ -55,6 +55,7 @@ const mapOptions = {
 </div>
     
       <!-- Marker cho tất cả vị trí tìm kiếm được -->
+      
       <GMapMarker
         v-for="(location, index) in resolvedLocations"
         :key="index"
@@ -114,6 +115,7 @@ const mapOptions = {
                     </div>
                   </GMapInfoWindow>
   </GMapMarker>
+
       <GMapMarker
       v-if="location.statusError == 1 && showMarkers"
         :position="location.coordinates"
@@ -408,6 +410,7 @@ const mapOptions = {
   </GMapMarker>
     </div>
    </div>
+   <!--
    <GMapMarker
         v-if="location.status == 4"
           :position="location.coordinates"
@@ -424,6 +427,7 @@ const mapOptions = {
         >
       
     </GMapMarker>
+  -->
   </div>
       <!-- Marker cho vị trí hiện tại -->
       <GMapMarker
@@ -510,20 +514,26 @@ const mapOptions = {
 
           </div>
         </div>
-    <div v-if="isShowHome" :style="'width: ' + isCheckShow == 1 ? '500' : '380' + 'px'" style="display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1000; left: 82px; top: 0; background-color: #F0F8FF; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
+    <div v-if="isShowHome" :style="{
+    display: 'flex',
+    position: 'absolute',
+    overflow: 'auto',
+    height: '100%',
+    zIndex: 1000,
+    left: '82px',
+    top: '0',
+    borderTopRightRadius: '10px',
+    borderBottomRightRadius: '10px',
+    width: isCheckShow === 1 ? '450px' : '380px',
+    backgroundColor: isCheckShow === 1 ? '#D3D3D3' : '#F0F8FF'
+  }">
       <div>
       <div v-if="isCheckShow == 1">
-        <div style="text-align: left; padding-left: 55px; margin-top: 20px;">
-          <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
+        <div style="text-align: left; padding-left: 55px; margin: 0 auto; width: 80%; border-bottom: 2px solid black;">
+          <div style="margin-top: 20px;">
+            <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
           <p style="font-weight: bold; opacity: 0.8;">Search Data</p>
-          
-          </div>
-        <!-- Nút trong bản đồ -->
-     <div class="map-buttons" style="display: flex; flex-direction: column; z-index: 1000; margin: 10px 15px;">
-      <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
-      <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
-
-      <select v-model="dataSelect" @change="searchDataSelect" style="padding: 10px 15px; border-radius: 10px; border: 1px dashed turquoise; width: 200px;">
+          <select v-model="dataSelect" @change="searchDataSelect" style="padding: 10px 15px; margin: 15px 0; border-radius: 10px; border: 1px dashed turquoise; width: 200px;">
         <option value="null" selected disabled>Search data ...</option>
         <option value="b1s">
           ✔ Search Data 1
@@ -545,93 +555,366 @@ const mapOptions = {
             📍 All Location
           </option>
         </select>
+            </div>
+          </div>
+        <!-- Nút trong bản đồ -->
+     <div class="map-buttons" style="display: flex; flex-direction: column; z-index: 1000; margin: 10px 15px;">
+      <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
+      <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
+
+      <div style="text-align: left; width: 100%; padding-left: 15px; margin-top: 20px;">
+        <input v-model.trim="valueE" style="padding: 5px 10px; outline: none; border: 1px dashed grey; border-radius: 10px;" placeholder="Search..." type="text">
+        <button @click="timkiemDataRoad" style="background-color: transparent; border: none; outline: none;"><i class="fa fa-search" aria-hidden="true"></i></button>
+        </div>
       
-        <div style="margin: 10px 0; padding: 10px; width: 350px; height: 550px; overflow: auto; background-color: rgba(255, 255, 255, 0.6); top: 100px; right: 10px; border-radius: 10px;">
+        <div style="margin: 10px 0; padding: 10px; width: 400px; height: 550px; overflow: auto; background-color: #D3D3D3; top: 100px; right: 10px; border-radius: 10px;">
       <div v-if="zoomLevel >= 13">
         <div v-for="(location, index) in locations" :key="index">
         <div v-if="location.isError">
-          <div v-if="location.statusError == 0" @click="showDataMap(location.coordinates, location)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-            <h4>category Code: {{ location.categoryCode }}</h4>
+          <div v-if="location.statusError == 0" :class="'div0_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
+            cursor: 'pointer',
+             height: '60px',
+            border: 'none',
+             borderRadius: '10px',
+              padding: '10px',
+               marginBottom: '10px',
+               backgroundColor: 'rgba(255, 255, 255, 0.6)'
+          }">
+            
+            <div :class="'divchu0_' + location.id + '_' + index" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
+              <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold;">signalNo: <strong>{{ location.signalNumber }}</strong></p>
+              </div>
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold; margin: 0 20px;">Types: <strong>{{ location.typesOfSignal }}</strong></p>
+              </div>
+              <div style="width: 20%;">
+                <button @click="showDataChon('status0_' + location.id + '_' + index, 'div0_' + location.id + '_' + index, 'divchu0_' + location.id + '_' + index, 'details_' + location.id + '_' + index)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: red; color: white;">Not received</button>
+                </div>
+            
+            </div>
+
+          <div :class="'status0_' + location.id + '_' + index" style="transform: scale(0); text-align: left;">
+            
             <div style="display: flex;">
+              <div>
+                <p style="font-size: 12px; font-weight: bold;">Lat: <strong>{{ location.latitude }}</strong></p>
+                <p style="font-size: 12px; font-weight: bold;">Road 1: <strong>{{ location.road1 }}</strong></p>
+                </div>
             <div>
-            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Road 2: <strong>{{ location.road2 }}</strong></p>
+              </div>
+              </div>
+              <div style="display: flex;">
+                <p style="font-size: 12px; font-weight: bold; ">Maintenance records: {{ location.totalUpdate == 0 ? "No" : location.totalUpdate }}</p>
+                <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer; margin-left: 100px;" @click="showDetailsDiv('details_' + location.id + '_' + index, 'div0_' + location.id + '_' + index)">Details</p>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; width: 100%; margin: 10px 0;">
+              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.id" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.id" @click="clickDataLocation(location, 'foot-walking', 's13' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.id" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.id" @click="clickDataLocation(location, 'driving-car', 's15' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.id" @click="clickDataLocation(location, 'wheelchair', 's16' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 5px;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.id" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.id" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+              </div>
           </div>
-          <div>
-            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-            <p style="font-size: 20px; font-weight: bold;">Status: <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i></p>
+
+          
+          <div :class="'details_' + location.id + '_' + index" style="transform: scale(0); margin: 15px 0; text-align: left; padding: 0 6px;">
+            <div>
+              <p style="font-size: 12px;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
+            <p style="font-size: 12px;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
+            <p style="font-size: 12px;">Account: {{ location.account_userUpdate }}</p>
+              </div>
+
+            
+            </div>
+          
           </div>
-          </div>
+          
+          <div v-if="location.statusError == 1"  :class="'div1_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
+            cursor: 'pointer',
+             height: '60px',
+            border: 'none',
+             borderRadius: '10px',
+              padding: '10px',
+               marginBottom: '10px',
+               backgroundColor: 'rgba(255, 255, 255, 0.6)'
+          }">
+            
+            <div :class="'divchu1_' + location.id + '_' + index" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold;">signalNo: <strong>{{ location.signalNumber }}</strong></p>
+              </div>
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold; margin: 0 20px;">Types: <strong>{{ location.typesOfSignal }}</strong></p>
+              </div>
            
-          </div>
-          
-          <div v-if="location.statusError == 1" @click="showDataMap(location.coordinates, location)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-            <div style="display: flex;">
-            <div>
-            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-          </div>
-          <div>
-            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-            <p style="font-size: 20px; color: greenyellow;">Status: <i class="fa fa-handshake-o" aria-hidden="true"></i></p>
-          </div>
-          </div>
+            <div style="width: 20%;">
+              <button @click="showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #6495ED; color: white;">Multiplied</button>
+              </div>
+            </div>
+
+          <div :class="'status1_' + location.id + '_' + index" style="transform: scale(0); text-align: left;">
             
+            <div style="display: flex;">
+              <div>
+                <p style="font-size: 12px; font-weight: bold;">Lat: <strong>{{ location.latitude }}</strong></p>
+                <p style="font-size: 12px; font-weight: bold;">Road 1: <strong>{{ location.road1 }}</strong></p>
+                </div>
+            <div>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Road 2: <strong>{{ location.road2 }}</strong></p>
+              </div>
+              </div>
+              <div style="display: flex;">
+                <p style="font-size: 12px; font-weight: bold; ">Maintenance records: {{ location.totalUpdate == 0 ? "No" : location.totalUpdate }}</p>
+                <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer; margin-left: 100px;" @click="showDetailsDiv('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index)">Details</p>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; width: 100%; margin: 10px 0;">
+              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.id" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.id" @click="clickDataLocation(location, 'foot-walking', 's13' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.id" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.id" @click="clickDataLocation(location, 'driving-car', 's15' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.id" @click="clickDataLocation(location, 'wheelchair', 's16' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 5px;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.id" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.id" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+              </div>
           </div>
 
-          <div v-if="location.statusError == 2" @click="showDataMap(location.coordinates, location)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-            <div style="display: flex;">
+          
+          <div :class="'details1_' + location.id + '_' + index" style="transform: scale(0); margin: 15px 0; text-align: left; padding: 0 6px;">
             <div>
-            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-          </div>
-          <div>
-            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-            <p style="font-size: 20px; color: greenyellow; animation: thei1 0.5s ease-in-out infinite;">Status: <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></p>
-          </div>
-          </div>
+              <p style="font-size: 12px;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
+            <p style="font-size: 12px;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
+            <p style="font-size: 12px;">Account: {{ location.account_userUpdate }}</p>
+              </div>
+
             
+            </div>
+          
           </div>
 
-          <div v-if="location.statusError == 3" @click="showDataMap(location.coordinates, location)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
-            <div style="display: flex;">
-            <div>
-            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
-          </div>
-          <div>
-            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-            <p style="font-size: 20px; color: greenyellow; animation: thei2 0.5s ease-in-out infinite;">Status: <i class="fa fa-check" aria-hidden="true"></i></p>
-          </div>
-          </div>
+          <div v-if="location.statusError == 2" :class="'div2_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
+            cursor: 'pointer',
+             height: '60px',
+            border: 'none',
+             borderRadius: '10px',
+              padding: '10px',
+               marginBottom: '10px',
+               backgroundColor: 'rgba(255, 255, 255, 0.6)'
+          }">
             
-          </div>
-        </div>
-        <div v-else style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;" @click="showDataMap(location.coordinates, location)">
-          <h4>category Code: {{ location.categoryCode }}</h4>
-          
-          <div style="display: flex;">
+            <div :class="'divchu2_' + location.id + '_' + index" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold;">signalNo: <strong>{{ location.signalNumber }}</strong></p>
+              </div>
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold; margin: 0 20px;">Types: <strong>{{ location.typesOfSignal }}</strong></p>
+              </div>
+           
+            <div style="width: 20%;">
+              <button @click="showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: yellow; color: black;">Under construction</button>
+              </div>
+            </div>
+
+          <div :class="'status2_' + location.id + '_' + index" style="transform: scale(0); text-align: left;">
+            
+            <div style="display: flex;">
+              <div>
+                <p style="font-size: 12px; font-weight: bold;">Lat: <strong>{{ location.latitude }}</strong></p>
+                <p style="font-size: 12px; font-weight: bold;">Road 1: <strong>{{ location.road1 }}</strong></p>
+                </div>
             <div>
-            <p style="font-size: 12px;">IdentificationCode: <strong>{{ location.identificationCode }}</strong></p>
-            <p style="font-size: 12px;">Lat: <strong>{{ location.latitude }}</strong></p>
-            <p style="font-size: 12px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Road 2: <strong>{{ location.road2 }}</strong></p>
+              </div>
+              </div>
+              <div style="display: flex;">
+                <p style="font-size: 12px; font-weight: bold; ">Maintenance records: {{ location.totalUpdate == 0 ? "No" : location.totalUpdate }}</p>
+                <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer; margin-left: 100px;" @click="showDetailsDiv('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index)">Details</p>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; width: 100%; margin: 10px 0;">
+              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.id" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.id" @click="clickDataLocation(location, 'foot-walking', 's13' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.id" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.id" @click="clickDataLocation(location, 'driving-car', 's15' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.id" @click="clickDataLocation(location, 'wheelchair', 's16' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 5px;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.id" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.id" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+              </div>
           </div>
-          <div>
-            <p style="font-size: 12px;">signal Number: <strong>{{ location.signalNumber }}</strong></p>
-            <p style="font-size: 12px;">Types Of Signal: <strong>{{ location.typesOfSignal }}</strong></p>
-            <p style="font-size: 20px; color: greenyellow;"><i class="fa fa-check" aria-hidden="true"></i></p>
-          </div>
-          </div>
+
           
+          <div :class="'details2_' + location.id + '_' + index" style="transform: scale(0); margin: 15px 0; text-align: left; padding: 0 6px;">
+            <div>
+              <p style="font-size: 12px;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
+            <p style="font-size: 12px;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
+            <p style="font-size: 12px;">Account: {{ location.account_userUpdate }}</p>
+              </div>
+
+            
+            </div>
+          
+          </div>
+
+          <div v-if="location.statusError == 3" :class="'div3_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
+            cursor: 'pointer',
+             height: '60px',
+            border: 'none',
+             borderRadius: '10px',
+              padding: '10px',
+               marginBottom: '10px',
+               backgroundColor: 'rgba(255, 255, 255, 0.6)'
+          }">
+            
+            <div :class="'divchu3_' + location.id + '_' + index" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold;">signalNo: <strong>{{ location.signalNumber }}</strong></p>
+              </div>
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold; margin: 0 20px;">Types: <strong>{{ location.typesOfSignal }}</strong></p>
+              </div>
+           
+            <div style="width: 20%;">
+              <button @click="showDataChon('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">Fixed</button>
+              </div>
+            </div>
+
+          <div :class="'status3_' + location.id + '_' + index" style="transform: scale(0); text-align: left;">
+            
+            <div style="display: flex;">
+              <div>
+                <p style="font-size: 12px; font-weight: bold;">Lat: <strong>{{ location.latitude }}</strong></p>
+                <p style="font-size: 12px; font-weight: bold;">Road 1: <strong>{{ location.road1 }}</strong></p>
+                </div>
+            <div>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Road 2: <strong>{{ location.road2 }}</strong></p>
+              </div>
+              </div>
+              <div style="display: flex;">
+                <p style="font-size: 12px; font-weight: bold; ">Maintenance records: {{ location.totalUpdate == 0 ? "No" : location.totalUpdate }}</p>
+                <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer; margin-left: 100px;" @click="showDetailsDiv('details3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index)">Details</p>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; width: 100%; margin: 10px 0;">
+              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.id" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.id" @click="clickDataLocation(location, 'foot-walking', 's13' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.id" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.id" @click="clickDataLocation(location, 'driving-car', 's15' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.id" @click="clickDataLocation(location, 'wheelchair', 's16' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 5px;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.id" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.id" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+              </div>
+          </div>
+
+          
+          <div :class="'details3_' + location.id + '_' + index" style="transform: scale(0); margin: 15px 0; text-align: left; padding: 0 6px;">
+            <div>
+              <p style="font-size: 12px;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
+            <p style="font-size: 12px;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
+            <p style="font-size: 12px;">Account: {{ location.account_userUpdate }}</p>
+              </div>
+
+            
+            </div>
+          
+          </div>
         </div>
+        <div v-else :class="'div4_' + location.id + '_' + index" @click="showDataMap(location.coordinates, location)" :style="{
+            cursor: 'pointer',
+             height: '60px',
+            border: 'none',
+             borderRadius: '10px',
+              padding: '10px',
+               marginBottom: '10px',
+               backgroundColor: 'rgba(255, 255, 255, 0.6)'
+          }">
+            
+            <div :class="'divchu4_' + location.id + '_' + index" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold;">signalNo: <strong>{{ location.signalNumber }}</strong></p>
+              </div>
+            <div style="width: 38.33%;">
+              <p style="font-size: 12px; font-weight: bold; margin: 0 20px;">Types: <strong>{{ location.typesOfSignal }}</strong></p>
+              </div>
+           
+            <div style="width: 20%;">
+              <button @click="showDataChon('status4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, 'divchu4_' + location.id + '_' + index, 'details4_' + location.id + '_' + index)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">not broken</button>
+              </div>
+            </div>
+
+          <div :class="'status4_' + location.id + '_' + index" style="transform: scale(0); text-align: left;">
+            
+            <div style="display: flex;">
+              <div>
+                <p style="font-size: 12px; font-weight: bold;">Lat: <strong>{{ location.latitude }}</strong></p>
+                <p style="font-size: 12px; font-weight: bold;">Road 1: <strong>{{ location.road1 }}</strong></p>
+                </div>
+            <div>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Lng: <strong>{{ location.longitude }}</strong></p>
+              <p style="font-size: 12px; font-weight: bold; margin: 0 15px;">Road 2: <strong>{{ location.road2 }}</strong></p>
+              </div>
+              </div>
+              <div style="display: flex;">
+                <p style="font-size: 12px; font-weight: bold; ">Maintenance records: {{ location.totalUpdate == 0 ? "No" : location.totalUpdate }}</p>
+                <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer; margin-left: 100px;" @click="showDetailsDiv('details4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index)">Details</p>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; width: 100%; margin: 10px 0;">
+              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">🚗</button>
+                      <button :class="'s12' + location.id" @click="clickDataLocation(location, 'cycling-regular', 's12' + location.id)" style="width: 30px; height: 30px; border-radius: 50%; border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-bicycle" aria-hidden="true"></i></button>
+                      <button :class="'s13' + location.id" @click="clickDataLocation(location, 'foot-walking', 's13' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-blind" aria-hidden="true"></i></button>
+                      <button :class="'s14' + location.id" @click="clickDataLocation(location, 'driving-hgv', 's14' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-truck" aria-hidden="true"></i></button>
+                      <button :class="'s15' + location.id" @click="clickDataLocation(location, 'driving-car', 's15' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-motorcycle" aria-hidden="true"></i></button>
+
+                      <button :class="'s16' + location.id" @click="clickDataLocation(location, 'wheelchair', 's16' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 5px;"><i class="fa fa-wheelchair" aria-hidden="true"></i></button>
+                      <button :class="'s17' + location.id" @click="clickDataLocation(location, 'foot-hiking', 's17' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
+                      <button :class="'s18' + location.id" @click="clickDataLocation(location, 'cycling-electric', 's18' + location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer; margin: 0 10px;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
+                      <button @click="clickDataUpdate(location.id)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;">💨💫</button>
+              </div>
+          </div>
+
+          
+          <div :class="'details4_' + location.id + '_' + index" style="transform: scale(0); margin: 15px 0; text-align: left; padding: 0 6px;">
+            <div>
+              <p style="font-size: 12px;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
+            <p style="font-size: 12px;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
+            <p style="font-size: 12px;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
+            <p style="font-size: 12px;">Account: {{ location.account_userUpdate }}</p>
+              </div>
+
+            
+            </div>
+          
+          </div>
       </div>
       </div>
       <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
@@ -873,6 +1156,13 @@ const mapOptions = {
     </GMapMap>
   </div>
    
+  <div class="marquee-container" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%);" v-if="zoomLevel < 13">
+    <div :class="['marquee-text', { paused: isPaused }]" style="color: red; font-weight: bold; font-size: 18px;">
+      大家好，請放大。
+    </div>
+
+    <button style="outline: none; border: none; padding: 10px 25px; border-radius: 10px; cursor: pointer;" @click="togglePause">{{ isPaused ? 'Run' : 'Stop' }}</button>
+  </div>
   <div v-if="selectedImage" class="image-modal" @click.self="closeImage">
     <div v-if="getFileType(selectedImage) === 'image'">
       <img width="800px" :src="selectedImage" class="image-full" alt="Full Image" />
@@ -923,13 +1213,14 @@ import { useDebounceFn } from '@vueuse/core' // Giúp debounce dễ hơn
 const showMarkers = ref(false)
 // Vị trí trung tâm bản đồ (Hồ Chí Minh)
 const mapCenter = ref({ lat: 22.99318457718073, lng: 120.20495235408347 });
-const zoomLevel = ref(15);
+const zoomLevel = ref(12);
 const valueE = ref("")
 const page = ref(1)
 const totalPage = ref(0)
 const pageSize = ref(5)
 const store = useCounterStore()
 const router = useRouter()
+// const heighData = ref(130)
 // Vị trí hiện tại của người dùng
 const currentLocation = ref({ lat: 22.99318457718073, lng: 120.20495235408347 });
 
@@ -954,19 +1245,53 @@ const selectedImage = ref(null)
 const trafficLayer = ref(null)
 const sonumber = ref(4)
 const trafficVisible = ref(false); // Trạng thái bật/tắt giao thông
-const TaiNanCenter = ref([{
-  coordinates: { lat: 22.998670465166924, lng: 120.22384000412357 },
-  status: 4
-}])
 
 const dataLocation = ref(null)
-
 const classI = ref(null)
 const showInput = ref(false)
 const inputValue = ref(0)
 const dataSelect = ref(null)
 const showDetails = ref(false)
 
+const isPaused = ref(false)
+
+const togglePause = () => {
+  isPaused.value = !isPaused.value
+}
+const timkiemDataRoad = () => {
+  if(!valueE.value){
+    btnSearch.value = null
+    pageSize.value = 22000
+  }
+    
+  findAllDataMap(valueE.value, page.value)
+  isPhanTrang.value = true
+  dataSelect.value = 'all'
+}
+
+const fomatDate = (rawDate) => {
+  const date = new Date(rawDate);
+
+const formatted = new Intl.DateTimeFormat('vi-VN').format(date);
+return formatted
+}
+const showDetailsDiv = (classData, classDiv) => {
+  const element = document.querySelector('.' + classData);
+  if (!element) return;
+    // Kiểm tra xem đã là scaleX(1) hay chưa
+  const isScaled = getScaleX(element)
+
+  console.log("Data Check " , isScaled)
+  element.style.transform = isScaled === 1 ? 'scale(0)' : 'scale(1)'
+  element.style.transition = 'transform 0.4s ease'
+
+  document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
+  if(isScaled === 1){
+  document.querySelector('.' + classDiv).style.height = '180px'
+  }else{
+  document.querySelector('.' + classDiv).style.height = '245px'
+  }
+}
 const getFileType = (url) => {
   const extension = url.split('.').pop().toLowerCase()
 
@@ -3860,6 +4185,7 @@ const checkDataClassI = (classData, index) =>{
 
   switch(classData){
     case 'i2':
+      valueE.value = ""
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
       zoomLevel.value = 15
       pageSize.value = 22000
@@ -4004,12 +4330,7 @@ const newCenter = { lat: center.lat(), lng: center.lng() };
     ) {
       mapCenter.value = { lat: center.lat(), lng: center.lng() };
 
-      if (zoomLevel.value < 13) {
-    // Khi thu nhỏ bản đồ -> chỉ hiển thị các Quận
-    locations.value = TaiNanCenter.value;
-  } else {
-    // Nếu zoom >= 18 thì cập nhật danh sách điểm
-    if (zoomLevel.value >= 13) {
+      if (zoomLevel.value >= 13) {
       if(btnSearch.value == null){
       
       if(inputValue.value <= 0){
@@ -4040,22 +4361,21 @@ const newCenter = { lat: center.lat(), lng: center.lng() };
       
      }
       else{
-       if(btnSearch.value == 'b1s'){
-         searchStatus1(btnSearch.value)
-       }else if(btnSearch.value == 'b2s'){
-         searchStatus2(btnSearch.value)
-       }else if(btnSearch.value == 'b3s'){
-         searchStatus3(btnSearch.value)
-       }else if(btnSearch.value == 'b4s'){
-         searchStatus4(btnSearch.value)
-       }else if(btnSearch.value == 'b5s'){
-         searchStatus5(btnSearch.value)
+       if(dataSelect.value == 'b1s'){
+         searchStatus1(dataSelect.value)
+       }else if(dataSelect.value == 'b2s'){
+         searchStatus2(dataSelect.value)
+       }else if(dataSelect.value == 'b3s'){
+         searchStatus3(dataSelect.value)
+       }else if(dataSelect.value == 'b4s'){
+         searchStatus4(dataSelect.value)
+       }else if(dataSelect.value == 'b5s'){
+         searchStatus5(dataSelect.value)
        }
       }
 
     } else {
       locations.value = []; // Nếu zoom < 18 thì ẩn hết điểm
-    }
     }
 
   
@@ -4076,11 +4396,11 @@ const onIdle = () => {
   showMarkers.value = true
 }
 
-const zoomData = (data) => {
-  mapCenter.value = data
-  // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
-  zoomLevel.value = 13
-}
+// const zoomData = (data) => {
+//   mapCenter.value = data
+//   // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
+//   zoomLevel.value = 13
+// }
 const imageStatus = ref({
 status0: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
 status1: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -4102,7 +4422,57 @@ const isLoading = ref(false)
 const { proxy } = getCurrentInstance();
 const hostName = proxy?.hostname;
 
+const getScaleX = (element) => {
+  const style = window.getComputedStyle(element);
+  const transform = style.transform;
 
+  if (transform === 'none') return 1; // mặc định là scaleX(1)
+
+  // matrix(a, b, c, d, e, f) → a là scaleX
+  const matrix = transform.match(/^matrix\((.+)\)$/);
+  if (matrix) {
+    const values = matrix[1].split(', ');
+    const scaleX = parseFloat(values[0]); // scaleY nằm ở vị trí thứ 0 (1) (Dùng cho ScaleX)
+    const scaleY = parseFloat(values[3]); // scaleY nằm ở vị trí thứ 4 (d) (Dùng cho ScaleY)
+    // return scaleX;
+     // Nếu scaleX và scaleY bằng nhau, thì dùng chung scale
+    if (scaleX === scaleY) return scaleX;
+  }
+
+  return 1; // fallback
+}
+const showDataChon = (classData, classDiv, classChu, divcon) => {
+ const element = document.querySelector('.' + classData);
+ const elementCon = document.querySelector('.' + divcon);
+  if (!element) return;
+
+  
+  if(elementCon){
+    const isScaledcon = getScaleX(elementCon)
+    if(isScaledcon === 1){
+    elementCon.style.transform ='scale(0)'
+  elementCon.style.transition = 'transform 0.4s ease'
+    }
+  
+  
+  }
+    // Kiểm tra xem đã là scaleX(1) hay chưa
+  const isScaled = getScaleX(element)
+
+  element.style.transform = isScaled === 1 ? 'scale(0)' : 'scale(1)'
+  element.style.transition = 'transform 0.4s ease'
+
+  document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
+  if(isScaled === 1){
+  document.querySelector('.' + classDiv).style.height = '60px'
+    document.querySelector('.' + classChu).style.borderBottom = 'none'
+    
+  }else{
+ document.querySelector('.' + classDiv).style.height = '180px'
+  
+document.querySelector('.' + classChu).style.borderBottom = '1px dashed black'
+  }
+}
 // Danh sách ảnh
 const images = ref([
 "https://png.pngtree.com/png-clipart/20230417/original/pngtree-return-of-investment-flat-icon-png-image_9064391.png",
@@ -4132,7 +4502,7 @@ const findAllDataMap = async (searchData, pageData) => {
   isLoading.value = true;
 document.body.classList.add("loading"); // Add Lớp "loading"
 document.body.style.overflow = "hidden";
-  const res = searchData == "" ? await axios.get(hostName + `/api/TrafficEquipment/FindAll?page=${pageData}&pageSize=${pageSize.value}`, getToken())
+  const res = searchData === "" ? await axios.get(hostName + `/api/TrafficEquipment/FindAll?page=${pageData}&pageSize=${pageSize.value}`, getToken())
   : await axios.get(hostName + `/api/TrafficEquipment/FindAll?name=${searchData}&page=${pageData}&pageSize=${pageSize.value}`, getToken())
 
   if(res.data.success){
@@ -4142,6 +4512,8 @@ document.body.style.overflow = "hidden";
       }))
 
       mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+      
+      if(searchData === ""){
       if(inputValue.value <= 0){
         locations.value = dataLoadStart.value.filter((location) => {
           const distance = getDistance(
@@ -4165,6 +4537,10 @@ document.body.style.overflow = "hidden";
             return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
         });
       }
+      }else{
+        locations.value = dataLoadStart.value
+      }
+      
       
 
       // console.log(dataLoadStart.value)
@@ -4753,6 +5129,34 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
+.marquee-container {
+  width: 30%;
+  overflow: hidden;
+  background: white;
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marquee 10s linear infinite;
+}
+
+.paused {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
 .overlay {
   position: fixed;
   top: 0;

@@ -23,7 +23,8 @@ app.use(VueMap, {
         key: 'AIzaSyANT9F5ECcLaUhoq84sF6ZFGWn806iRIJk',
         // libraries: ['places', 'visualization'] // Để hỗ trợ tìm kiếm
         libraries: 'places',
-        language: 'zh-TW'
+        language: 'zh-TW',
+        v: 'beta'
     }
 })
 pinia.use(piniaPluginPersistedstate)
