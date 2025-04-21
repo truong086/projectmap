@@ -108,10 +108,12 @@ const mapOptions = {
 
         class="marker-icon"
       >
-          <!-- Hiển thị thông tin khi bấm vào marker -->
+          <!-- Hiển thị thông tin khi bấm vào marker 
+            disableAutoPan: true: Là ngăn không cho di chuyển bản đồ
+            -->
            <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                  :options="{ maxWidth: 250 }"
+                  :options="{ maxWidth: 250, disableAutoPan: true }"
                   @closeclick="selectedMarker = null"
                   >
                   <div>
@@ -141,7 +143,7 @@ const mapOptions = {
       >
       <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                  :options="{ maxWidth: 250 }"
+                  :options="{ maxWidth: 250, disableAutoPan: true }"
                   @closeclick="selectedMarker = null"
                   >
                   <div>
@@ -218,7 +220,7 @@ const mapOptions = {
 
       <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                  :options="{ maxWidth: 250 }"
+                  :options="{ maxWidth: 250, disableAutoPan: true }"
                   @closeclick="selectedMarker = null"
                   >
                   <div>
@@ -297,7 +299,7 @@ const mapOptions = {
       >
       <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                  :options="{ maxWidth: 250 }"
+                  :options="{ maxWidth: 250, disableAutoPan: true }"
                   @closeclick="selectedMarker = null"
                   >
                   <div>
@@ -376,7 +378,7 @@ const mapOptions = {
       >
       <GMapInfoWindow
                   v-if="selectedMarker === location.coordinates.lat && showDistanceList"
-                  :options="{ maxWidth: 250 }"
+                  :options="{ maxWidth: 250, disableAutoPan: true }"
                   @closeclick="selectedMarker = null"
                   >
                   <div>
@@ -550,15 +552,17 @@ const mapOptions = {
     borderTopRightRadius: '10px',
     borderBottomRightRadius: '10px',
     width: isCheckShow === 1 ? '450px' : '380px',
-    backgroundColor: isCheckShow === 1 ? '#D3D3D3' : '#F0F8FF'
+    backgroundColor: isCheckShow === 1 ? '#DCDCDC' : '#F0F8FF'
   }">
       <div>
       <div v-if="isCheckShow == 1">
-        <div style="text-align: left; padding-left: 55px; margin: 0 auto; width: 80%; border-bottom: 2px solid black;">
+        <div style="text-align: left; padding-left: 25px; margin: 0 auto; width: 80%; border-bottom: 2px solid black;">
           <div style="margin-top: 20px;">
-            <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
+            <div style="text-align: center; margin-bottom: 20px;">
+              <i class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
           <p style="font-weight: bold; opacity: 0.8;">Search Data</p>
-          <select v-model="dataSelect" @change="searchDataSelect" style="padding: 10px 15px; margin: 15px 0; border-radius: 10px; border: 1px dashed turquoise; width: 200px;">
+              </div>
+          <select v-model="dataSelect" @change="searchDataSelect" style="padding: 10px 15px; margin: 15px 0; border-radius: 10px; border: 1px dashed turquoise; width: 230px;">
         <option value="null" selected disabled>Search data ...</option>
         <option value="b1s">
           ✔ Search Data 1
@@ -592,7 +596,7 @@ const mapOptions = {
         <button @click="timkiemDataRoad" style="background-color: transparent; border: none; outline: none;"><i class="fa fa-search" aria-hidden="true"></i></button>
         </div>
       
-        <div style="margin: 10px 0; padding: 10px; width: 400px; height: 550px; overflow: auto; background-color: #D3D3D3; top: 100px; right: 10px; border-radius: 10px;">
+        <div class="scroll-box" style="margin: 10px 0; padding: 10px; width: 400px; height: 550px; overflow: auto; background-color: #DCDCDC; top: 100px; right: 10px; border-radius: 10px;">
       <div v-if="zoomLevel >= 13">
         <div v-for="(location, index) in locations" :key="index" :ref="el => setItemRef(location.id, index, el)">
         <div v-if="location.isError">
@@ -1243,7 +1247,7 @@ import { useDebounceFn } from '@vueuse/core' // Giúp debounce dễ hơn
 const showMarkers = ref(false)
 // Vị trí trung tâm bản đồ (Hồ Chí Minh)
 const mapCenter = ref({ lat: 22.99318457718073, lng: 120.20495235408347 });
-const zoomLevel = ref(12);
+const zoomLevel = ref(15);
 const valueE = ref("")
 const page = ref(1)
 const totalPage = ref(0)
@@ -4234,7 +4238,6 @@ const checkDataClassI = (classData, index) =>{
     case 'i2':
       valueE.value = ""
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
-      zoomLevel.value = 15
       pageSize.value = 22000
       findAllDataMap(valueE.value, page.value)
       AllData()
@@ -4243,14 +4246,12 @@ const checkDataClassI = (classData, index) =>{
 
     case 'i3':
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
-      zoomLevel.value = 15
       dataSelect.value = "b5s"
       searchStatus5('b5s')
       break
 
     case 'i4':
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
-      zoomLevel.value = 15
       dataSelect.value = "b3s"
       searchStatus3('b3s')
       break
@@ -4310,9 +4311,9 @@ if (trafficLayer.value) {
 }
 };
 const showDataMap = (location, data) => {
-mapCenter.value = location
+// mapCenter.value = location
   // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
-  mapCenter.value = location
+  // mapCenter.value = location
   // zoomLevel.value = 15
   selectedMarker.value = location.lat
   showDistanceList.value = true
@@ -4683,8 +4684,8 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      if(zoomLevel.value < 13)
-          zoomLevel.value = 13
+      // if(zoomLevel.value < 13)
+      //     zoomLevel.value = 13
       isPhanTrang.value = false
 }
 
@@ -4708,8 +4709,8 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      if(zoomLevel.value < 13)
-          zoomLevel.value = 13
+      // if(zoomLevel.value < 13)
+      //     zoomLevel.value = 13
       isPhanTrang.value = false
 }
 // routePath.value = []
@@ -4732,8 +4733,8 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      if(zoomLevel.value < 13)
-          zoomLevel.value = 13
+      // if(zoomLevel.value < 13)
+      //     zoomLevel.value = 13
       isPhanTrang.value = false
 }
 // routePath.value = []
@@ -4756,8 +4757,8 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      if(zoomLevel.value < 13)
-          zoomLevel.value = 13
+      // if(zoomLevel.value < 13)
+      //     zoomLevel.value = 13
       isPhanTrang.value = false
 }
 
@@ -4853,7 +4854,7 @@ selectedMarker.value = index;
 dataLocation.value = data
   showDetails.value = true
   showDistanceList.value = true
-  mapCenter.value = data.coordinates
+  // mapCenter.value = data.coordinates
   // zoomLevel.value = 18
   
   showDataChon(classData, classDiv, classChu, divcon)
@@ -5179,6 +5180,27 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
+/* Áp dụng cho container có scroll (ví dụ class là .scroll-box) */
+.scroll-box::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-box::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+  margin-top: 15px; /**Điều chỉnh vị trí của Scroll */
+}
+
+.scroll-box::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 2px solid #f0f0f0; /* tạo hiệu ứng rãnh đẹp */
+}
+
+.scroll-box::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 .marquee-container {
   width: 20%;
   overflow: hidden;
