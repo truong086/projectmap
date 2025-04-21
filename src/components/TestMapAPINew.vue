@@ -541,7 +541,9 @@ const mapOptions = {
 
           </div>
         </div>
-    <div v-if="isShowHome" :style="{
+    <div :style="{
+      transform: isShowHome ? 'scale(1)' : 'scale(0)',
+      transition: '0.4s ease-in-out',
     display: 'flex',
     position: 'absolute',
     overflow: 'auto',
