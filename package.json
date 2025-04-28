@@ -17,6 +17,7 @@
     "@vueuse/core": "^13.1.0",
     "axios": "^1.7.9",
     "core-js": "^3.8.3",
+    "haversine-distance": "^1.2.3",
     "jquery": "^3.7.1",
     "map": "file:",
     "pinia": "^3.0.1",

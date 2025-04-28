@@ -1,32 +1,51 @@
 <template>
-  <GMapMap
-    ref="mapRef"
-    :center="mapCenter"
-    :zoom="zoomLevel"
-    map-type-id="roadmap"
-    style="width: 100%; height: 500px"
-  ></GMapMap>
+  <div class="container">
+    <div class="input-wrapper">
+      <input v-model="inputText" type="text" placeholder="Nhập gì đó..." />
+      <button @click="showSquare = true">Hiển thị ô vuông</button>
+
+      <div v-if="showSquare" class="square"></div>
+    </div>
+
+    <!-- Các nội dung khác -->
+    <div class="other-content">
+      <p>Đây là các nội dung khác...</p>
+      <p>Rất nhiều dòng dữ liệu...</p>
+      <p>Tiếp tục kéo xuống...</p>
+      <p>...</p>
+      <p>...</p>
+      <p>...</p>
+      <p>...</p>
+    </div>
+  </div>
 </template>
 
 <script setup>
- /* global google */
-import { ref, onMounted } from "vue";
+import { ref } from 'vue'
 
-const mapRef = ref(null);
-const mapCenter = ref({ lat: 34.04924594193164, lng: -118.24104309082031 });
-const zoomLevel = ref(13);
-
-onMounted(() => {
-  const checkMapLoaded = setInterval(() => {
-    if (mapRef.value?.$mapObject) {
-      clearInterval(checkMapLoaded);
-      const trafficLayer = new google.maps.TrafficLayer();
-      trafficLayer.setMap(mapRef.value.$mapObject);
-    }
-  }, 500);
-});
+const inputText = ref('')
+const showSquare = ref(false)
 </script>
 
 <style scoped>
-/* Style cho bản đồ nếu cần */
+.container {
+  padding: 20px;
+}
+
+.input-wrapper {
+  position: relative;
+  margin-bottom: 2000px; /* giả sử có rất nhiều nội dung */
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  background-color: white;
+  border: 1px solid black;
+  
+  position: sticky;
+  top: 80px; /* khoảng cách từ trên trình duyệt xuống */
+  z-index: 100;
+  margin-top: 10px;
+}
 </style>

@@ -20,7 +20,7 @@
                     <div style="margin: 10px 0; display: flex;">
                         <div v-if="dataNewId.id != null" style="width: 550px; height: 200px; background-color: rgba(255, 255, 255, 0.4); border-radius: 10px;">
                             <div>
-                            <div v-if="dataNewId.repairStatus == 0" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                            <div v-if="dataNewId.repairStatus == 1" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
                               <h4>category Code: {{ dataNewId.categoryCode }}</h4>
                               <div style="display: flex;">
                                 <div>
@@ -54,7 +54,7 @@
                             
                             </div>
                             
-                            <div v-if="dataNewId.repairStatus == 1" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                            <div v-if="dataNewId.repairStatus == 2" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
                                 <h4>category Code: {{ dataNewId.categoryCode }}</h4>
                                 <div style="display: flex;">
                               <div>
@@ -70,10 +70,9 @@
                             </div>
                             <div>
                               <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
-                                          <option value="0">尚未確認</option>
-                                          <option value="1">已分配工程師</option>
-                                          <option value="2">工程師正在維修中</option>
-                                          <option value="3">已完成維修</option>
+                                          <option value="2"> 故障確認</option>
+                                          <option value="3">維修中</option>
+                                          <option value="4">維修完成</option>
                                         </select>
 
                                         <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
@@ -104,7 +103,7 @@
                             </div>
                             </div>
 
-                            <div v-if="dataNewId.repairStatus == 2" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                            <div v-if="dataNewId.repairStatus == 3" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
                                 <h4>category Code: {{ dataNewId.categoryCode }}</h4>
                                 <div style="display: flex;">
                               <div>
@@ -119,10 +118,9 @@
                             </div>
                             <div>
                               <select v-model="dataNewId.repairStatus" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 0 10px;">
-                                          <option value="0">尚未確認</option>
-                                          <option value="1">已分配工程師</option>
-                                          <option value="2">工程師正在維修中</option>
-                                          <option value="3">已完成維修</option>
+                                <option value="2"> 故障確認</option>
+                                          <option value="3">維修中</option>
+                                          <option value="4">維修完成</option>
                                         </select>
 
                                         <select v-model="dataNewId.faultCodes" @change="updateDataStatus(dataNewId.id)" style="border-radius: 10px; padding: 10px; margin: 15px 10px;">
@@ -153,7 +151,7 @@
                               
                             </div>
 
-                            <div v-if="dataNewId.repairStatus == 3" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+                            <div v-if="dataNewId.repairStatus == 4" style="cursor: pointer; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
                                 <h4>category Code: {{ dataNewId.categoryCode }}</h4>
                                 <div style="display: flex;">
                               <div>
@@ -272,16 +270,17 @@
                             </div> 
                           </td>
                             <td style="color: white;"> 
-                              <div v-if="item.repairStatus == 0" style="display: flex;">
+                              <div style="display: flex;">
+                              <div v-if="item.repairStatus == 1" style="display: flex;">
                                 <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i>
                                 <div style="margin: 0 10px;">
-                                <button @click="addDataPlan(item.id)" style="border: none; outline: none; padding: 10px 25px; border-radius: 10px; background-color: red; color: white;">
+                                <!-- <button @click="addDataPlan(item.id)" style="border: none; outline: none; padding: 10px 25px; border-radius: 10px; background-color: red; color: white;">
                                   Nhận
-                                </button>
+                                </button> -->
                               </div>
                               </div> 
 
-                              <div v-else-if="item.repairStatus == 1" style="display: flex;">
+                              <div v-else-if="item.repairStatus == 2 && item.user_name === store.getIdAccountName" style="display: flex;">
                                 <i class="fa fa-check" style="animation: thei2 0.5s ease-in-out infinite;" aria-hidden="true"></i>
                                 <div style="margin: 0 10px;">
                                 <button @click="updateData(item.id)" style="border: none; outline: none; padding: 10px 25px; border-radius: 10px; background-color: yellow; color: back;">
@@ -291,7 +290,7 @@
                               </div> 
 
                               
-                              <div v-else-if="item.repairStatus == 2" style="display: flex;">
+                              <div v-else-if="item.repairStatus == 3 && item.user_name === store.getIdAccountName" style="display: flex;">
                                 <i class="fa fa-exclamation-triangle" style="animation: thei2 0.5s ease-in-out infinite;" aria-hidden="true"></i>
                                 <div style="margin: 0 10px;">
                                 <button @click="updateData(item.id)" style="border: none; outline: none; padding: 10px 25px; border-radius: 10px; background-color: yellow; color: black;">
@@ -300,10 +299,20 @@
                               </div>
                               </div> 
 
-                              <div v-else-if="item.repairStatus == 3">
+                              <div v-else-if="item.repairStatus == 4">
                                 <i class="fa fa-handshake-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i>
                               
                               </div> 
+
+                              <div v-else-if="item.repairStatus == 5">
+                                <i class="fa fa-grav" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i>
+                              
+                              </div> 
+                              <div v-if="item.repairStatus != 4">
+                                <button @click="updateClose(item.id)" style="padding: 10px 15px; border: none; outline: none; border-radius: 10px;" v-if="item.repairStatus >= 1 && item.repairStatus < 5">Close</button>
+                                <button @click="updateOffClose(item.id)" style="padding: 10px 15px; border: none; outline: none; border-radius: 10px;" v-else>Off Close</button>
+                              </div>
+                            </div>
 
                               
                           </td>
@@ -342,6 +351,7 @@
   import axios from "axios";
   import PagesTotal from "../PageList/PagesTotal.vue";
   import { useCounterStore } from "../../store";
+  import {useRoute} from 'vue-router'
 
   const valueE = ref("")
   const page = ref(1)
@@ -353,6 +363,7 @@
   const mapCenter = ref({ lat: 22.841228204468152, lng: 120.26414714944056 });
   const zoomLevel = ref(21);
   const store = useCounterStore();
+  const route = useRoute()
   const mapOptions = {
   mapTypeId: 'satellite',
   disableDefaultUI: true,
@@ -363,8 +374,36 @@
   keyboardShortcuts: false,
 }
 
+const dataUpdateClose = ref({
+
+  id: 0,
+  status: 0,
+  faultCodes: 0
+})
+
+const updateClose = async (id) => {
+  dataUpdateClose.value.id = id
+  dataUpdateClose.value.status = 5
+  const res = await axios.put(hostName + `/api/RepairDetails/UpdateByClose`, dataUpdateClose.value, getToken())
+  if(res.data.success){
+    findAllDataMap(valueE.value, page.value)
+  }
+}
+
+
+const updateOffClose = async (id) => {
+  dataUpdateClose.value.id = id
+  dataUpdateClose.value.status = 5
+  const res = await axios.put(hostName + `/api/RepairDetails/UpdateByOffClose`, dataUpdateClose.value, getToken())
+  if(res.data.success){
+    findAllDataMap(valueE.value, page.value)
+  }
+}
   const dataNewId = ref({})
   onMounted(() => {
+    if(route.query.id){
+      updateData(route.query.id)
+    }
     findAllDataMap(valueE.value, page.value)
   })
 
@@ -438,22 +477,22 @@ const updateData = async (id) => {
   document.body.style.overflow = "auto";
 }
 
-const addDataPlan = async (id) => {
-  isLoading.value = true;
-  document.body.classList.add("loading"); // Add Lớp "loading"
-  document.body.style.overflow = "hidden";
-  const res = await axios.put(hostName + '/api/RepairDetails/Update', {id: id}, getToken())
-  if(res.data.success){
-    alert("Success")
-    findAllDataMap(valueE.value, page.value)
-  }else{
-    alert(res.data.error)
-  }
+// const addDataPlan = async (id) => {
+//   isLoading.value = true;
+//   document.body.classList.add("loading"); // Add Lớp "loading"
+//   document.body.style.overflow = "hidden";
+//   const res = await axios.put(hostName + '/api/RepairDetails/Update', {id: id}, getToken())
+//   if(res.data.success){
+//     alert("Success")
+//     findAllDataMap(valueE.value, page.value)
+//   }else{
+//     alert(res.data.error)
+//   }
 
-  isLoading.value = false;
-  document.body.classList.remove("loading");
-  document.body.style.overflow = "auto";
-}
+//   isLoading.value = false;
+//   document.body.classList.remove("loading");
+//   document.body.style.overflow = "auto";
+// }
 const getToken = () => {
     var token = store.getToken;
     var result = {
