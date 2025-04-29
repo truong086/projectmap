@@ -455,8 +455,8 @@ const mapOptions = {
     </GMapMarker>
     
     <!--Poi-->
-    <div style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: rgba(175, 238, 238, 0.9);">
-        <div style="width: 80px; height: 100%; margin-top: 15px;">
+    <div class="scroll-box" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: rgba(175, 238, 238, 1);">
+        <div style="width: 100px; height: 100%; margin-top: 15px;">
 
           <div style="padding: 10px; margin-top: 15px; cursor: pointer;">
             <img v-if="!isShowHome" style="animation: thei3 0.5s ease-in-out infinite;" width="28px" src="../assets/Icon/Picture1.png" alt="">
@@ -474,13 +474,11 @@ const mapOptions = {
             <div style="cursor: pointer; padding: 10px;" class="i2" @click="checkDataClassI('i2', 1)">
             <img width="28px" src="../assets/Icon/Picture3.png" alt="">
             <p style="font-size: 12px;">所有號誌清單</p>
-            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i3" @click="checkDataClassI('i3', 1)">
             <img width="28px" src="../assets/Icon/Picture4.png" alt="">
             <p style="font-size: 12px;">故障號誌清單</p>
-            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="cursor: pointer; padding: 10px;" class="i4" @click="checkDataClassI('i4', 1)">
@@ -500,19 +498,16 @@ const mapOptions = {
             <div style="cursor: pointer; padding: 10px;" class="i6" @click="checkDataClassI('i6', 2)">
             <img width="28px" src="../assets/Icon/Picture7.png" alt="">
             <p style="font-size: 12px;">地圖設定</p>
-            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i7" @click="checkDataClassI('i7', 3)">
             <img width="28px" src="../assets/Icon/Picture8.png" alt="">
             <p style="font-size: 12px;">道路設定</p>
-            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="cursor: pointer; padding: 10px;" class="i8" @click="checkDataClassI('i8', 8)">
             <img width="28px" src="../assets/Icon/Picture9.png" alt="">
             <p style="font-size: 12px;">網站設定</p>
-            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i9" @click="checkDataClassI('i9', 9)">
@@ -523,9 +518,11 @@ const mapOptions = {
 
           </div>
         </div>
-    <div v-if="isCheckShow != 10 && isCheckShow != 8" :style="{
-      transform: isShowHome ? 'translateX(0%)' : 'translateX(-200%)',
-      transition: '0.4s ease-in-out',
+        <div v-if="isCheckShow != 10 && isCheckShow != 8" >
+          
+          <div class="scroll-box" :style="{
+            transform: isShowHome ? 'translateX(0%)' : 'translateX(-100%)',
+            transition: '0.4s ease-in-out',
     display: 'flex',
     position: 'absolute',
     overflow: 'auto',
@@ -533,10 +530,12 @@ const mapOptions = {
     zIndex: 1000,
     left: '82px',
     top: '0',
+    textAlign: 'center',
+    padding: '20px',
     borderTopRightRadius: '10px',
     borderBottomRightRadius: '10px',
-    width: isCheckShow === 1 ? '400px' : '380px',
-    backgroundColor: isCheckShow === 1 ? '#F5F5F5' : '#F0F8FF'
+    width: isCheckShow === 1 ? '420px' : '400px',
+    backgroundColor: isCheckShow === 1 ? '#e6f3ff' : '#F0F8FF'
   }">
       <div>
       <div v-if="isCheckShow == 1">
@@ -605,7 +604,7 @@ const mapOptions = {
               </div>
            
             <div style="width: 20%;">
-              <button @click="showDataChon('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #d9d9d9; color: black;">Not received</button>
+              <button @click="showDataChon('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #d9d9d9; color: black;">故障通報</button>
               </div>
               </div>
 
@@ -717,7 +716,7 @@ const mapOptions = {
               </div>
            
             <div style="width: 20%;">
-              <button @click="showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: red; color: white;">Multiplied</button>
+              <button @click="showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: red; color: white;">故障確認</button>
               </div>
             </div>
 
@@ -797,7 +796,7 @@ const mapOptions = {
               </div>
            
             <div style="width: 20%;">
-              <button @click="showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: yellow; color: black;">Under construction</button>
+              <button @click="showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: yellow; color: black;">維修中</button>
               </div>
             </div>
 
@@ -877,7 +876,7 @@ const mapOptions = {
               </div>
            
             <div style="width: 20%;">
-              <button @click="showDataChon('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">Fixed</button>
+              <button @click="showDataChon('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">維修完成</button>
               </div>
             </div>
 
@@ -1190,28 +1189,25 @@ const mapOptions = {
                 </div>
               </div>
             </div>
-
-            
     </div>
+    
     </div>
-
-    <div>
+          <div>
       <div :style="{
       transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
-      left: isCheckShow === 1 ? '90px' : '75px'
-  }" style="position: absolute; top: 50%; height: 30px; cursor: pointer; display: flex; justify-content: center; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+      left: '100px'
+  }" style="position: absolute; top: 30%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
         <i @click="isShowHome = !isShowHome" :style="{
       transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
       transition: '0.4s ease-in-out',
     
-  }" style="font-size: 20px; line-height: 30px;" class="fa fa-sign-in" aria-hidden="true"></i>
+  }" style="font-size: 20px; margin-right: 10px; line-height: 30px;" class="fa fa-sign-in" aria-hidden="true"></i>
         
       </div>
       </div>
-    
-
-      <div v-if="!isShowHome" style="position: absolute; top: 20px; left: 100px;">
+          </div>
+      <div v-if="!isShowHome" style="position: absolute; top: 20px; left: 120px;">
         <div>
             <GMapAutocomplete
             style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none; width: 250px;"
@@ -1332,6 +1328,8 @@ const dataUser = ref([])
 const duongdi = ref([])
 const soIndex = ref(0)
 const idClick = ref(0)
+let mapInstance = null
+let mapBounds = null
 
 // Icon nhỏ và lớn
 const smallIcon = ({
@@ -1351,6 +1349,19 @@ const bigIcon = ref( {
 //   isPaused.value = !isPaused.value
 // }
 
+// Kiểm tra tọa độ có nằm trong bounds không
+const isLatLngInBounds = (lat, lng) =>{
+  if (!mapBounds) return false
+  const ne = mapBounds.getNorthEast()
+  const sw = mapBounds.getSouthWest()
+
+  return (
+    lat <= ne.lat() &&
+    lat >= sw.lat() &&
+    lng <= ne.lng() &&
+    lng >= sw.lng()
+  )
+}
 const itemRefs = ref({}) // lưu ref theo id_index
 
 const checkTokenData = async () => {
@@ -4619,14 +4630,18 @@ const submitInput = () => {
 
 const checkDataClassI = (classData, index) =>{
   isAction.value = false
-  isCheckShow.value = index
-  if(classI.value != null)
+  if(classData != 'i1'){
+    isCheckShow.value = index
+
+    if(classI.value != null)
     document.querySelector("." + classI.value).style.boxShadow = "none"
 
     //  box-shadow: 6px 2px 6px grey;
-  document.querySelector("." + classData).style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.6)"
+    document.querySelector("." + classData).style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.6)"
 
-  classI.value = classData
+    classI.value = classData
+  }
+  
 
   switch(classData){
     case 'i1':
@@ -4727,7 +4742,7 @@ if (trafficLayer.value) {
 }
 };
 const showDataMap = (location, data) => {
-mapCenter.value = location
+// mapCenter.value = location
   // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
   // mapCenter.value = location
   // zoomLevel.value = 15
@@ -4737,6 +4752,10 @@ mapCenter.value = location
   idClick.value = data.id
   dataLocation.value = data
   showDetails.value = true
+
+  if (!isLatLngInBounds(location.lat, location.lng)) {
+    mapCenter.value = location
+  } 
 }
 const clickDataUpdate = (id) => {
 router.push({path: "/admin/fromelementPages", query: {id: id}})
@@ -4863,6 +4882,9 @@ const debounceZoomEnd = useDebounceFn(() => {
 // Hoặc bạn có thể dùng event `idle` nếu bạn chỉ muốn hiển thị data khi map dừng di chuyển/zoom hẳn:
 const onIdle = () => {
   showMarkers.value = true
+  if (!mapRefs.value) return
+  mapInstance = mapRefs.value.$mapObject
+  mapBounds = mapInstance.getBounds()
 }
 
 // const zoomData = (data) => {
