@@ -458,14 +458,14 @@ const mapOptions = {
     <div style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: rgba(175, 238, 238, 0.9);">
         <div style="width: 80px; height: 100%; margin-top: 15px;">
 
-          <div style="padding: 10px; margin-top: 15px; cursor: pointer;" @click="isShowHome = !isShowHome">
+          <div style="padding: 10px; margin-top: 15px; cursor: pointer;">
             <img v-if="!isShowHome" style="animation: thei3 0.5s ease-in-out infinite;" width="28px" src="../assets/Icon/Picture1.png" alt="">
             <img v-else width="28px" src="../assets/Icon/Picture1.png" alt="">
             <p style="font-size: 12px;">首頁</p>
             
             </div>
 
-            <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i1" @click="checkDataClassI('i1', 1)">
+            <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i1" @click="checkDataClassI('i1', 10)">
             <img width="28px" src="../assets/Icon/Picture2.png" alt="">
             <p style="font-size: 12px;">展開/摺疊</p>
             <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
@@ -523,7 +523,7 @@ const mapOptions = {
 
           </div>
         </div>
-    <div :style="{
+    <div v-if="isCheckShow != 10 && isCheckShow != 8" :style="{
       transform: isShowHome ? 'translateX(0%)' : 'translateX(-200%)',
       transition: '0.4s ease-in-out',
     display: 'flex',
@@ -1197,7 +1197,7 @@ const mapOptions = {
 
     <div>
       <div :style="{
-      transform: isShowHome ? 'translateX(760%)' : 'translateX(0%)',
+      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
       left: isCheckShow === 1 ? '90px' : '75px'
   }" style="position: absolute; top: 50%; height: 30px; cursor: pointer; display: flex; justify-content: center; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
@@ -4629,6 +4629,13 @@ const checkDataClassI = (classData, index) =>{
   classI.value = classData
 
   switch(classData){
+    case 'i1':
+      if(zoomLevel.value > 15){
+        zoomLevel.value = 8
+      }else{
+        zoomLevel.value = 20
+      }
+      break
     case 'i2':
       valueE.value = ""
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
