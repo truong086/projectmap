@@ -100,7 +100,7 @@ const mapOptions = {
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1s,
-          scaledSize: { width: 40, height: 40 },
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
           anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
@@ -136,7 +136,7 @@ const mapOptions = {
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status0,
-          scaledSize: { width: 40, height: 40 },
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
           anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
@@ -203,7 +203,7 @@ const mapOptions = {
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status2,
-          scaledSize: { width: 40, height: 40 },
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
           anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
@@ -274,7 +274,7 @@ const mapOptions = {
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status3,
-          scaledSize: { width: 40, height: 40 },
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
           anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
         class="marker-icon"
@@ -343,7 +343,7 @@ const mapOptions = {
         :icon="{
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1,
-          scaledSize: { width: 40, height: 40 },
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
           anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
@@ -461,50 +461,70 @@ const mapOptions = {
           <div style="padding: 10px; margin-top: 15px; cursor: pointer;" @click="isShowHome = !isShowHome">
             <img v-if="!isShowHome" style="animation: thei3 0.5s ease-in-out infinite;" width="28px" src="../assets/Icon/Picture1.png" alt="">
             <img v-else width="28px" src="../assets/Icon/Picture1.png" alt="">
+            <p style="font-size: 12px;">首頁</p>
+            
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i1" @click="checkDataClassI('i1', 1)">
             <img width="28px" src="../assets/Icon/Picture2.png" alt="">
+            <p style="font-size: 12px;">展開/摺疊</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="cursor: pointer; padding: 10px;" class="i2" @click="checkDataClassI('i2', 1)">
             <img width="28px" src="../assets/Icon/Picture3.png" alt="">
+            <p style="font-size: 12px;">所有號誌清單</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i3" @click="checkDataClassI('i3', 1)">
             <img width="28px" src="../assets/Icon/Picture4.png" alt="">
+            <p style="font-size: 12px;">故障號誌清單</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="cursor: pointer; padding: 10px;" class="i4" @click="checkDataClassI('i4', 1)">
             <img width="28px" src="../assets/Icon/Picture5.png" alt="">
+            <p style="font-size: 12px;">維修中號誌</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <router-link to="/admin">
               <div style="margin: 15px 0; padding: 10px; cursor: pointer;" class="i5" @click="checkDataClassI('i5', 5)">
             <img width="28px" src="../assets/Icon/Picture6.png" alt="">
+            <p style="font-size: 12px;">統計圖表</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
               </router-link>
 
             <div style="cursor: pointer; padding: 10px;" class="i6" @click="checkDataClassI('i6', 2)">
             <img width="28px" src="../assets/Icon/Picture7.png" alt="">
+            <p style="font-size: 12px;">地圖設定</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i7" @click="checkDataClassI('i7', 3)">
             <img width="28px" src="../assets/Icon/Picture8.png" alt="">
+            <p style="font-size: 12px;">道路設定</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="cursor: pointer; padding: 10px;" class="i8" @click="checkDataClassI('i8', 8)">
             <img width="28px" src="../assets/Icon/Picture9.png" alt="">
+            <p style="font-size: 12px;">網站設定</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i9" @click="checkDataClassI('i9', 9)">
             <img width="28px" src="../assets/Icon/Picture10.png" alt="">
+            <p style="font-size: 12px;">關於</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
           </div>
         </div>
     <div :style="{
-      transform: isShowHome ? 'scale(1)' : 'scale(0)',
+      transform: isShowHome ? 'translateX(0%)' : 'translateX(-200%)',
       transition: '0.4s ease-in-out',
     display: 'flex',
     position: 'absolute',
@@ -1175,6 +1195,22 @@ const mapOptions = {
     </div>
     </div>
 
+    <div>
+      <div :style="{
+      transform: isShowHome ? 'translateX(760%)' : 'translateX(0%)',
+      transition: '0.4s ease-in-out',
+      left: isCheckShow === 1 ? '90px' : '75px'
+  }" style="position: absolute; top: 50%; height: 30px; cursor: pointer; display: flex; justify-content: center; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+        <i @click="isShowHome = !isShowHome" :style="{
+      transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
+      transition: '0.4s ease-in-out',
+    
+  }" style="font-size: 20px; line-height: 30px;" class="fa fa-sign-in" aria-hidden="true"></i>
+        
+      </div>
+      </div>
+    
+
       <div v-if="!isShowHome" style="position: absolute; top: 20px; left: 100px;">
         <div>
             <GMapAutocomplete
@@ -1295,6 +1331,20 @@ const dataSearchUserName = ref([])
 const dataUser = ref([])
 const duongdi = ref([])
 const soIndex = ref(0)
+const idClick = ref(0)
+
+// Icon nhỏ và lớn
+const smallIcon = ({
+  // url: 'https://maps.google.com/mapfiles/kml/shapes/info-i_maps.png',
+  width: 40,
+  height: 40 
+});
+
+const bigIcon = ref( {
+  // url: 'https://maps.google.com/mapfiles/kml/shapes/info-i_maps.png',
+  width: 60, 
+  height: 60 
+});
 // const isPaused = ref(true)
 
 // const togglePause = () => {
@@ -1304,6 +1354,7 @@ const soIndex = ref(0)
 const itemRefs = ref({}) // lưu ref theo id_index
 
 const checkTokenData = async () => {
+try{
   const res = await axios.post(
     hostName + `/api/User/CheckToken?token=${store.getToken}`,
     {},
@@ -1320,6 +1371,20 @@ const checkTokenData = async () => {
   } else {
     return false;
   }
+}catch(error){
+  if (error.response) {
+      if (error.response.status === 401) {
+        return false;
+      } else {
+        console.error('Lỗi khác:', error.response.status);
+        return false;
+      }
+    } else {
+      console.error('Không thể kết nối server hoặc lỗi khác:', error.message);
+    }
+    return false;
+}
+  
 };
 const sortPointsByNearest = (startPoint, points) => {
   const sortedPoints = [];
@@ -4655,13 +4720,14 @@ if (trafficLayer.value) {
 }
 };
 const showDataMap = (location, data) => {
-// mapCenter.value = location
+mapCenter.value = location
   // mapCenter.value.lng = TaiNanCenter.value[0].coordinates.lng
   // mapCenter.value = location
   // zoomLevel.value = 15
   selectedMarker.value = location.lat
   showDistanceList.value = true
 
+  idClick.value = data.id
   dataLocation.value = data
   showDetails.value = true
 }
@@ -5265,7 +5331,7 @@ dataLocation.value = data
   showDistanceList.value = true
   // mapCenter.value = data.coordinates
   // zoomLevel.value = 18
-  
+  idClick.value = locationId
   scrollToItem(locationId, indexId)
   showDataChon(classData, classDiv, classChu, divcon, location)
   
@@ -5514,6 +5580,12 @@ return routePath.value[midIndex];
 });
 
 onMounted(() => {
+if (!localStorage.getItem('reloaded')) {
+    localStorage.setItem('reloaded', 'true');
+    window.location.reload();
+  } else {
+    localStorage.removeItem('reloaded');
+  }
   findAllDataMap(valueE.value, page.value)
   // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
   startImageRotation()
@@ -5528,6 +5600,8 @@ onMounted(() => {
       router.push("/login");
     }
   }, 100);
+
+  
   // checkDataClassI('i1', 1)
 });
 
