@@ -542,23 +542,23 @@ const mapOptions = {
         <div style="text-align: left; margin: 0 auto; width: 80%; border-bottom: 3px solid black;">
           <div style="margin-top: 20px; display: flex; justify-content: space-between;">
             
-          <select v-model="dataSelect" @change="searchDataSelect" style="background-color: #e8c264; padding: 10px 15px; margin: 15px 0; border-radius: 20px; border: 1px dashed turquoise; width: 180px;">
+          <select v-model="dataSelect" @change="searchDataSelect" style="background-color: #e8c264; padding: 10px 15px; margin: 15px 0; border-radius: 20px; border: 1px dashed turquoise; width: 280px;">
         <option value="null" selected disabled>Search data ...</option>
         <option value="b1s">
-          ✔ Search Data 1
+          ✔ 故障確認
           </option>
           <option value="b2s">
-            💦 Search Data 2
+            💦 維修中
           </option>
 
           <option value="b3s">
-             👌 Search Data 3
+             👌 維修完成
           </option>
           <option value="b4s">
-             💌 Search Data 4
+             💌 No Error
           </option>
           <option value="b5s">
-            ❌ Search Data 5
+            ❌ 故障通報
           </option>
           <option value="b6s">
             🧨 Total Error
@@ -568,9 +568,7 @@ const mapOptions = {
           </option>
         </select>
 
-        <div style="text-align: center; margin-top: 20px; margin-right: 15px; cursor: pointer;" @click="showDetailsAll(isAction = !isAction)">
-              <i :class="{ 'spin-icon': isAction }" class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>
-              </div>
+        
             </div>
           </div>
         <!-- Nút trong bản đồ -->
@@ -578,12 +576,20 @@ const mapOptions = {
       <!-- <button @click="searchLocation">📍 Tìm vị trí</button> -->
       <!-- <button @click="getDirections">🚗 Tìm đường</button> -->
 
-      <div style="text-align: left; width: 100%; padding-left: 15px; margin-top: 20px;">
+      <div style="display: flex;">
+        
+        
+      <div style="text-align: left; width: 310px; padding-left: 15px; margin-top: 20px;">
         <input v-model.trim="valueE" style="padding: 5px 10px; outline: none; border: 1px dashed grey; border-radius: 10px;" placeholder="Search..." type="text">
         <button @click="timkiemDataRoad" style="background-color: transparent; border: none; outline: none;"><i class="fa fa-search" aria-hidden="true"></i></button>
         </div>
-      
-        <div class="scroll-box" style="margin: 10px 0; padding: 10px; width: 350px; height: 550px; overflow: auto; background-color: #F5F5F5; top: 100px; right: 10px; border-radius: 10px;">
+
+        <div style="text-align: center; margin-top: 20px; margin-right: 15px; cursor: pointer;" @click="showDetailsAll(isAction = !isAction)">
+              <!--<i :class="{ 'spin-icon': isAction }" class="fa fa-futbol-o" aria-hidden="true" style="font-size: 30px;"></i>-->
+                <img :src="isAction ? require('../assets/Icon/roomsmall.png') : require('../assets/Icon/roomlong.png')" style="width: 30px;">
+              </div>
+            </div>
+        <div class="scroll-box">
       <div v-if="zoomLevel >= 13">
         <div v-for="(location, index) in locations" :key="index" :ref="el => setItemRef(location.id, index, el)">
         <div v-if="location.isError">
@@ -940,7 +946,8 @@ const mapOptions = {
           
           </div>
         </div>
-        <div v-else :class="['div4_' + location.id + '_' + index, ' div4']" @click="showDataMap(location.coordinates, location)" :style="{
+        <div v-else>
+          <div :class="['div4_' + location.id + '_' + index, ' div4']" @click="showDataMap(location.coordinates, location)" :style="{
             cursor: 'pointer',
              height: '60px',
             border: 'none',
@@ -1018,6 +1025,8 @@ const mapOptions = {
               
           </div>
           </div>
+          </div>
+        
       </div>
       </div>
       <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
@@ -1210,7 +1219,7 @@ const mapOptions = {
       <div v-if="!isShowHome" style="position: absolute; top: 20px; left: 120px;">
         <div>
             <GMapAutocomplete
-            style="padding: 10px 5px; border-radius: 10px; border: 1px dashed greenyellow; outline: none; width: 250px;"
+            style="padding: 10px 15px; border-radius: 20px; border: none; box-shadow: 3px 3px 3px grey; outline: none; width: 250px;"
               v-model="searchAddress"
               type="text"
               placeholder="Address to Find..."
@@ -5282,7 +5291,7 @@ locations.value = dataLoadStart.value.filter((location) => {
       locations.value = dataLoadStart.value.filter((location) => location.isError === false);
 }
 
-isPhanTrang.value = false
+isPhanTrang.value = true
 
 // routePath.value = []
 // routeDistance.value = null
