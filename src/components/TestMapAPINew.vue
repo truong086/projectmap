@@ -1036,13 +1036,14 @@ try{
     return false;
   }
 }catch(error){
-  if (error.data.errorCode === 401) {
-  console.error('Lỗi khác:');
-        return false;
-      } else {
-        console.error('Lỗi khác:', error.response.status);
-        return false;
-      }
+  // if (error.data.errorCode === 401) {
+  // console.error('Lỗi khác:');
+  //       return false;
+  //     } else {
+  //       console.error('Lỗi khác:', error.response.status);
+  //       return false;
+  //     }
+  return false;
 }
   
 };
@@ -5265,6 +5266,13 @@ if (!localStorage.getItem('reloaded')) {
   } else {
     localStorage.removeItem('reloaded');
   }
+     setInterval(() => {
+    if (!checkTokenData()) {
+      store.clearStore();
+      localStorage.clear();
+      router.push("/login");
+    }
+  }, 100);
   findAllDataMap(valueE.value, page.value)
   // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
   startImageRotation()
@@ -5272,13 +5280,7 @@ if (!localStorage.getItem('reloaded')) {
   statusGiaoThong()
   poiStart()
 
-  setInterval(() => {
-    if (!checkTokenData()) {
-      store.clearStore();
-      localStorage.clear();
-      router.push("/login");
-    }
-  }, 100);
+ 
 
   
   // checkDataClassI('i1', 1)
