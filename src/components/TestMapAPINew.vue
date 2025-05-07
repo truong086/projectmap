@@ -520,12 +520,17 @@ const mapOptions = {
         </div>
         <div v-if="isCheckShow != 10 && isCheckShow != 8" >
           
-          <div class="scroll-box" :style="{
-            transform: isShowHome ? 'translateX(0%)' : 'translateX(-100%)',
-            transition: '0.4s ease-in-out',
+          <div
+  ref="scrollContainer"
+  class="scroll-box"
+  @wheel="handleScroll"
+  :class="{ 'show-scroll': showScroll }"
+  :style="{
+    transform: isShowHome ? 'translateX(0%)' : 'translateX(-100%)',
+    transition: '0.4s ease-in-out',
     display: 'flex',
+    flexDirection: 'column',
     position: 'absolute',
-    overflow: 'auto',
     height: '100%',
     zIndex: 1000,
     left: '82px',
@@ -535,12 +540,14 @@ const mapOptions = {
     borderTopRightRadius: '10px',
     borderBottomRightRadius: '10px',
     width: isCheckShow === 1 ? '420px' : '400px',
-    backgroundColor: isCheckShow === 1 ? '#e6f3ff' : '#F0F8FF'
-  }">
+    backgroundColor: isCheckShow === 1 ? '#e6f3ff' : '#F0F8FF',
+    overflow: 'auto'
+  }"
+>
       <div>
       <div v-if="isCheckShow == 1">
         <div style="text-align: left; margin: 0 auto; width: 80%; border-bottom: 3px solid black;">
-          <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+          <div style=" display: flex; justify-content: space-between;">
             
           <select v-model="dataSelect" @change="searchDataSelect" style="background-color: #e8c264; padding: 10px 15px; margin: 15px 0; border-radius: 20px; border: 1px dashed turquoise; width: 280px;">
         <option value="null" selected disabled>Search data ...</option>
@@ -580,8 +587,51 @@ const mapOptions = {
         
         
       <div style="text-align: left; width: 310px; padding-left: 15px; margin-top: 20px;">
+      <select v-model.trim="valueE" @change="timkiemDataRoad" style="background-color: #e8c264; padding: 10px 15px; margin-bottom: 10px; border-radius: 20px; border: 1px dashed turquoise; width: 180px;">
+     <option value="" selected disabled>🥽Search District ...</option>
+      <option value="東區">東區</option>
+      <option value="南區">南區</option>
+      <option value="北區">北區</option>
+      <option value="安南區">安南區</option>
+      <option value="安平區">安平區</option>
+      <option value="中西區">中西區</option>
+      <option value="永康區">永康區</option>
+      <option value="新營區">新營區</option>
+      <option value="鹽水區">鹽水區</option>
+      <option value="白河區">白河區</option>
+      <option value="柳營區">柳營區</option>
+      <option value="後壁區">後壁區</option>
+      <option value="東山區">東山區</option>
+      <option value="麻豆區">麻豆區</option>
+      <option value="下營區">下營區</option>
+      <option value="六甲區">六甲區</option>
+      <option value="官田區">官田區</option>
+      <option value="大內區">大內區</option>
+      <option value="佳里區">佳里區</option>
+      <option value="學甲區">學甲區</option>
+      <option value="西港區">西港區</option>
+      <option value="七股區">七股區</option>
+      <option value="將軍區">將軍區</option>
+      <option value="北門區">北門區</option>
+      <option value="新化區">新化區</option>
+      <option value="善化區">善化區</option>
+      <option value="新市區">新市區</option>
+      <option value="安定區">安定區</option>
+      <option value="山上區">山上區</option>
+      <option value="玉井區">玉井區</option>
+      <option value="楠西區">楠西區</option>
+      <option value="南化區">南化區</option>
+      <option value="左鎮區">左鎮區</option>
+      <option value="仁德區">仁德區</option>
+      <option value="歸仁區">歸仁區</option>
+      <option value="關廟區">關廟區</option>
+      <option value="龍崎區">龍崎區</option>
+
+      </select>
+      <!--
         <input v-model.trim="valueE" style="padding: 5px 10px; outline: none; border: 1px dashed grey; border-radius: 10px;" placeholder="Search..." type="text">
         <button @click="timkiemDataRoad" style="background-color: transparent; border: none; outline: none;"><i class="fa fa-search" aria-hidden="true"></i></button>
+        -->
         </div>
 
         <div style="text-align: center; margin-top: 20px; margin-right: 15px; cursor: pointer;" @click="showDetailsAll(isAction = !isAction)">
@@ -590,445 +640,22 @@ const mapOptions = {
               </div>
             </div>
         <div class="scroll-box">
-      <div v-if="zoomLevel >= 13">
-        <div v-for="(location, index) in locations" :key="index" :ref="el => setItemRef(location.id, index, el)">
-        <div v-if="location.isError">
-          <div v-if="location.statusError == 1" :class="['div_' + location.id + '_' + index, ' div0']" @click="showDataMap(location.coordinates, location)" :style="{
-            cursor: 'pointer',
-             height: '60px',
-            border: 'none',
-             borderRadius: '10px',
-              padding: '10px',
-               marginBottom: '10px',
-               backgroundColor: '#FFF8DC'
-          }">
-            <div :class="['divchu_' + location.id + '_' + index, ' divchu0']" style="margin-bottom: 15px; padding-top: 5px;">
-            <div style="display: flex;">
-              <div style="width: 80%; text-align: left;">
-              <p style="font-size: 13px; font-weight: bold;">號誌編號: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 13px; font-weight: bold;">號誌類型: <strong>{{ location.typesOfSignal }}</strong></p>
-              </div>
-           
-            <div style="width: 20%;">
-              <button @click="showDataChon('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #d9d9d9; color: black;">故障通報</button>
-              </div>
-              </div>
-
-              <div v-if="location.account_user == null" style="display: flex; transform: scale(0); z-index: 999;" :class="['status_' + location.id + '_' + index, ' status0']">
-                <div>
-                  <p style="font-size: 11px; margin-right: 8px; margin-top: 8px;">派遣工程師</p>
-                  </div>
-
-                  <div style="background-color: white; height: 25px; border: 1px solid grey; margin-top: 8px; position: relative; z-index: 999;">
-                    <i style="font-size: 13px; color: grey; margin: 5px;" class="fa fa-search" aria-hidden="true"></i>
-                    <input v-model="searchUserName" style="width: 80%; padding: 3px 5px; border: none; outline: none;" type="text">
-                     <div 
-      :class="['square', ' display_' + location.id + '_' + index, ' displaynone']"
-      style="padding: 5px;"
-    >
-    <div style="text-align: left;">
-      <i @click="showBoxSearch('status_' + location.id + '_' + index, 'display_' + location.id + '_' + index, 'huy')" class="fa fa-window-close-o" aria-hidden="true"></i>
-      </div>
-    
-      <div>
-        <div v-for="(item, index) in dataSearchUserName" :key="index" style="margin: 10px 20px;">
-          <div @click="updateUser(location.repaiDetail_id, item.id, 'status_' + location.id + '_' + index, 'displaynone')" style="display: flex;">
-            <p style="font-size: 12px; font-weight: bold;">Name: {{ item.name }}</p>
-            <p style="font-size: 12px; margin: 0 15px; font-weight: bold;">Job: {{ item.total }}</p>
-            </div>
-          </div>
-        </div>
-    </div>
-                    </div>
-                    <div>
-                      <button @click="showBoxSearch('status_' + location.id + '_' + index, 'display_' + location.id + '_' + index, 'on')" style="background-color: transparent; border: none; outline: none; font-size: 20px;"><i class="fa fa-check-square-o" aria-hidden="true"></i></button>
-                      </div>
-                </div>
-            </div>
-
-          <div :class="['status_' + location.id + '_' + index, ' status0']" style="transform: scale(0); text-align: left; z-index: 0">
-            
-            <div style="display: flex; justify-content: space-between; width: 100%; z-index: 0;">
-              <div style="z-index: 0;">
-                <p style="font-size: 12px; font-weight: bold; z-index: 0;">緯度: <strong>{{ location.latitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold; z-index: 0;">經度: <strong>{{ location.longitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
-              <p style="font-size: 12px; font-weight: bold;">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
-                </div>
-
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
-                        <div v-for="(image, index) in location?.images" :key="index">
-                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
-                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
-                                  <video
-                                @click="showImage(image)"
-                                    autoplay
-                                    muted
-                                    loop
-                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
-                                    :src="image"
-                                  />
-                                </div>
-                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
-                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
-                          </div>
-                        
-                      </div>
-            <div>
-              
-              </div>
-              </div>
-
-              <div v-if="location.totalUpdate > 0" :class="['details_' + location.id + '_' + index, ' details0']" style="transform: scale(0); text-align: left; height: 0;">
-            <div>
-              <p style="font-size: 12px; font-weight: bold;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
-            <p style="font-size: 12px; font-weight: bold;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
-            <p style="font-size: 12px; font-weight: bold;">Account: {{ location.account_userUpdate }}</p>
-              </div>
-            </div>
-              <div style="display: flex; border-top: 1px dashed grey; margin-top: 15px;">
-                <div style="width: 33.33%;">
-              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="outline: none; background: transparent; cursor: pointer; text-decoration: underline; border: none;">規劃路徑</button>
-              </div>
-              <div style="width: 33.33%;">
-                <button @click="clickDataShowTable(location.repaiDetail_id)" style="outline: none; background: transparent; cursor: pointer; border: none;">後台管理</button>
-                </div>
-
-                <div style="width: 33.33%;">
-                  <button style="outline: none; background: transparent; cursor: pointer; border: none;"> <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer;" @click="showDetailsDiv('details_' + location.id + '_' + index, 'div_' + location.id + '_' + index, location)">顯示詳細資料</p></button>
-                </div>
-                </div>
-              
-          </div>
-          </div>
-          
-          <div v-if="location.statusError == 2"  :class="['div1_' + location.id + '_' + index, ' div1']" @click="showDataMap(location.coordinates, location)" :style="{
-            cursor: 'pointer',
-             height: '60px',
-            border: 'none',
-             borderRadius: '10px',
-              padding: '10px',
-               marginBottom: '10px',
-               backgroundColor: '#FFF8DC'
-          }">
-            <div :class="['divchu1_' + location.id + '_' + index, ' divchu1']" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
-            <div style="width: 80%; text-align: left;">
-              <p style="font-size: 13px; font-weight: bold;">號誌編號: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 13px; font-weight: bold;">號誌類型: <strong>{{ location.typesOfSignal }}</strong></p>
-              </div>
-           
-            <div style="width: 20%;">
-              <button @click="showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: red; color: white;">故障確認</button>
-              </div>
-            </div>
-
-          <div :class="['status1_' + location.id + '_' + index, ' status1']" style="transform: scale(0); text-align: left;">
-            
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <div>
-                <p style="font-size: 12px; font-weight: bold;">緯度: <strong>{{ location.latitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
-                </div>
-
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
-                        <div v-for="(image, index) in location?.images" :key="index">
-                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
-                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
-                                  <video
-                                @click="showImage(image)"
-                                    autoplay
-                                    muted
-                                    loop
-                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
-                                    :src="image"
-                                  />
-                                </div>
-                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
-                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
-                          </div>
-                        
-                      </div>
-            <div>
-              
-              </div>
-              </div>
-
-              <div v-if="location.totalUpdate > 0" :class="['details1_' + location.id + '_' + index, ' details1']" style="transform: scale(0); text-align: left; height: 0;">
-            <div>
-              <p style="font-size: 12px; font-weight: bold;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
-            <p style="font-size: 12px; font-weight: bold;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
-            <p style="font-size: 12px; font-weight: bold;">Account: {{ location.account_userUpdate }}</p>
-              </div>
-            </div>
-              <div style="display: flex; border-top: 1px dashed grey; margin-top: 15px;">
-                <div style="width: 33.33%;">
-              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="outline: none; background: transparent; cursor: pointer; text-decoration: underline; border: none;">規劃路徑</button>
-              </div>
-              <div style="width: 33.33%;">
-                <button @click="clickDataShowTable(location.repaiDetail_id)" style="outline: none; background: transparent; cursor: pointer; border: none;">後台管理</button>
-                </div>
-
-                <div style="width: 33.33%;">
-                  <button style="outline: none; background: transparent; cursor: pointer; border: none;"> <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer;" @click="showDetailsDiv('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, location)">顯示詳細資料</p></button>
-                </div>
-                </div>
-              
-          </div>
-          
-          </div>
-
-          <div v-if="location.statusError == 3" :class="['div2_' + location.id + '_' + index, ' div2']" @click="showDataMap(location.coordinates, location)" :style="{
-            cursor: 'pointer',
-             height: '60px',
-            border: 'none',
-             borderRadius: '10px',
-              padding: '10px',
-               marginBottom: '10px',
-               backgroundColor: '#FFF8DC'
-          }">
-            <div :class="['divchu2_' + location.id + '_' + index, ' divchu2']" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
-            <div style="width: 80%; text-align: left;">
-              <p style="font-size: 13px; font-weight: bold;">號誌編號: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 13px; font-weight: bold;">號誌類型: <strong>{{ location.typesOfSignal }}</strong></p>
-              </div>
-           
-            <div style="width: 20%;">
-              <button @click="showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: yellow; color: black;">維修中</button>
-              </div>
-            </div>
-
-          <div :class="['status2_' + location.id + '_' + index, ' status2']" style="transform: scale(0); text-align: left;">
-            
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <div>
-                <p style="font-size: 12px; font-weight: bold;">緯度: <strong>{{ location.latitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
-                </div>
-
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
-                        <div v-for="(image, index) in location?.images" :key="index">
-                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
-                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
-                                  <video
-                                @click="showImage(image)"
-                                    autoplay
-                                    muted
-                                    loop
-                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
-                                    :src="image"
-                                  />
-                                </div>
-                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
-                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
-                          </div>
-                        
-                      </div>
-            <div>
-              
-              </div>
-              </div>
-
-              <div v-if="location.totalUpdate > 0" :class="['details2_' + location.id + '_' + index, ' details2']" style="transform: scale(0); text-align: left; height: 0;">
-            <div>
-              <p style="font-size: 12px; font-weight: bold;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
-            <p style="font-size: 12px; font-weight: bold;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
-            <p style="font-size: 12px; font-weight: bold;">Account: {{ location.account_userUpdate }}</p>
-              </div>
-            </div>
-              <div style="display: flex; border-top: 1px dashed grey; margin-top: 15px;">
-                <div style="width: 33.33%;">
-              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="outline: none; background: transparent; cursor: pointer; text-decoration: underline; border: none;">規劃路徑</button>
-              </div>
-              <div style="width: 33.33%;">
-                <button @click="clickDataShowTable(location.repaiDetail_id)" style="outline: none; background: transparent; cursor: pointer; border: none;">後台管理</button>
-                </div>
-
-                <div style="width: 33.33%;">
-                  <button style="outline: none; background: transparent; cursor: pointer; border: none;"> <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer;" @click="showDetailsDiv('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, location)">顯示詳細資料</p></button>
-                </div>
-                </div>
-              
-          </div>
-          
-          </div>
-
-          <div v-if="location.statusError == 4" :class="['div3_' + location.id + '_' + index, ' div3']" @click="showDataMap(location.coordinates, location)" :style="{
-            cursor: 'pointer',
-             height: '60px',
-            border: 'none',
-             borderRadius: '10px',
-              padding: '10px',
-               marginBottom: '10px',
-               backgroundColor: '#FFF8DC'
-          }">
-            <div :class="['divchu3_' + location.id + '_' + index, ' divchu3']" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
-            <div style="width: 80%; text-align: left;">
-              <p style="font-size: 13px; font-weight: bold;">號誌編號: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 13px; font-weight: bold;">號誌類型: <strong>{{ location.typesOfSignal }}</strong></p>
-              </div>
-           
-            <div style="width: 20%;">
-              <button @click="showDataChon('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">維修完成</button>
-              </div>
-            </div>
-
-          <div :class="['status3_' + location.id + '_' + index, ' status3']" style="transform: scale(0); text-align: left;">
-            
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <div>
-                <p style="font-size: 12px; font-weight: bold;">緯度: <strong>{{ location.latitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
-                </div>
-
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
-                        <div v-for="(image, index) in location?.images" :key="index">
-                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
-                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
-                                  <video
-                                @click="showImage(image)"
-                                    autoplay
-                                    muted
-                                    loop
-                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
-                                    :src="image"
-                                  />
-                                </div>
-                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
-                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
-                          </div>
-                        
-                      </div>
-            <div>
-              
-              </div>
-              </div>
-
-              <div v-if="location.totalUpdate > 0" :class="['details3_' + location.id + '_' + index, ' details3']" style="transform: scale(0); text-align: left; height: 0;">
-            <div>
-              <p style="font-size: 12px; font-weight: bold;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
-            <p style="font-size: 12px; font-weight: bold;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
-            <p style="font-size: 12px; font-weight: bold;">Account: {{ location.account_userUpdate }}</p>
-              </div>
-            </div>
-              <div style="display: flex; border-top: 1px dashed grey; margin-top: 15px;">
-                <div style="width: 33.33%;">
-              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="outline: none; background: transparent; cursor: pointer; text-decoration: underline; border: none;">規劃路徑</button>
-              </div>
-              <div style="width: 33.33%;">
-                <button @click="clickDataUpdate(location.id)" style="outline: none; background: transparent; cursor: pointer; border: none;">後台管理</button>
-                </div>
-
-                <div style="width: 33.33%;">
-                  <button style="outline: none; background: transparent; cursor: pointer; border: none;"> <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer;" @click="showDetailsDiv('details3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, location)">顯示詳細資料</p></button>
-                </div>
-                </div>
-              
-          </div>
-          
-          </div>
-        </div>
-        <div v-else>
-          <div :class="['div4_' + location.id + '_' + index, ' div4']" @click="showDataMap(location.coordinates, location)" :style="{
-            cursor: 'pointer',
-             height: '60px',
-            border: 'none',
-             borderRadius: '10px',
-              padding: '10px',
-               marginBottom: '10px',
-               backgroundColor: '#FFF8DC'
-          }">
-            <div :class="['divchu4_' + location.id + '_' + index, ' divchu4']" style="display: flex; margin-bottom: 15px; padding: 5px 0;">
-            <div style="width: 80%; text-align: left;">
-              <p style="font-size: 13px; font-weight: bold;">號誌編號: <strong>{{ location.signalNumber }}</strong></p>
-              <p style="font-size: 13px; font-weight: bold;">號誌類型: <strong>{{ location.typesOfSignal }}</strong></p>
-              </div>
-           
-            <div style="width: 20%;">
-              <button @click="showDataChon('status4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, 'divchu4_' + location.id + '_' + index, 'details4_' + location.id + '_' + index, location)" style="padding: 5px 10px; font-size: 10px; border-radius: 10px; background-color: #7FFF00; color: black;">平常</button>
-              </div>
-            </div>
-
-          <div :class="['status4_' + location.id + '_' + index, ' status4']" style="transform: scale(0); text-align: left;">
-            
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <div>
-                <p style="font-size: 12px; font-weight: bold;">緯度: <strong>{{ location.latitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
-                <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
-                </div>
-
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
-                        <div v-for="(image, index) in location?.images" :key="index">
-                          <img @click="showImage(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
-                                <div v-if="image != null && getFileType(image) === 'video'" @click="showImage(image)">
-                                  <video
-                                @click="showImage(image)"
-                                    autoplay
-                                    muted
-                                    loop
-                                    style="width: 30px; height: 30px; border-radius: 50%; transition: all 0.3s ease;"
-                                    :src="image"
-                                  />
-                                </div>
-                                <iframe v-else-if="image != null && getFileType(image) === 'pdf'" :src="image" width="100%" height="300px"></iframe>
-                                <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
-                          </div>
-                        
-                      </div>
-            <div>
-              
-              </div>
-              </div>
-
-              <div v-if="location.totalUpdate > 0" :class="['details4_' + location.id + '_' + index, ' details4']" style="transform: scale(0); text-align: left; height: 0;">
-            <div>
-              <p style="font-size: 12px; font-weight: bold;">Last modified date: <strong>{{fomatDate(location.dateUpdate) }}</strong></p>
-            <p style="font-size: 12px; font-weight: bold;" v-if="location.statusErrorUpdate == 0">Code Error: 號誌正常</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 1">Code Error: 號誌設備故障</p>
-            <p style="font-size: 12px; font-weight: bold;" v-else-if="location.statusErrorUpdate == 2">Code Error: 號誌停電</p>
-            <p style="font-size: 12px; font-weight: bold;">Account: {{ location.account_userUpdate }}</p>
-              </div>
-            </div>
-              <div style="display: flex; border-top: 1px dashed grey; margin-top: 15px;">
-                <div style="width: 33.33%;">
-              <button :class="'s1' + location.id" @click="clickDataLocation(location, 'driving-car', 's1' + location.id)" style="outline: none; background: transparent; cursor: pointer; text-decoration: underline; border: none;">規劃路徑</button>
-              </div>
-              <div style="width: 33.33%;">
-                <button @click="clickDataUpdate(location.id)" style="outline: none; background: transparent; cursor: pointer; border: none;">後台管理</button>
-                </div>
-
-                <div style="width: 33.33%;">
-                  <button style="outline: none; background: transparent; cursor: pointer; border: none;"> <p v-if="location.totalUpdate > 0" style="text-decoration: underline; cursor: pointer;" @click="showDetailsDiv('details3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, location)">顯示詳細資料</p></button>
-                </div>
-                </div>
-              
-          </div>
-          </div>
-          </div>
-        
-      </div>
-      </div>
+          <ShowmapGmarket 
+    :locations="locations"
+    :zoomLevel="zoomLevel"
+    :showDataChon="showDataChon"
+    :clickDataLocation="clickDataLocation"
+    :clickDataShowTable="clickDataShowTable"
+    :updateUser="updateUser"
+    :showBoxSearch="showBoxSearch"
+    :showImage="showImage"
+    :showDataMap="showDataMap"
+    :clickDataUpdate="clickDataUpdate"
+    :getFileType="getFileType"
+    :setItemRef="setItemRef"
+    :fomatDate="fomatDate"
+    :showDetailsDiv="showDetailsDiv"
+  />
       <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
      </div>
     </div>
@@ -1203,9 +830,9 @@ const mapOptions = {
     </div>
           <div>
       <div :style="{
-      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
+      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(785%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
-      left: '100px'
+      left: '90px'
   }" style="position: absolute; top: 30%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
         <i @click="isShowHome = !isShowHome" :style="{
       transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
@@ -1290,6 +917,7 @@ import { useRouter } from "vue-router";
 import {useCounterStore} from '../store'
 import { useDebounceFn } from '@vueuse/core' // Giúp debounce dễ hơn
 import haversine from 'haversine-distance'; // tính khoảng cách giữa 2 điểm
+import ShowmapGmarket from './showmapGmarket.vue'
 const showMarkers = ref(false)
 // Vị trí trung tâm bản đồ (Hồ Chí Minh)
 const mapCenter = ref({ lat: 22.99318457718073, lng: 120.20495235408347 });
@@ -1340,6 +968,22 @@ const idClick = ref(0)
 let mapInstance = null
 let mapBounds = null
 
+const showScroll = ref(false)
+let hideScrollTimeout = null
+
+const handleScroll = () => {
+  showScroll.value = true
+
+  // Nếu đang có timer cũ thì xóa đi
+  if (hideScrollTimeout) {
+    clearTimeout(hideScrollTimeout)
+  }
+
+  // Tạo timer mới để ẩn scroll sau 2 giây không lăn
+  hideScrollTimeout = setTimeout(() => {
+    showScroll.value = false
+  }, 1000)
+}
 // Icon nhỏ và lớn
 const smallIcon = ({
   // url: 'https://maps.google.com/mapfiles/kml/shapes/info-i_maps.png',
@@ -1392,17 +1036,13 @@ try{
     return false;
   }
 }catch(error){
-  if (error.response) {
-      if (error.response.status === 401) {
+  if (error.data.errorCode === 401) {
+  console.error('Lỗi khác:');
         return false;
       } else {
         console.error('Lỗi khác:', error.response.status);
         return false;
       }
-    } else {
-      console.error('Không thể kết nối server hoặc lỗi khác:', error.message);
-    }
-    return false;
 }
   
 };
@@ -5020,6 +4660,7 @@ findAllDataMap(valueE.value, newPage)
 const changeReload = (event) =>{
   pageSize.value = event
   findAllDataMap(valueE.value, page.value)
+  dataSelect.value = "all"
 }
 const getToken = () => {
 
@@ -5719,11 +5360,20 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
-.spin-icon {
-  animation: spin 0.5s linear infinite;
-  display: inline-block;
+
+
+.scroll-box::-webkit-scrollbar {
+  width: 8px;
+  opacity: 0;
+  display: none; /* ẩn mặc định trên Chrome/Safari */
+  transition: opacity 0.3s;
 }
 
+.scroll-box.show-scroll::-webkit-scrollbar {
+  display: block; /* Hiện khi cần */
+  opacity: 1;
+  
+}
 .square {
   width: 200px;
   height: 100px;

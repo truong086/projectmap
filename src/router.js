@@ -79,6 +79,11 @@ const routes = [
     },
     children: [
       {
+        path: "/Admin",
+        name: "dataDasboard",
+        component: dashboardPages,
+      },
+      {
         path: "dashboardPages",
         name: "DashboardPages",
         component: dashboardPages,

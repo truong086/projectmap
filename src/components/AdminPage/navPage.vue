@@ -82,6 +82,14 @@
                 <span class="menu-title">Tables</span>
             </router-link>
           </li>
+          <li class="nav-item menu-items">
+            <router-link class="nav-link" to="/">
+                <span class="menu-icon">
+                    <i class="mdi mdi-table-large"></i>
+                </span>
+                <span class="menu-title">Back Map</span>
+            </router-link>
+          </li>
         </ul>
       </nav>
 </template>
