@@ -329,6 +329,16 @@ watch(
           show: false // Nếu bạn muốn ẩn nhãn
         }
       }
+    ],
+    xaxis: [
+      {
+        x: 0, // Vị trí đường ngang (cuối trục X)
+        borderColor: 'black', // Màu đường
+        strokeDashArray: 0,
+        label: {
+          show: false // Nếu bạn muốn ẩn nhãn
+        }
+      }
     ]
   }
     };

@@ -455,7 +455,7 @@ const mapOptions = {
     </GMapMarker>
     
     <!--Poi-->
-    <div class="scroll-box" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: rgba(175, 238, 238, 1);">
+    <div class="scroll-boxs" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: #e6ffff;">
         <div style="width: 100px; height: 100%; margin-top: 15px;">
 
           <div style="padding: 10px; margin-top: 15px; cursor: pointer;">
@@ -828,12 +828,27 @@ const mapOptions = {
     </div>
     
     </div>
-          <div>
+          <div v-if="isCheckShow == 1">
       <div :style="{
-      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(785%)' : 'translateX(0%)',
+      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(790%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
-      left: '90px'
-  }" style="position: absolute; top: 30%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+      left: '85px'
+  }" style="position: absolute; top: 20%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+        <i @click="isShowHome = !isShowHome" :style="{
+      transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
+      transition: '0.4s ease-in-out',
+    
+  }" style="font-size: 20px; margin-right: 10px; line-height: 30px;" class="fa fa-sign-in" aria-hidden="true"></i>
+        
+      </div>
+      </div>
+
+      <div v-if="isCheckShow == 2 || isCheckShow == 3 || isCheckShow == 9">
+      <div :style="{
+      transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
+      transition: '0.4s ease-in-out',
+      left: '85px'
+  }" style="position: absolute; top: 20%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
         <i @click="isShowHome = !isShowHome" :style="{
       transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
       transition: '0.4s ease-in-out',
@@ -856,6 +871,10 @@ const mapOptions = {
           </div>
         </div>
     </GMapMap>
+
+    <!-- Overlay mờ phủ lên bản đồ -->
+    <div class="map-overlay"></div>
+
   </div>
    
   <div class="marquee-container" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%);" v-if="zoomLevel < 13">
@@ -886,6 +905,8 @@ const mapOptions = {
     
   </div>
   </div>
+
+
 
   <div v-if="isLoading" class="loading-overlay">
     <div class="spinner"></div>
@@ -1018,6 +1039,7 @@ const isLatLngInBounds = (lat, lng) =>{
 const itemRefs = ref({}) // lưu ref theo id_index
 
 const checkTokenData = async () => {
+
 try{
   const res = await axios.post(
     hostName + `/api/User/CheckToken?token=${store.getToken}`,
@@ -1025,14 +1047,18 @@ try{
     getToken()
   );
   if (res.data.success) {
-    const check = res.data.content.token.split(".");
-    if (check.length !== 3) {
-      return false;
-    } else {
-      store.setToken(res.data.content.token);
-      return true;
-    }
+    // const check = res.data.content.token.split(".");
+    // if (check.length !== 3) {
+    //   return false;
+    // } else {
+    //   store.setToken(res.data.content.token);
+    //   return true;
+    // }
+    // alert("Đã vào")
+    store.setToken(res.data.content.token);
+    return true
   } else {
+  //  alert("Đã vào")
     return false;
   }
 }catch(error){
@@ -4755,11 +4781,11 @@ var result = {
 return result;
 };
 const findAllDataMap = async (searchData, pageData) => {
- if (!checkTokenData()) {
+ if (await checkTokenData() === false) {  
+      router.push("/login");
       store.clearStore();
       localStorage.clear();
-      router.push("/login");
-
+      
       return
     }
   isLoading.value = true;
@@ -5357,11 +5383,12 @@ if (!localStorage.getItem('reloaded')) {
   } else {
     localStorage.removeItem('reloaded');
   }
-     setInterval(() => {
-    if (!checkTokenData()) {
+     setInterval( async() => {
+    if (await checkTokenData() === false) {
+      router.push("/login");
       store.clearStore();
       localStorage.clear();
-      router.push("/login");
+      return
     }
   }, 100);
   findAllDataMap(valueE.value, page.value)
@@ -5454,6 +5481,23 @@ onUnmounted(() => {
 
 <style scoped>
 
+.map-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(169, 169, 169, 0.2); /* màu đen mờ */
+  pointer-events: none; /* để không chặn tương tác với map */
+  z-index: 10;
+}
+
+.scroll-boxs::-webkit-scrollbar {
+  width: 8px;
+  opacity: 0;
+  display: none; /* ẩn mặc định trên Chrome/Safari */
+  transition: opacity 0.3s;
+}
 
 .scroll-box::-webkit-scrollbar {
   width: 8px;
