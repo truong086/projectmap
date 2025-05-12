@@ -4755,6 +4755,13 @@ var result = {
 return result;
 };
 const findAllDataMap = async (searchData, pageData) => {
+ if (!checkTokenData()) {
+      store.clearStore();
+      localStorage.clear();
+      router.push("/login");
+
+      return
+    }
   isLoading.value = true;
 document.body.classList.add("loading"); // Add Lớp "loading"
 document.body.style.overflow = "hidden";
