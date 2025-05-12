@@ -1394,6 +1394,7 @@ const timkiemDataRoad = () => {
   }
     
   findAllDataMap(valueE.value, page.value)
+  searchLocationValue(valueE.value + ", 臺南, 台灣")
   isPhanTrang.value = true
   dataSelect.value = 'all'
 }
@@ -4781,13 +4782,6 @@ var result = {
 return result;
 };
 const findAllDataMap = async (searchData, pageData) => {
- if (await checkTokenData() === false) {  
-      router.push("/login");
-      store.clearStore();
-      localStorage.clear();
-      
-      return
-    }
   isLoading.value = true;
 document.body.classList.add("loading"); // Add Lớp "loading"
 document.body.style.overflow = "hidden";
@@ -5220,6 +5214,36 @@ const searchLocation = async (dataSearch) => {
   }
 };
 
+const searchLocationValue = async (dataSearch) => {
+  searchAddress.value = dataSearch
+  console.log("Data Name ", dataSearch)
+  if (!searchAddress.value) {
+    alert("Vui lòng nhập địa chỉ!");
+    return;
+  }
+
+  try {
+    const coordinates = await geocodeAddress(searchAddress.value);
+
+    // Thêm địa chỉ mới vào danh sách
+    resolvedLocations.value.push({
+      address: searchAddress.value,
+      coordinates,
+    });
+
+    fetchOSMBoundary()
+    // Cập nhật bản đồ
+    mapCenter.value = coordinates;
+    zoomLevel.value = 15;
+
+    // Xóa ô input
+    searchAddress.value = "";
+    
+  } catch (error) {
+    alert("Không tìm thấy địa chỉ, vui lòng thử lại!");
+  }
+};
+
 // Tìm đường đến vị trí đã chọn
 const getDirections = async () => {
   if (!selectedLocation.value) {
@@ -5384,13 +5408,13 @@ if (!localStorage.getItem('reloaded')) {
     localStorage.removeItem('reloaded');
   }
      setInterval( async() => {
-    if (await checkTokenData() === false) {
+    if (await checkTokenData() == false) {
       router.push("/login");
       store.clearStore();
       localStorage.clear();
       return
     }
-  }, 100);
+  }, 1000);
   findAllDataMap(valueE.value, page.value)
   // getCurrentLocation(); // Lấy vị trí hiện tại khi tải trang
   startImageRotation()
