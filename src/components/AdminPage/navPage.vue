@@ -1,9 +1,9 @@
 <template>
     <!-- partial:partials/_sidebar.html -->
-    <nav class="sidebar sidebar-offcanvas" id="sidebar">
-        <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
-          <a class="sidebar-brand brand-logo" href="index.html"><img src="../../assets/AdminTemplate/assets/images/logo.svg" alt="logo" /></a>
-          <a class="sidebar-brand brand-logo-mini" href="index.html"><img src="../../assets/AdminTemplate/assets/images/logo-mini.svg" alt="logo" /></a>
+    <nav class="sidebar sidebar-offcanvas" id="sidebar"  style="background-color: #e6ffff;">
+        <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top" style="background-color: #e6ffff;">
+          
+          <a class="" href="index.html"><img style="width: 100px;" src="https://tse3.mm.bing.net/th?id=OIP.IQpVvjs2al0YGdaoTpn2DwHaGu&pid=Api&P=0&h=220" alt="logo" /></a>
         </div>
         <ul class="nav">
           <li class="nav-item profile">

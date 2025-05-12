@@ -467,7 +467,7 @@ const mapOptions = {
 
             <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i1" @click="checkDataClassI('i1', 10)">
             <img width="28px" src="../assets/Icon/Picture2.png" alt="">
-            <p style="font-size: 12px;">展開/摺疊</p>
+            <p style="font-size: 12px;">調整視野</p>
             <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
@@ -545,11 +545,11 @@ const mapOptions = {
   }"
 >
       <div>
-      <div v-if="isCheckShow == 1">
+      <div v-if="isCheckShow == 1" style="width: 390px;">
         <div style="text-align: left; margin: 0 auto; width: 80%; border-bottom: 3px solid black;">
           <div style=" display: flex; justify-content: space-between;">
             
-          <select v-model="dataSelect" @change="searchDataSelect" style="background-color: #e8c264; padding: 10px 15px; margin: 15px 0; border-radius: 20px; border: 1px dashed turquoise; width: 280px;">
+          <select v-model="dataSelect" @change="searchDataSelect" style="background-color: white; padding: 10px 15px; margin: 15px 0; border-radius: 20px; border: 1px dashed turquoise; width: 280px;">
         <option value="null" selected disabled>Search data ...</option>
         <option value="b1s">
           ✔ 故障確認
@@ -587,7 +587,7 @@ const mapOptions = {
         
         
       <div style="text-align: left; width: 310px; padding-left: 15px; margin-top: 20px;">
-      <select v-model.trim="valueE" @change="timkiemDataRoad" style="background-color: #e8c264; padding: 10px 15px; margin-bottom: 10px; border-radius: 20px; border: 1px dashed turquoise; width: 180px;">
+      <select v-model.trim="valueE" @change="timkiemDataRoad" style="background-color: white; padding: 10px 15px; margin-bottom: 10px; border-radius: 20px; border: 1px dashed turquoise; width: 180px;">
      <option value="" selected disabled>🥽Search District ...</option>
       <option value="東區">東區</option>
       <option value="南區">南區</option>
@@ -1259,16 +1259,16 @@ else if(dataSelect.value == 'b5s'){
 else if(dataSelect.value == 'b6s'){
   locations.value.forEach((location, index) => {
     if(location.statusError == 1 && location.isError){
-      showDataChon('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location)
-      showDetailsDiv('details_' + location.id + '_' + index, 'div_' + location.id + '_' + index, location)
+      showDataChonCheckData('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details_' + location.id + '_' + index, 'div_' + location.id + '_' + index, location, check)
     }
     else if(location.statusError == 2 && location.isError){
-      showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location)
-      showDetailsDiv('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, location)
+      showDataChonCheckData('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, location, check)
     }
     else if(location.statusError == 3 && location.isError){
-      showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location)
-      showDetailsDiv('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, location)
+      showDataChonCheckData('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, location, check)
     }
   })
 
@@ -1277,24 +1277,24 @@ else if(dataSelect.value == 'b6s'){
 else if(dataSelect.value == 'all'){
   locations.value.forEach((location, index) => {
     if(location.statusError == 1 && location.isError){
-      showDataChon('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location)
-      showDetailsDiv('details_' + location.id + '_' + index, 'div_' + location.id + '_' + index, location)
+      showDataChonCheckData('status_' + location.id + '_' + index, 'div_' + location.id + '_' + index, 'divchu_' + location.id + '_' + index, 'details_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details_' + location.id + '_' + index, 'div_' + location.id + '_' + index, location, check)
     }
     else if(location.statusError == 2 && location.isError){
-      showDataChon('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location)
-      showDetailsDiv('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, location)
+      showDataChonCheckData('status1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, 'divchu1_' + location.id + '_' + index, 'details1_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details1_' + location.id + '_' + index, 'div1_' + location.id + '_' + index, location, check)
     }
     else if(location.statusError == 3 && location.isError){
-      showDataChon('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location)
-      showDetailsDiv('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, location)
+      showDataChonCheckData('status2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, 'divchu2_' + location.id + '_' + index, 'details2_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details2_' + location.id + '_' + index, 'div2_' + location.id + '_' + index, location, check)
     }
 
     else if(location.statusError == 4 && location.isError){
-      showDataChon('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index, location)
-      showDetailsDiv('details3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, location)
+      showDataChonCheckData('status3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, 'divchu3_' + location.id + '_' + index, 'details3_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details3_' + location.id + '_' + index, 'div3_' + location.id + '_' + index, location, check)
     }else{
-      showDataChon('status4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, 'divchu4_' + location.id + '_' + index, 'details4_' + location.id + '_' + index, location)
-      showDetailsDiv('details4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, location)
+      showDataChonCheckData('status4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, 'divchu4_' + location.id + '_' + index, 'details4_' + location.id + '_' + index, location, check)
+      showDetailsDivCheckData('details4_' + location.id + '_' + index, 'div4_' + location.id + '_' + index, location, check)
     }
   })
 }
@@ -1390,6 +1390,26 @@ const showDetailsDiv = (classData, classDiv, location) => {
 
   document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
   if(isScaled === 1){
+  document.querySelector('.' + classDiv).style.height = location.account_user == null && location.isError == true ? '270px' : '230px'
+  document.querySelector('.' + classData).style.height = '0px'
+  }else{
+  document.querySelector('.' + classDiv).style.height = location.account_user == null && location.isError == true ?  '320px' : '270px'
+  document.querySelector('.' + classData).style.height = '50px'
+  }
+}
+
+const showDetailsDivCheckData = (classData, classDiv, location, check) => {
+  const element = document.querySelector('.' + classData);
+  if (!element) return;
+    // Kiểm tra xem đã là scaleX(1) hay chưa
+  const isScaled = getScaleX(element)
+
+  console.log("Data Check " , isScaled)
+  element.style.transform = !check ? 'scale(0)' : 'scale(1)'
+  element.style.transition = '0.4s ease'
+
+  document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
+  if(!check){
   document.querySelector('.' + classDiv).style.height = location.account_user == null && location.isError == true ? '270px' : '230px'
   document.querySelector('.' + classData).style.height = '0px'
   }else{
@@ -4296,9 +4316,9 @@ const checkDataClassI = (classData, index) =>{
   switch(classData){
     case 'i1':
       if(zoomLevel.value > 15){
-        zoomLevel.value = 8
+        zoomLevel.value = 13
       }else{
-        zoomLevel.value = 20
+        zoomLevel.value = 16
       }
       break
     case 'i2':
@@ -4628,6 +4648,70 @@ const showDataChon = (classData, classDiv, classChu, divcon, location) => {
 
   document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
   if(isScaled === 1){
+  document.querySelector('.' + classDiv).style.height = '60px'
+    document.querySelector('.' + classChu).style.borderBottom = 'none'
+    
+  }else{
+    if(location.isError == false || (location.isError == true && location.statusError == 3) || (location.isError == true && location.statusError != 3 && location.account_user != null)){
+      document.querySelector('.' + classDiv).style.height = '230px'
+    }else{
+      document.querySelector('.' + classDiv).style.height = '270px'
+    }
+ 
+  
+document.querySelector('.' + classChu).style.borderBottom = '1px dashed black'
+  }
+
+})
+}
+
+const showDataChonCheckData = (classData, classDiv, classChu, divcon, location, check) => {
+ const element = document.querySelectorAll('.' + classData);
+ const elementCon = document.querySelector('.' + divcon);
+  if (!element) return;
+
+  
+  if(elementCon){
+    const isScaledcon = getScaleX(elementCon)
+    if(isScaledcon === 1){
+    elementCon.style.transform ='scale(0)'
+  elementCon.style.transition = '0.4s ease'
+  elementCon.style.height = '0px'
+    }
+  
+  
+  }
+  let datacheck = null
+  let datacount = 0
+  element.forEach(item => {
+    datacount++
+    const check1 = getScaleX(item)
+    if(datacount == 1){
+      
+      datacheck = item
+    }
+    
+    if(datacount == 2){
+      const check2 = getScaleX(datacheck)
+      if(check1 === 0 && check2 === 1){
+        console.log("Đã vào", datacheck)
+        datacheck.style.transform = 'scale(0)'
+      }
+    }
+  })
+ 
+  
+
+  element.forEach(item => {
+    // Kiểm tra xem đã là scaleX(1) hay chưa
+  const isScaled = getScaleX(item)
+  console.log(isScaled)
+
+  item.style.transform = !check ? 'scale(0)' : 'scale(1)'
+  item.style.transition = 'transform 0.4s ease'
+
+  document.querySelector('.' + classDiv).style.transition = 'height 0.4s ease'
+  if(!check){
   document.querySelector('.' + classDiv).style.height = '60px'
     document.querySelector('.' + classChu).style.borderBottom = 'none'
     
@@ -5372,6 +5456,12 @@ onUnmounted(() => {
 }
 
 .scroll-box.show-scroll::-webkit-scrollbar {
+  display: block; /* Hiện khi cần */
+  opacity: 1;
+  
+}
+
+.scroll-box:hover::-webkit-scrollbar {
   display: block; /* Hiện khi cần */
   opacity: 1;
   

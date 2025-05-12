@@ -2,8 +2,8 @@
 
             <div class="row">
               <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
@@ -17,13 +17,13 @@
                         </div>
                       </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">燈沒壞</h6>
+                    <h6 class="text-muted font-weight-normal">妥善率</h6>
                   </div>
                 </div>
               </div>
               <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
@@ -37,13 +37,13 @@
                         </div>
                       </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">建設中</h6>
+                    <h6 class="text-muted font-weight-normal">維修中的號誌數目</h6>
                   </div>
                 </div>
               </div>
               <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
@@ -57,18 +57,18 @@
                         </div>
                       </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">燈壞了</h6>
+                    <h6 class="text-muted font-weight-normal">故障的號誌數目</h6>
                   </div>
                 </div>
               </div>
               <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">沒有資料</h3>
-                          <p class="text-success ms-2 mb-0 font-weight-medium">沒有資料</p>
+                          <h3 class="mb-0">{{ totalPhanTram1month }}</h3>
+                          <p class="text-success ms-2 mb-0 font-weight-medium">個</p>
                         </div>
                       </div>
                       <div class="col-3">
@@ -77,16 +77,16 @@
                         </div>
                       </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">沒有資料</h6>
+                    <h6 class="text-muted font-weight-normal">最近一個月完成維修的號誌數目</h6>
                   </div>
                 </div>
               </div>
             </div>
             <div class="row" style="width: 100%;">
               <div class="stretch-card">
-                <div class="card">
-                  <div class="card-body">
-                    <h1 style="color: white;">燈沒壞</h1>
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
+                    <h1 style="color: grey;">妥善率</h1>
                     <SalesChartPage2 :products="dataUpdate" :colorData="color1" :text="text1" :loai="phantram"/>
                   </div>
                 </div>
@@ -94,9 +94,9 @@
             </div>
             <div class="row" style="width: 100%;">
               <div class="stretch-card">
-                <div class="card">
-                  <div class="card-body">
-                    <h1 style="color: white;">建設中</h1>
+                <div class="card" style="border: none;">
+                  <div class="card-body" style="background-color: #cce7ff;">
+                    <h1 style="color: grey;">維修中的號誌數目</h1>
                     <SalesChartPage2 :products="dataUpdateDistrics" :colorData="color2" :text="text2" :loai="ge"/>
                     
                   </div>
@@ -131,6 +131,7 @@ const phantram = ref('%')
 const totalPhanTram = ref(0)
 const totalLanUpdate = ref(0)
 const totalPhanTramError = ref(0)
+const totalPhanTram1month = ref(0)
 const getToken = () => {
 
 var result = {
@@ -139,6 +140,12 @@ var result = {
 return result;
 };
 
+const total1month = async () => {
+  const res = await axios.get(hostName + '/api/RepairDetails/FindAllDone1month', getToken())
+  if(res.data.success){
+    totalPhanTram1month.value = res.data.content
+  }
+}
 const totalUpdate = async () => {
   isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
@@ -202,6 +209,7 @@ onMounted(() => {
   totalUpdateDistrics()
   totalPhanTranData()
   totalPhanTranDataError()
+  total1month()
 })
 </script>
 

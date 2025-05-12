@@ -9,12 +9,12 @@
               </nav>
             </div>
             <div class="main-panel">
-          <div class="content-wrapper" v-if="dataNewId.id != null">
+          <div class="content-wrapper" v-if="dataNewId.id != null"  style="background-color: rgb(204, 231, 255); border: none;">
             <div class="row">
               <div class="col-lg-6 grid-margin stretch-card" style="width: 1200px;">
-                <div class="card">
+                <div class="card" style="background-color: rgb(204, 231, 255); border: none;">
                   <div class="card-body">
-                    <h4 class="card-title">Basic Table</h4>
+                    <h4 class="card-title" style="color: grey;">Basic Table</h4>
                     <p class="card-description"> Add class <code>.table</code>
                     </p>
                     <div style="margin: 10px 0; display: flex;">
@@ -210,9 +210,9 @@
         </div>
             <div class="row">
               <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
+                <div class="card"  style="background-color: rgb(204, 231, 255); border: none;">
                   <div class="card-body">
-                    <h4 class="card-title">Striped Table</h4>
+                    <h4 class="card-title" style="color: grey;">Striped Table</h4>
                     <p class="card-description"> Add class <code>.table-striped</code>
                     </p>
                     <div class="table-responsive">
@@ -231,14 +231,14 @@
                         </thead>
                         <tbody>
                           <tr v-for="(item, index) in dataLoadStart" :key="index">
-                            <td style="color: white;">
+                            <td style="color: black;">
                               {{ item.id }}
                             </td>
-                            <td style="color: white;"> {{ item.lat }} </td>
-                            <td style="color: white;">
+                            <td style="color: black;"> {{ item.lat }} </td>
+                            <td style="color: black;">
                               {{ item.log }}
                             </td>
-                            <td style="color: white;"> {{ item.managementUnit }} </td>
+                            <td style="color: black;"> {{ item.managementUnit }} </td>
                             <td v-if="item.images.length > 0 && item.images != null">
                               <div  v-for="(image, indexImage) in item.images" :key="indexImage">
                                 <img @click="expandVideo(image)" v-if="image != null && getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
@@ -256,9 +256,9 @@
                                 <a v-else-if="image != null && (getFileType(image) === 'word'  || getFileType(image) === 'excel') " :href="image" target="_blank">Tải xuống: {{ item }}</a>
                               </div>
                             </td>
-                            <td style="color: white;"> {{ item.signalNumber }} </td>
-                            <td style="color: white;"> {{ item.user_name }} </td>
-                            <td style="color: white;"> 
+                            <td style="color: black;"> {{ item.signalNumber }} </td>
+                            <td style="color: black;"> {{ item.user_name }} </td>
+                            <td style="color: black;"> 
                               <div v-if="item.faultCodes == 0">
                                 <p>號誌正常</p>
                             </div> 
@@ -269,7 +269,7 @@
                                 <p>號誌停電</p>
                             </div> 
                           </td>
-                            <td style="color: white;"> 
+                            <td style="color: black;"> 
                               <div style="display: flex;">
                               <div v-if="item.repairStatus == 1" style="display: flex;">
                                 <i class="fa fa-window-close-o" style="animation: thei1 0.5s ease-in-out infinite;" aria-hidden="true"></i>

@@ -21,8 +21,8 @@
       <navPages></navPages>
       <div class="container-fluid page-body-wrapper">
         <headerPages></headerPages>
-        <div class="main-panel">
-            <div class="content-wrapper">
+        <div class="main-panel" style="background-color: #e6ffff;">
+            <div class="content-wrapper" style="background-color: #e6ffff;">
                 <router-view></router-view>
                 <!-- <dashboardPages></dashboardPages> -->
             </div>

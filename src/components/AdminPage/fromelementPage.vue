@@ -10,9 +10,9 @@
             </div>
             <div class="row">
               <div class="col-md-6 grid-margin stretch-card">
-                <div class="card">
+                <div class="card" style="background-color: rgb(204, 231, 255); border: none;">
                   <div class="card-body">
-                    <h4 class="card-title">Default form</h4>
+                    <h4 class="card-title" style="color: grey;">Default form</h4>
                     <p class="card-description"> Basic form layout </p>
                     <div style="margin: 10px 0;">
                         <div v-if="dataNewId.id != null" style="width: 550px; height: 200px; position: relative; background-color: rgba(255, 255, 255, 0.4); border-radius: 10px;">
@@ -137,7 +137,7 @@
                       </div>
                       <div class="form-group">
                         <label for="exampleInputPassword1">remark</label>
-                        <input type="text" class="form-control" v-model="addData.remark" id="exampleInputPassword1" placeholder="remark">
+                        <input type="text" class="form-control" style="background-color: aliceblue; border: none;" v-model="addData.remark" id="exampleInputPassword1" placeholder="remark">
                       </div>
 
                       <div class="image-uploader">
@@ -166,15 +166,15 @@
                 </div>
               </div>
               <div class="col-md-6 grid-margin stretch-card">
-                <div class="card">
+                <div class="card" style="background-color: rgb(204, 231, 255); border: none;">
                   <div class="card-body">
-                    <h4 class="card-title">Horizontal Form</h4>
+                    <h4 class="card-title" style="color: grey;">Horizontal Form</h4>
                     <p class="card-description"> Horizontal form layout </p>
                     <div>
                         <input type="text" v-model="valueE" style="border: none; padding: 5px 10px; border-radius: 10px;" placeholder="Search...">
                         <button v-on:click="findAllDataMap(valueE, page)" style="outline: none; cursor: pointer; border: none; padding: 5px 15px; border-radius: 10px; margin: 10px 5px;">💨</button>
                     </div>
-                    <div style=" padding: 10px; width: 550px; height: 400px; overflow: auto; background-color: rgba(255, 255, 255, 0.8); border: 1px solid black; border-radius: 10px;">
+                    <div style=" padding: 10px; width: 550px; height: 400px; overflow: auto; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px;">
         <div v-for="(location, index) in locations" :key="index">
           <div v-if="location.isError">
             <div v-if="location.statusError == 0" @click="showDataMap(location)" style="cursor: pointer; border: 1px dashed black; border-radius: 10px; padding: 10px; margin-bottom: 10px;">

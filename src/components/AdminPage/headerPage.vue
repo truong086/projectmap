@@ -1,6 +1,6 @@
 <template>
     <!-- partial:partials/_navbar.html -->
-    <nav class="navbar p-0 fixed-top d-flex flex-row">
+    <nav class="navbar p-0 fixed-top d-flex flex-row" style="background-color: #e6ffff;">
           <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
             <a class="navbar-brand brand-logo-mini" href="index.html"><img src="../../assets/AdminTemplate/assets/images/logo-mini.svg" alt="logo" /></a>
           </div>
@@ -11,7 +11,7 @@
             <ul class="navbar-nav w-100">
               <li class="nav-item w-100">
                 <form class="nav-link mt-2 mt-md-0 d-none d-lg-flex search">
-                  <input type="text" class="form-control" placeholder="Search products">
+                  <input type="text" class="form-control" style="background-color: antiquewhite; border: none;" placeholder="Search products">
                 </form>
               </li>
             </ul>
