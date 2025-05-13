@@ -6,18 +6,13 @@
                   <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
-                        <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0"> {{ totalPhanTram }}</h3>
+                        <div class="d-flex align-items-center align-self-start" style="display: flex; justify-content: center; width: 280px;">
+                          <h3 class="mb-0" style="font-size: 35px;"> {{ totalPhanTram }}</h3>
                           <p class="text-success ms-2 mb-0 font-weight-medium">%</p>
                         </div>
                       </div>
-                      <div class="col-3">
-                        <div class="icon icon-box-success ">
-                          <span class="mdi mdi-arrow-top-right icon-item"></span>
-                        </div>
-                      </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">妥善率</h6>
+                    <h6 class="text-muted font-weight-normal" style="font-size: 20px;">妥善率</h6>
                   </div>
                 </div>
               </div>
@@ -26,18 +21,13 @@
                   <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
-                        <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">{{ totalLanUpdate }}</h3>
+                        <div class="d-flex align-items-center align-self-start" style="display: flex; justify-content: center; width: 280px;">
+                          <h3 class="mb-0" style="font-size: 35px;">{{ totalLanUpdate }}</h3>
                           <p class="text-success ms-2 mb-0 font-weight-medium">個</p>
                         </div>
                       </div>
-                      <div class="col-3">
-                        <div class="icon icon-box-success">
-                          <span class="mdi mdi-arrow-top-right icon-item"></span>
-                        </div>
-                      </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">維修中的號誌數目</h6>
+                    <h6 class="text-muted font-weight-normal" style="font-size: 20px;">維修中的號誌數目</h6>
                   </div>
                 </div>
               </div>
@@ -46,18 +36,14 @@
                   <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
-                        <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">{{ totalPhanTramError }}</h3>
-                          <p class="text-danger ms-2 mb-0 font-weight-medium">%</p>
+                        <div class="d-flex align-items-center align-self-start" style="display: flex; justify-content: center; width: 280px;">
+                          <h3 class="mb-0" style="font-size: 35px;">{{ totalPhanTramError }}</h3>
+                          <p class="text-danger ms-2 mb-0 font-weight-medium">個</p>
                         </div>
                       </div>
-                      <div class="col-3">
-                        <div class="icon icon-box-danger">
-                          <span class="mdi mdi-arrow-bottom-left icon-item"></span>
-                        </div>
-                      </div>
+
                     </div>
-                    <h6 class="text-muted font-weight-normal">故障的號誌數目</h6>
+                    <h6 class="text-muted font-weight-normal" style="font-size: 20px;">故障的號誌數目</h6>
                   </div>
                 </div>
               </div>
@@ -66,18 +52,13 @@
                   <div class="card-body" style="background-color: #cce7ff;">
                     <div class="row">
                       <div class="col-9">
-                        <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">{{ totalPhanTram1month }}</h3>
+                        <div class="d-flex align-items-center align-self-start" style="display: flex; justify-content: center; width: 280px;">
+                          <h3 class="mb-0" style="font-size: 35px;">{{ totalPhanTram1month }}</h3>
                           <p class="text-success ms-2 mb-0 font-weight-medium">個</p>
                         </div>
                       </div>
-                      <div class="col-3">
-                        <div class="icon icon-box-success ">
-                          <span class="mdi mdi-arrow-top-right icon-item"></span>
-                        </div>
-                      </div>
                     </div>
-                    <h6 class="text-muted font-weight-normal">最近一個月完成維修的號誌數目</h6>
+                    <h6 class="text-muted font-weight-normal" style="display: flex; justify-content: center; width: 280px;">最近一個月完成維修的號誌數目</h6>
                   </div>
                 </div>
               </div>
@@ -122,7 +103,7 @@ const dataUpdateDistrics = ref([])
 const { proxy } = getCurrentInstance();
 const hostName = proxy?.hostname;
 const isLoading = ref(false)
-const color1 = ref('#de0dad')
+const color1 = ref('#8A2BE2')
 const color2 = ref('#7FFF00')
 const text1 = ref('燈沒壞')
 const text2 = ref('建設中')
@@ -195,7 +176,7 @@ const totalPhanTranDataError = async () => {
   isLoading.value = true;
   document.body.classList.add("loading"); // Add Lớp "loading"
   document.body.style.overflow = "hidden";
-  const res = await axios.get(hostName + '/api/TrafficEquipment/GetNormalError', getToken())
+  const res = await axios.get(hostName + '/api/TrafficEquipment/TotalError', getToken())
   if(res.data.success){
     totalPhanTramError.value = res.data.content
   }

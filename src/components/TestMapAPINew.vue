@@ -101,7 +101,7 @@ const mapOptions = {
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1s,
           scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
         class="marker-icon"
@@ -137,7 +137,7 @@ const mapOptions = {
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status0,
           scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
         class="marker-icon"
@@ -204,7 +204,7 @@ const mapOptions = {
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status2,
           scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
         class="marker-icon"
@@ -275,7 +275,7 @@ const mapOptions = {
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status3,
           scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
         class="marker-icon"
       >
@@ -344,7 +344,7 @@ const mapOptions = {
           // url: marker1.url, // Đây là đổi ảnh liên tục
           url: imageStatus.status1,
           scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
         }"
 
         class="marker-icon"
@@ -410,7 +410,7 @@ const mapOptions = {
             // url: marker1.url, // Đây là đổi ảnh liên tục
             url: imageStatus.status0,
             scaledSize: { width: 40, height: 40 },
-            anchor: { x: 25, y: 25 }, // Căn giữa ảnh marker
+            anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
           }"
 
           class="marker-icon"
@@ -655,6 +655,8 @@ const mapOptions = {
     :setItemRef="setItemRef"
     :fomatDate="fomatDate"
     :showDetailsDiv="showDetailsDiv"
+    :dataSearchUserName="dataSearchUserName"
+    v-model:searchUserName="searchUserName"
   />
       <PagesTotal v-if="isPhanTrang" :page="page" :totalPage="totalPage" :valueE="valueE" @pageChange="findAllDataMap" @pageSizeChange="changeReload"></PagesTotal>
      </div>

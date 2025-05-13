@@ -30,7 +30,7 @@
 
                   <div style="background-color: white; height: 25px; border: 1px solid grey; margin-top: 8px; position: relative; z-index: 999;">
                     <i style="font-size: 13px; color: grey; margin: 5px;" class="fa fa-search" aria-hidden="true"></i>
-                    <input v-model="searchUserName" style="width: 80%; padding: 3px 5px; border: none; outline: none;" type="text">
+                    <input v-model="localSearchUserName" style="width: 80%; padding: 3px 5px; border: none; outline: none;" type="text">
                      <div 
       :class="['square', ' display_' + location.id + '_' + index, ' displaynone']"
       style="padding: 5px;"
@@ -40,7 +40,7 @@
       </div>
     
       <div>
-        <div v-for="(item, index) in dataSearchUserName" :key="index" style="margin: 10px 20px;">
+        <div v-for="(item, index) in props.dataSearchUserName" :key="index" style="margin: 10px 20px;">
           <div @click="props.updateUser(location.repaiDetail_id, item.id, 'status_' + location.id + '_' + index, 'displaynone')" style="display: flex;">
             <p style="font-size: 12px; font-weight: bold;">Name: {{ item.name }}</p>
             <p style="font-size: 12px; margin: 0 15px; font-weight: bold;">Job: {{ item.total }}</p>
@@ -143,6 +143,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -222,6 +223,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -302,6 +304,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -383,6 +386,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -441,9 +445,13 @@
 </template>
 
 <script setup>
-import {  defineProps } from 'vue';
+import {  ref, watch, defineProps, defineEmits } from 'vue';
 const props = defineProps({
   locations: {
+        type: Array,
+        required: true
+    },
+    dataSearchUserName: {
         type: Array,
         required: true
     },
@@ -498,9 +506,28 @@ const props = defineProps({
     showDetailsDiv: {
       type: Function,
       required: true
+    },
+    searchUserName: {
+      type: String,
+      required: true
     }
 })
 
+// Emit để gửi thay đổi lên cha
+const emit = defineEmits(['update:searchUserName'])
+
+// Tạo biến cục bộ để dùng v-model trong component con
+const localSearchUserName = ref('')
+
+// Đồng bộ khi `searchUserName` từ cha thay đổi
+watch(() => props.searchUserName, (newVal) => {
+  localSearchUserName.value = newVal
+}, { immediate: true })
+
+// Đồng bộ khi người dùng sửa input
+watch(localSearchUserName, (newVal) => {
+  emit('update:searchUserName', newVal)
+})
 const showDataChons = (classData, classDiv, classChu, divcon, location) => {
   props.showDataChon(classData, classDiv, classChu, divcon, location)
 }

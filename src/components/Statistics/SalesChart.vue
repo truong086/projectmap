@@ -340,7 +340,36 @@ watch(
         }
       }
     ]
+  },plotOptions: {
+  bar: {
+    borderRadius: 3,
+    borderRadiusApplication: 'end',
+    columnWidth: '60%'
   }
+},
+fill: {
+  opacity: 0.4 // Làm màu trong suốt toàn bộ
+}
+  //fill: {
+//   type: 'gradient',
+//   gradient: {
+//     shade: 'light',
+//     type: "vertical", // hướng dọc từ trên xuống
+//     shadeIntensity: 0.5,
+//     gradientToColors: ['#ffffff'], // màu nhạt dần về phía dưới
+//     inverseColors: false,
+//     opacityFrom: 0.95,
+//     opacityTo: 0.3, // làm mờ phía dưới
+//     stops: [0, 100]
+//   }
+// },
+// plotOptions: {
+//   bar: {
+//     borderRadius: 3, // làm bo góc top -> tạo cảm giác viền top
+//     borderRadiusApplication: 'end', // chỉ bo phía trên
+//     columnWidth: '50%', // thu hẹp thanh để viền dễ thấy
+//   }
+// },
     };
     }
     
