@@ -63,7 +63,7 @@
                 <p style="font-size: 12px; font-weight: bold; z-index: 0;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">維修工程師: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold;">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -143,7 +143,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">維修工程師: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -223,7 +223,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">維修工程師: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -304,7 +304,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">維修工程師: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
@@ -386,7 +386,7 @@
                 <p style="font-size: 12px; font-weight: bold;">經度: <strong>{{ location.longitude }}</strong></p>
                 <p style="font-size: 12px; font-weight: bold;">行政區: <strong>{{ location.districs }}</strong></p>
               <p style="font-size: 12px; font-weight: bold;">道路: <strong>{{ location.road1 }}, {{ location.road2 }}</strong></p>
-              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">Engineer: {{ location.account_user }}</p>
+              <p v-if="location.account_user != null" style="font-size: 12px; font-weight: bold;">維修工程師: {{ location.account_user }}</p>
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
