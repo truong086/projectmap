@@ -1,7 +1,6 @@
 <template>
  
   <div style="height: 100vh; width: 100vw; margin-top: -60px;">
-    
   <div style="position: relative; height: 100vh; width: 100vw;">
 <!-- Bản đồ 
 const mapOptions = {
@@ -836,7 +835,7 @@ const mapOptions = {
       transition: '0.4s ease-in-out',
       left: '85px'
   }" style="position: absolute; top: 20%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
-        <i @click="isShowHome = !isShowHome" :style="{
+        <i @click="showWindowDetaile" :style="{
       transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
       transition: '0.4s ease-in-out',
     
@@ -851,7 +850,7 @@ const mapOptions = {
       transition: '0.4s ease-in-out',
       left: '85px'
   }" style="position: absolute; top: 20%; height: 30px; cursor: pointer; text-align: right; width: 50px; background-color: white; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
-        <i @click="isShowHome = !isShowHome" :style="{
+        <i @click="showWindowDetaile" :style="{
       transform: isShowHome ? 'rotate(-180deg)' : 'rotate(0)',
       transition: '0.4s ease-in-out',
     
@@ -990,7 +989,6 @@ const soIndex = ref(0)
 const idClick = ref(0)
 let mapInstance = null
 let mapBounds = null
-
 const showScroll = ref(false)
 let hideScrollTimeout = null
 
@@ -1039,6 +1037,50 @@ const isLatLngInBounds = (lat, lng) =>{
   )
 }
 const itemRefs = ref({}) // lưu ref theo id_index
+
+const showWindowDetaile = () => {
+    isShowHome.value = !isShowHome.value
+    const map = mapRefs.value?.$mapObject
+    const center = map.getCenter()
+    let farthestPoint = null
+    let maxDistance = 0
+    const centerLatLng = { lat: center.lat(), lng: center.lng() }
+
+    const rightOffsetPoint = getOffsetPointToRight(centerLatLng, 1000)
+
+    if (isLatLngInBounds(currentLocation.value.lat, currentLocation.value.lng) && isShowHome.value) {
+      shiftMap(-1000, currentLocation.value)
+    } 
+
+    const dataLocation = locations.value.filter(point => {
+        if(isLatLngInBounds(point.latitude, point.longitude)){
+              return point.longitude <= rightOffsetPoint.lng
+        }
+    })
+
+    dataLocation.forEach(point => {
+          const dist = calculateDistanceInMeters(mapCenter.value.lat, mapCenter.value.lng, point.latitude, point.longitude)
+      if (dist > maxDistance) {
+        maxDistance = dist
+        farthestPoint = point
+      }
+    })
+
+    const toaDoNew = {lat: farthestPoint?.latitude, lng: farthestPoint?.longitude}
+     if(isLatLngInBounds(farthestPoint?.latitude, farthestPoint?.longitude)  && isShowHome.value){
+          console.log(dataLocation)
+        shiftMap(-1000, toaDoNew)
+    }
+
+}
+
+const getOffsetPointToRight = (center, meters) => {
+  const deltaLng = meters / (111320 * Math.cos(center.lat * Math.PI / 180))
+  return {
+    lat: center.lat,
+    lng: center.lng + deltaLng
+  }
+}
 
 const checkTokenData = async () => {
 
@@ -5402,6 +5444,28 @@ const midIndex = Math.floor(routePath.value.length / 2);
 return routePath.value[midIndex];
 });
 
+const shiftMap = (lngOffsetInMeters, mapDataCenter) => {
+  const lat = mapDataCenter.lat;
+  const lng = mapDataCenter.lng;
+  const deltaLng = lngOffsetInMeters / (111320 * Math.cos(lat * Math.PI / 180));
+
+  const shiftedLng = lng + deltaLng;
+
+  console.log("shiftedLng: ", shiftedLng)
+  mapRefs.value.panTo({ lat, lng: shiftedLng });
+}
+
+const calculateDistanceInMeters = (lat1, lng1, lat2, lng2) => {
+const R = 6378137
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 onMounted(() => {
 if (!localStorage.getItem('reloaded')) {
     localStorage.setItem('reloaded', 'true');
@@ -5423,6 +5487,7 @@ if (!localStorage.getItem('reloaded')) {
   loadData()
   statusGiaoThong()
   poiStart()
+
 
  
 
