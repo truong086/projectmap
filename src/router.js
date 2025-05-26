@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import LoginPage from "./components/loginPage.vue";
-import mapdataPages from "./components/TestMapAPINew.vue";
+import mapdataPages from "./components/mapdatapages2Data.vue";
 import testAPIMapPages from "./components/testAPIMapPage.vue";
 import AdminPage from "./components/AdminPage/indexPage.vue";
 import dashboardPages from "./components/AdminPage/dashboardPage.vue";
@@ -75,23 +75,26 @@ const routes = [
         "/AdminTemplate/assets/js/todolist.js",
         "/AdminTemplate/assets/js/dashboard.js"
       ],
-      requiresAuth: true, roleAdmin: [1]
+      requiresAuth: true, roleAdmin: [1, 3]
     },
     children: [
       {
         path: "/Admin",
         name: "dataDasboard",
         component: dashboardPages,
+        meta: {roleAdmin: [1]}
       },
       {
         path: "dashboardPages",
         name: "DashboardPages",
         component: dashboardPages,
+        meta: {roleAdmin: [1]}
       },
       {
         path: "tablePages",
         name: "TablePages",
         component: tablePages,
+        meta: {roleAdmin: [1]}
       },
       {
         path: "fromelementPages",

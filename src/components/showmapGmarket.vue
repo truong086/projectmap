@@ -532,7 +532,7 @@ const showDataChons = (classData, classDiv, classChu, divcon, location) => {
   props.showDataChon(classData, classDiv, classChu, divcon, location)
 }
 const clickDataUpdates = (id) => {
-  props.showDataChon(id)
+  props.clickDataUpdate(id)
 }
 </script>
 

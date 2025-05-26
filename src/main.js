@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import VueMap from '@fawmi/vue-google-maps';
+// import VueMap from 'vue3-google-map';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import { createPinia } from 'pinia'; 
@@ -20,7 +21,7 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(VueMap, {
     load: {
-        key: 'AIzaSyANT9F5ECcLaUhoq84sF6ZFGWn806iRIJk',
+        key: 'AIzaSyCNPqyJ8qQrE8OjuvpyU66bPrNe1Ej9MRU',
         // libraries: ['places', 'visualization'] // Để hỗ trợ tìm kiếm
         libraries: 'places',
         language: 'zh-TW',

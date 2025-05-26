@@ -111,8 +111,6 @@ import axios from 'axios';
       DataToken.setAccountImage(res.data.content.image)
       DataToken.setAccountName(res.data.content.username)
       router.push("/")
-      
-      
     }else{
       isLoading.value = false
       document.body.classList.remove('loading') // Xóa Lớp "loading"
