@@ -524,7 +524,7 @@ v-if="!show3d"
             <p style="font-size: 12px;">3D地圖</p>
             <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
-            
+
             <div v-if="store.getRole(0) == 1 || store.getRole(0) == 2" style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i9" @click="checkDataClassI('i9', 9)">
             <img width="28px" src="../assets/Icon/Picture10.png" alt="">
             <p style="font-size: 12px;">關於</p>
@@ -844,10 +844,11 @@ v-if="!show3d"
 
                 <div>
                 <div style="display: flex; margin-left: 20px;">
-                  <h3 style="margin-top: 2px; ">Chọn: {{ selectDataInput.length }}</h3>
+                  <h3 style="margin-top: 2px; ">點: {{ selectDataInput.length }}</h3>
                   <button v-if="selectDataInput.length > 0" @click="searchMapData" style="border: none; font-size: 15px; cursor: pointer; outline: none; border-radius: 10px; background-color: aquamarine; margin-left: 20px;">⏩</button>
                 </div>
-                <div v-for="(item, index) in locationsSort" :key="index" :ref="el => setItemRef(item.id, index, el)">
+                <div class="scroll-box" >
+                  <div v-for="(item, index) in locationsSort" :key="index" :ref="el => setItemRef(item.id, index, el)">
                 <div v-if="item.id != null">
                   <div @click="showDataMap(item.coordinates, item)" style="display: flex; margin-left: 10px; justify-content: space-between; border-radius: 10px; box-shadow: 3px 3px 3px grey; padding: 15px; margin: 15px 0; background-color: rgb(255, 248, 220);">
                     <div style="text-align: left;">
@@ -862,6 +863,8 @@ v-if="!show3d"
                 </div>
                     
                 </div>
+                </div>
+                
               </div>
               <div>
                 </div>
@@ -1225,6 +1228,8 @@ const res = await axios.get(hostName + `/api/TrafficEquipment/FindAllErrorCode0B
               ...item,
               checked: false // thêm trường mới
             }))
+
+            locations.value = locationsSort.value
         }
           
 }
@@ -1934,11 +1939,15 @@ const showdivDetailsAuto = (divData, check) => {
 
 const setItemRef = (id, index, el) =>{
   if (el) {
+  
     itemRefs.value[`${id}_${index}`] = el
+    console.log(`Refs: ${id}_${index}`)
+    console.log(`itemRefs: ${itemRefs.value}`)
   }
 }
 
 const scrollToItem = (id, index) => {
+console.log(`scroll: ${id}_${index}`)
   const key = `${id}_${index}`
   const el = itemRefs.value[key]
   if (el) {
