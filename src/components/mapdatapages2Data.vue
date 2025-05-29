@@ -11,6 +11,7 @@ const mapOptions = {
 } 
 -->
 <GMapMap
+v-if="!show3d"
       ref="mapRefs"
       :center="mapCenter"
       map-id="c538a4b0749ed9e7c5ccc7e5"
@@ -455,7 +456,11 @@ const mapOptions = {
     </GMapMarker>
     
     <!--Poi-->
-    <div class="scroll-boxs" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: #e6ffff;">
+   
+    </GMapMap>
+     <div ref="map" class="map3ds" style="height: 0px; width: 0px;"></div>
+
+     <div class="scroll-boxs" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: #e6ffff;">
         <div style="width: 100px; height: 100%; margin-top: 15px;">
 
           <div style="padding: 10px; margin-top: 15px; cursor: pointer;">
@@ -496,15 +501,15 @@ const mapOptions = {
               </router-link>
 
               <div v-else-if="store.getRole(0) == 2" style="cursor: pointer; padding: 10px;" class="i12" @click="checkDataClassI('i12', 12)">
-            <img width="38px" src="https://img.lovepik.com/free-png/20220125/lovepik-construction-engineer-png-image_401727229_wh860.png" alt="">
-            <p style="font-size: 12px;">工程師</p>
+            <img width="38px" src="../assets/Icon/engineer.png" alt="">
+            <p style="font-size: 12px;">維修清單</p>
             </div>
-            <div style="cursor: pointer; padding: 10px;" class="i6" @click="checkDataClassI('i6', 2)">
+            <div v-if="!show3d" style="cursor: pointer; padding: 10px;" class="i6" @click="checkDataClassI('i6', 2)">
             <img width="28px" src="../assets/Icon/Picture7.png" alt="">
             <p style="font-size: 12px;">地圖設定</p>
             </div>
 
-            <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i7" @click="checkDataClassI('i7', 3)">
+            <div v-if="!show3d" style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i7" @click="checkDataClassI('i7', 3)">
             <img width="28px" src="../assets/Icon/Picture8.png" alt="">
             <p style="font-size: 12px;">道路設定</p>
             </div>
@@ -514,11 +519,19 @@ const mapOptions = {
             <p style="font-size: 12px;">網站設定</p>
             </div>
 
+            <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i15" @click="checkDataClassI('i15', 15)">
+            <img width="28px" src="../assets/Icon/map3d.png" alt="">
+            <p style="font-size: 12px;">3D地圖</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
+            </div>
+            
             <div v-if="store.getRole(0) == 1 || store.getRole(0) == 2" style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i9" @click="checkDataClassI('i9', 9)">
             <img width="28px" src="../assets/Icon/Picture10.png" alt="">
             <p style="font-size: 12px;">關於</p>
             <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
+
+            
 
           </div>
         </div>
@@ -814,19 +827,42 @@ const mapOptions = {
     </div>
         </div>
 
-        <div v-if="isCheckShow == 9">
+        <div v-if="isCheckShow == 9" style="width: 350px;">
           <div style="text-align: left; margin-left: 30px; justify-content: space-between; margin-top: 20px; width: 330px; border-bottom: 3px solid black; display: flex;">
               <h3>Search User Job</h3>
               <i style="font-size: 20px; margin-right: 20px;" class="fa fa-eercast" aria-hidden="true"></i>
               </div>
 
               <div>
+              
               <div v-for="(item, index) in dataUser" :key="index" style="text-align: center; align-items: center; display: flex; justify-content: center; margin: 15px 0;">
-                  <div @click="searchDuongdi(item.id)" style="display: flex; text-align: center; justify-content: center; background-color: grey; width: 80%; line-height: 50px; border-radius: 15px; cursor: pointer;">
-                    <p style="font-size: 15px; font-weight: bold; color: white;">Name: {{ item.name }}</p>
-                  <p style="margin: 0 15px; font-size: 15px; font-weight: bold; color: white;">Job: {{ item.total }}</p>
+                  <div @click="searchDuongdi(item.id)" style="display: flex; text-align: center; justify-content: center; width: 80%; border: 1px solid grey; line-height: 50px; border-radius: 15px; cursor: pointer;">
+                    <p style="font-size: 15px; font-weight: bold; color: black;">Name: {{ item.name }}</p>
+                  <p style="margin: 0 15px; font-size: 15px; font-weight: bold; color: black;">Job: {{ item.total }}</p>
                     </div>
                 </div>
+
+                <div>
+                <div style="display: flex; margin-left: 20px;">
+                  <h3 style="margin-top: 2px; ">Chọn: {{ selectDataInput.length }}</h3>
+                  <button v-if="selectDataInput.length > 0" @click="searchMapData" style="border: none; font-size: 15px; cursor: pointer; outline: none; border-radius: 10px; background-color: aquamarine; margin-left: 20px;">⏩</button>
+                </div>
+                <div v-for="(item, index) in locationsSort" :key="index" :ref="el => setItemRef(item.id, index, el)">
+                <div v-if="item.id != null">
+                  <div @click="showDataMap(item.coordinates, item)" style="display: flex; margin-left: 10px; justify-content: space-between; border-radius: 10px; box-shadow: 3px 3px 3px grey; padding: 15px; margin: 15px 0; background-color: rgb(255, 248, 220);">
+                    <div style="text-align: left;">
+                      <p style="font-size: 12px;">latitude: {{ item?.latitude }}</p>
+                      <p style="font-size: 12px;">longitude: {{ item?.longitude }}</p>
+                      <p style="font-size: 12px;">account_user: {{ item?.account_user }}</p>
+                    </div>
+                    <div>
+                      <input @click="checkDataCheckBox(item)" style="transform: scale(2);" :checked="item.checked" type="checkbox" name="" id="">
+                    </div>
+                    </div>
+                </div>
+                    
+                </div>
+              </div>
               <div>
                 </div>
               </div>
@@ -878,6 +914,40 @@ const mapOptions = {
 
     
         </div>
+
+        <div v-if="isCheckShow == 15" style="width: 390px;">
+        <!-- Nút trong bản đồ -->
+
+        <div>
+        <div style="text-align: left; margin-left: 30px; justify-content: space-between; margin-top: 20px; width: 330px; border-bottom: 3px solid black; display: flex;">
+              <h3>Map 3D</h3>
+              <div>
+              <input @click="show3dFunc" :checked="show3d" style=" margin-right: 20px; transform: scale(2);" type="checkbox"> 
+              <span style="margin-left: -10px;">On/Off</span>
+              </div>
+              
+              <!-- <i @click="show3dFunc" style="font-size: 20px; margin-right: 20px;" class="fa fa-eercast" aria-hidden="true"></i> -->
+              </div>
+        </div>
+        <div style="margin: 15px 0; position: relative;">
+          <div style="width: 100%; text-align: center; flex-direction: column; display: flex; position: absolute; align-items: center; ">
+            <button @click="rotateMap('tilt', -20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Top</button>
+            <button @click="rotateMap('tilt', 20)" class="databtn" style="width: 100px; height: 30px; margin-top: 100px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Bottom</button>
+          </div>
+
+          <div style="position: absolute; top: 60px; width: 100%; height: 60px; display: flex; justify-content: space-between; padding: 0 20px;">
+            <button @click="rotateMap('rotate', 20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Left</button>
+            <button @click="rotateMap('rotate', -20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Right</button>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top: 200px;">
+          <button @click="toggleMapType" style="border: none; outline: none; padding: 15px 30px; border-radius: 10px; background-color: greenyellow;">
+            地圖: {{ mapType === 'roadmap' ? '衛星' : '常' }}
+          </button>
+        </div>
+    
+        </div>
     </div>
     
     </div>
@@ -896,7 +966,7 @@ const mapOptions = {
       </div>
       </div>
 
-      <div v-if="isCheckShow == 2 || isCheckShow == 3 || isCheckShow == 9">
+      <div v-if="isCheckShow == 2 || isCheckShow == 3 || isCheckShow == 9 || isCheckShow == 15">
       <div :style="{
       transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
@@ -923,14 +993,13 @@ const mapOptions = {
   
           </div>
         </div>
-    </GMapMap>
 
     <!-- Overlay mờ phủ lên bản đồ -->
     <div class="map-overlay"></div>
 
   </div>
    
-  <div class="marquee-container" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%);" v-if="zoomLevel < 13">
+  <div class="marquee-container" style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%);" v-if="zoomLevel < 13 && !show3d">
     <!--
     <div :class="['marquee-text', { paused: isPaused }]" style="color: red; font-weight: bold; font-size: 18px;">
       此縮放等級無法顯示號誌
@@ -983,7 +1052,7 @@ const mapOptions = {
 <script setup>
 /* global google */
 // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch } from "vue";
+import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch, nextTick } from "vue";
 import axios from "axios";
 import PagesTotal from "./PageList/PagesTotal.vue";
 import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
@@ -1042,8 +1111,369 @@ const idClick = ref(0)
 let mapInstance = null
 let mapBounds = null
 const showScroll = ref(false)
+const mapInstanceData = ref(null)
+const heading = ref(320);
+const map = ref(null);
+const mapRef = ref(null);
+const show3d = ref(false)
+const dataOldMap = ref({})
+const locationsSort = ref([])
+const selectDataInput = ref([])
+const left = ref(0)
+const right = ref(0)
+const top = ref(0)
+const button = ref(0)
 let hideScrollTimeout = null
+const mapType = ref('satellite'); // bắt đầu với bản đồ vệ tinh
 
+const searchMapData = async () => {
+            const start = currentLocation.value; // Vị trí bắt đầu (bạn)
+  const waypoints = selectDataInput.value.map(loc => ({
+    lng: loc.longitude,
+    lat: loc.latitude
+  })); // Các điểm đi qua
+
+  const sortData = sortPointsByNearest(start, waypoints)
+
+  const allPoints = [start, ...sortData];
+          
+  isLoading.value = true;
+  document.body.classList.add("loading");
+  document.body.style.overflow = "hidden";
+
+  try {
+    // Với nhiều điểm, OpenRouteService yêu cầu POST JSON body
+    const response = await axios.post(
+      `https://api.openrouteservice.org/v2/directions/driving-car/geojson`,
+      {
+        coordinates: allPoints.map(p => [p.lng, p.lat]),
+      },
+      {
+        headers: {
+          Authorization: apiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.features && response.data.features.length > 0) {
+      const route = response.data.features[0];
+      const coordinates = route.geometry.coordinates.map(coord => ({
+        lat: coord[1],
+        lng: coord[0]
+      }));
+
+      routePath.value = coordinates;
+      routeDistance.value = route.properties.segments.reduce((sum, seg) => sum + seg.distance, 0) / 1000; // tổng km
+      showTimeDiChuyenKm.value = routeDistance.value;
+      showTimeDiChuyen.value = formatTime(route.properties.segments.reduce((sum, seg) => sum + seg.duration, 0));
+    } else {
+      console.error("Không tìm thấy tuyến đường nào!");
+      routePath.value = [];
+      routeDistance.value = null;
+    }
+  } catch (error) {
+    console.error("Lỗi khi lấy đường đi:", error);
+    routePath.value = [];
+    routeDistance.value = null;
+  }
+
+  isLoading.value = false;
+  document.body.classList.remove("loading");
+  document.body.style.overflow = "auto";
+}
+const toggleMapType = () => {
+  if (!mapRef.value) return;
+
+  mapType.value = mapType.value === 'roadmap' ? 'satellite' : 'roadmap';
+  mapRef.value.setMapTypeId(mapType.value);
+};
+
+const checkDataCheckBox = (data) => {
+    const checkData = selectDataInput.value.find(x => x.id == data.id)
+    const checkDataLocation = locationsSort.value.find(x => x.id == data.id)
+    if(checkData != null && checkDataLocation != null){
+          selectDataInput.value = selectDataInput.value.filter(x => x.id != data.id)
+          checkDataLocation.checked = false
+    }else if(checkData == null && checkDataLocation != null){
+          selectDataInput.value.push(data)
+          checkDataLocation.checked = true
+    }
+}
+const sortData = async (id) =>{
+await nextTick()
+const res = await axios.get(hostName + `/api/TrafficEquipment/FindAllErrorCode0ByAccount?id=${id}&page=1&pageSize=2000`, getToken())
+
+  if(res.data.success){
+    duongdi.value = res.data.content.data
+
+    const start = currentLocation.value; // Vị trí bắt đầu (bạn)
+  const waypoints = duongdi.value.map(loc => ({
+    lng: loc.longitude,
+    lat: loc.latitude
+  })); // Các điểm đi qua
+
+  const sortData = sortPointsByNearest(start, waypoints)
+    locationsSort.value = sortData.map(coor => {
+            const loadDataMap = locations.value.find(loc => loc.coordinates.lat === coor.lat && loc.coordinates.lng === coor.lng)
+
+            if(loadDataMap)
+              return loadDataMap
+          })
+
+          locationsSort.value = locationsSort.value.map(item => ({
+              ...item,
+              checked: false // thêm trường mới
+            }))
+        }
+          
+}
+const show3dFunc = () => {
+  show3d.value = !show3d.value
+  if(show3d.value){
+    initMap(mapCenter.value)
+  }else{
+  const maps = document.querySelector('.map3ds')
+    mapRef.value = null
+  maps.style.width = '0px'
+  maps.style.height = '0px'
+  updateMarkersByCenter()
+  }
+}
+const initMap = (center) => {
+const maps = document.querySelector('.map3ds')
+maps.style.width = '100vw'
+maps.style.height = '100vh'
+  
+
+  mapRef.value = new google.maps.Map(map.value, {
+    center: center,
+    zoom: zoomLevel.value,
+    tilt: 47.5,
+    mapId: "90f87356969d889c",
+    mapTypeId: mapType.value,
+    mapTypeControl: false
+  });
+
+   // Bắt sự kiện khi người dùng kéo map
+  // mapRef.value.addListener("idle", () => {
+  //         if(show3d.value){
+           
+  //          // Xóa hết marker cũ
+  // if (mapRef.value.myMarkers) {
+  //   mapRef.value.myMarkers.forEach(m => m.setMap(null));
+  // } else {
+  //   mapRef.value.myMarkers = [];
+  // }
+  //           updateMarkersByCenter()
+  //         }
+  // });
+
+  mapRef.value.addListener("idle", () => {
+  if (show3d.value) {
+    const center = mapRef.value.getCenter();
+  const newCenter = { lat: center.lat(), lng: center.lng() };
+  if (
+      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.01 ||
+      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.01
+    ) {
+      mapCenter.value = { lat: center.lat(), lng: center.lng() }
+
+      if(btnSearch.value == null){
+            // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(newCenter);
+            if(button.value > 0){
+      adjustMap('tilt', button.value)
+}else if(top.value < 0){
+          adjustMap('tilt', top.value)
+}else if(right.value < 0){
+          adjustMap('rotate', right.value)
+}else if(left.value > 0){
+          adjustMap('rotate', left.value)
+}
+      }
+      
+  updateMarkersByCenter(); // cập nhật lại marker
+    }
+    
+  }
+});
+
+  mapRef.value.addListener("zoom_changed", () => {
+    showMarkers.value = false; // Đang zoom → tạm ẩn dữ liệu
+    zoomLevel.value = mapRef.value.getZoom()
+    debounceZoomEnd()
+  });
+
+
+ // Xoá marker cũ nếu có
+  if (!mapRef.value.myMarkers) {
+    mapRef.value.myMarkers = [];
+  } else {
+    mapRef.value.myMarkers.forEach(marker => marker.setMap(null));
+    mapRef.value.myMarkers = [];
+  }
+
+};
+
+const updateMarkersByCenter = () => {
+  const center = mapRef.value.getCenter();
+  const newCenter = { lat: center.lat(), lng: center.lng() };
+  mapCenter.value = newCenter;
+
+  // 🔴 XÓA marker cũ nếu có
+    if (mapRef.value.myMarkers && mapRef.value.myMarkers.length > 0) {
+      mapRef.value.myMarkers.forEach(marker => marker.setMap(null));
+    }
+    mapRef.value.myMarkers = [];
+  // Lọc dữ liệu trong bán kính
+  const radius = inputValue.value > 0 ? inputValue.value : 1; // 1km mặc định
+  let nearbyData = []
+  console.log("btnSearch.value", btnSearch.value)
+  if(btnSearch.value == null){
+    nearbyData = dataLoadStart.value.filter(location => {
+      const distance = getDistanceData(
+        newCenter.lat,
+        newCenter.lng,
+        location.coordinates.lat,
+        location.coordinates.lng 
+      );
+      return distance <= radius;
+    });
+  }else{
+          nearbyData = dataLoadStart.value
+  }
+
+  if(nearbyData.find(x => x.id == 'fake_point') == null){
+           nearbyData.push({
+          id: 'fake_point',
+          isError: false,
+          coordinates: {
+            lat: 22.99318457718073, 
+            lng: 120.20495235408347
+          },
+          statusError: 6
+        });
+  }
+ 
+ 
+  // Tạo marker mới
+  mapRef.value.myMarkers = nearbyData.map((location, index) => {
+    const marker = new google.maps.Marker({
+      map: mapRef.value,
+      position: {
+        lat: location.coordinates.lat,
+        lng: location.coordinates.lng
+      },
+      icon: {
+          url: getMarkerIcon(location.statusError),
+          scaledSize: {
+            width: 40,
+            height: 40 
+          }
+      }
+    });
+
+    marker.addListener("click", () => { 
+          if(location.isError){
+            if(location.statusError == 1 && showMarkers.value){
+              showInfo(location.coordinates.lat, location, 
+                'status_' + location.id + '_' + index, 
+                'div_' + location.id + '_' + index, 
+                'divchu_' + location.id + '_' + index, 
+                'details_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            }else if(location.statusError == 2 && showMarkers.value){
+              showInfo(location.coordinates.lat, location, 
+                'status1_' + location.id + '_' + index, 
+                'div1_' + location.id + '_' + index, 
+                'divchu1_' + location.id + '_' + index, 
+                'details1_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            }else if(location.statusError == 3 && showMarkers.value){
+              showInfo(location.coordinates.lat, location, 
+                'status2_' + location.id + '_' + index, 
+                'div2_' + location.id + '_' + index, 
+                'divchu2_' + location.id + '_' + index, 
+                'details2_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            }else if(location.statusError == 4 && showMarkers.value){
+              showInfo(location.coordinates.lat, location, 
+                    'status3_' + location.id + '_' + index, 
+                    'div3_' + location.id + '_' + index, 
+                    'divchu3_' + location.id + '_' + index, 
+                    'details3_' + location.id + '_' + index,
+                    location.id, index,
+                    location)
+            }
+          }else{
+            showInfo(location.coordinates.lat, location, 
+                'status4_' + location.id + '_' + index, 
+                'div4_' + location.id + '_' + index, 
+                'divchu4_' + location.id + '_' + index, 
+                'details4_' + location.id + '_' + index,
+                location.id, index,
+                location)
+          }
+
+           
+    })
+          return marker;
+  });
+};
+
+const getDistanceData = (lat1, lng1, lat2, lng2) =>{
+  const R = 6371; // bán kính Trái đất (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // kết quả trả về là km
+}
+
+
+
+const getMarkerIcon = (status) => {
+  switch (status) {
+    case 1:
+      return imageStatus.value.status1s
+    case 2:
+      return imageStatus.value.status0
+    case 3:
+      return imageStatus.value.status2
+    case 4:
+      return imageStatus.value.status3
+    case 5:
+      return imageStatus.value.status1
+    case 6:
+      return 'https://cdn-icons-png.flaticon.com/512/25/25694.png'
+    default:
+      return imageStatus.value.status3
+  }
+};
+
+const adjustMap = (mode, amount) => {
+  if (!mapRef.value) return;
+
+  switch (mode) {
+    case "tilt":
+      mapRef.value.setTilt(mapRef.value.getTilt() + amount);
+      break;
+    case "rotate":
+      mapRef.value.setHeading(mapRef.value.getHeading() + amount);
+      break;
+  }
+};
 const handleScroll = () => {
   showScroll.value = true
 
@@ -1075,6 +1505,23 @@ const bigIcon = ref( {
 //   isPaused.value = !isPaused.value
 // }
 
+const rotateMap = (type, amount) => {
+if(type === 'tilt' && amount > 0){
+      button.value += amount
+}else if(type === 'tilt' && amount < 0){
+          top.value += amount
+}else if(type === 'rotate' && amount < 0){
+          right.value += amount
+}else if(type === 'rotate' && amount > 0){
+          left.value += amount
+}
+  if (mapInstanceData.value) {
+    heading.value = mapInstanceData.value.getHeading() + amount;
+    mapInstanceData.value.setHeading(heading.value);
+  }
+
+  adjustMap(type, amount)
+};
 // Kiểm tra tọa độ có nằm trong bounds không
 const isLatLngInBounds = (lat, lng) =>{
   if (!mapBounds) return false
@@ -1238,11 +1685,17 @@ const getDirectionsList = async () => {
   })); // Các điểm đi qua
 
   const sortData = sortPointsByNearest(start, waypoints)
-  console.log("Data Sort: ", sortData)
+const test = sortData.map(coor => {
+            const loadDataMap = locations.value.find(loc => loc.coordinates.lat === coor.lat && loc.coordinates.lng === coor.lng)
 
+            if(loadDataMap)
+              return loadDataMap
+          })
+
+          console.log("Map:", locations.value)
+          console.log("Test:", test)
   const allPoints = [start, ...sortData];
-  console.log("Data No Sort : ", allPoints)
-
+          
   isLoading.value = true;
   document.body.classList.add("loading");
   document.body.style.overflow = "hidden";
@@ -1498,9 +1951,13 @@ const timkiemDataRoad = () => {
     btnSearch.value = null
     pageSize.value = 22000
   }
+
+  
     
   findAllDataMap(valueE.value, page.value)
   searchLocationValue(valueE.value + ", 臺南, 台灣")
+  initMap(mapCenter.value)
+  updateMarkersByCenter()
   isPhanTrang.value = true
   dataSelect.value = 'all'
 }
@@ -4401,7 +4858,7 @@ const dataLoadStart = ref([
 
 ])
 
-const submitInput = () => {
+const submitInput = async () => {
   if(inputValue.value <= 0)
     return
   
@@ -4410,7 +4867,7 @@ const submitInput = () => {
 
   pageSize.value = 22000
   findAllDataMap(valueE.value, page.value)
-
+  locations.value = []
   locations.value = dataLoadStart.value.filter((location) => {
         const distance = getDistance(
           mapCenter.value.lat,
@@ -4418,9 +4875,20 @@ const submitInput = () => {
           location.coordinates.lat,
           location.coordinates.lng
         );
-        console.log(distance)
         return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
       });
+      if(show3d.value){
+          // renderMarkers(locations.value)
+           const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+          updateMarkersByCenter()
+      }
+        
 
       if(classI.value != null)
           document.querySelector("." + classI.value).style.boxShadow = "none"
@@ -4479,9 +4947,11 @@ const checkDataClassI = (classData, index) =>{
       showInput.value = true
       break
     case 'i9':
+      btnSearch.value = locations.value[0]
       if(store.getRole == 1)
         findAllUser()
       else findAllUserByEnginner()
+      findAllEngineer()
       break
 
     case 'i12':
@@ -4496,6 +4966,18 @@ const findAllUserByEnginner = async () => {
   const res = await axios.get(hostName + `/api/User/searchNameByUser`, getToken())
   if(res.data.success){
     dataUser.value = res.data.content.data
+    dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+
+      if(show3d.value){
+        btnSearch.value = locations.value[0]
+          initMap(mapCenter.value);
+          updateMarkersByCenter();
+        }
+
+      
   }
 
 }
@@ -4504,6 +4986,16 @@ const findAllUser = async () => {
   const res = await axios.get(hostName + `/api/User/searchName`, getToken())
   if(res.data.success){
     dataUser.value = res.data.content.data
+    dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+          if(show3d.value){
+          btnSearch.value = locations.value[0]
+            initMap(mapCenter.value);
+            updateMarkersByCenter();
+          }
+
   }
 
 }
@@ -4575,7 +5067,28 @@ const showDataMap = (location, data) => {
   if (!isLatLngInBounds(location.lat, location.lng)) {
     mapCenter.value = location
   } 
+
+  if(show3d.value){
+    focusMarker(data.id)
+  }
 }
+
+const focusMarker = (index) => {
+  const marker = locations.value.find(item => item.id == index); // Lấy marker tương ứng
+  if (marker) {
+    const position = marker.coordinates;
+    
+    // marker.setIcon({
+    //       scaledSize: new google.maps.Size(60, 60), // Phóng to
+    //       anchor: {x: 35, y: 45}
+    // })
+    if(!isLatLngInBounds(marker.coordinates.lat, marker.coordinates.lng)){
+          mapRef.value.setZoom(18); // Zoom gần hơn
+           mapRef.value.panTo(position); // Di chuyển tới marker
+    }
+    dataOldMap.value = marker
+  }
+};
 const clickDataUpdate = (id) => {
 router.push({path: "/admin/fromelementPages", query: {id: id}})
 }
@@ -4627,9 +5140,9 @@ showDistanceList.value = false
 }, 500); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
   }
 const onZoomChanged = () => {
-zoomLevel.value = mapRefs.value.$mapObject.getZoom();
-const center = mapRefs.value.$mapObject.getCenter();
-const newCenter = { lat: center.lat(), lng: center.lng() };
+    zoomLevel.value = mapRefs.value.$mapObject.getZoom();
+    const center = mapRefs.value.$mapObject.getCenter();
+    const newCenter = { lat: center.lat(), lng: center.lng() };
 
     // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
     if (
@@ -4639,6 +5152,7 @@ const newCenter = { lat: center.lat(), lng: center.lng() };
       mapCenter.value = { lat: center.lat(), lng: center.lng() };
 
       if (zoomLevel.value >= 13) {
+      
       if(btnSearch.value == null && duongdi.value.length <= 0){
       
       if(inputValue.value <= 0){
@@ -4916,8 +5430,14 @@ document.body.style.overflow = "hidden";
             ...m,
             coordinates: { lat: m.latitude, lng: m.longitude }
         }))
-
         locations.value = dataLoadStart.value
+        sortData(store.getIdAccount)
+
+        if(show3d.value){
+          btnSearch.value = locations.value[0]
+          initMap(mapCenter.value);
+          updateMarkersByCenter();
+        }
     }
 
     isLoading.value = false;
@@ -4932,12 +5452,15 @@ document.body.style.overflow = "hidden";
   : await axios.get(hostName + `/api/TrafficEquipment/FindAll?name=${searchData}&page=${pageData}&pageSize=${pageSize.value}`, getToken())
 
   if(res.data.success){
+    if(searchData !== "")
+          btnSearch.value = "nn"
       dataLoadStart.value = res.data.content.data.map(m => ({
           ...m,
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+     if(!show3d.value)
+           mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
       
       if(searchData === ""){
       if(inputValue.value <= 0){
@@ -4963,6 +5486,13 @@ document.body.style.overflow = "hidden";
             return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
         });
       }
+
+        if(show3d.value){
+          initMap(mapCenter.value)
+          updateMarkersByCenter()
+        }
+          
+
       }else{
         locations.value = dataLoadStart.value
       }
@@ -4974,11 +5504,13 @@ document.body.style.overflow = "hidden";
       page.value = res.data.content.page;
       totalPage.value = res.data.content.totalPages;
   }
-  console.log(res)
+      btnSearch.value = null 
+      duongdi.value.length = 0
   isLoading.value = false;
 document.body.classList.remove("loading");
 document.body.style.overflow = "auto";
 }
+
 // Hàm lấy ranh giới từ tên quận
 const fetchOSMBoundary = async () => {
 isLoading.value = true;
@@ -5062,6 +5594,20 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
+      dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+      if(show3d.value){
+        const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+        updateMarkersByCenter(); // cập nhật lại marker
+      }
       // if(zoomLevel.value < 13)
       //     zoomLevel.value = 13
       isPhanTrang.value = false
@@ -5089,6 +5635,20 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
+      dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+      if(show3d.value){
+        const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+        updateMarkersByCenter(); // cập nhật lại marker
+      }
       // if(zoomLevel.value < 13)
       //     zoomLevel.value = 13
       isPhanTrang.value = false
@@ -5114,6 +5674,20 @@ if(res.data.success){
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
+      dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+      if(show3d.value){
+        const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+        updateMarkersByCenter(); // cập nhật lại marker
+      }
       // if(zoomLevel.value < 13)
       //     zoomLevel.value = 13
       isPhanTrang.value = false
@@ -5138,6 +5712,21 @@ if(res.data.success){
           ...m,
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
+
+      dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+      if(show3d.value){
+        const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+        updateMarkersByCenter(); // cập nhật lại marker
+      }
 
       // if(zoomLevel.value < 13)
       //     zoomLevel.value = 13
@@ -5196,7 +5785,8 @@ return locations.value
 
 const AllData = () => {
   duongdi.value = []
-mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
+  if(!show3d.value)
+    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
 pageSize.value = 22000
 findAllDataMap(valueE.value, page.value)
       
@@ -5219,10 +5809,27 @@ btnSearch.value = classData
 duongdi.value = []
 const res = await axios.get(hostName + '/api/TrafficEquipment/FindAllErrorCode321?page=1&pageSize=20000', getToken())
 if(res.data.success){
+ dataLoadStart.value = res.data.content.data.map(m => ({
+          ...m,
+          coordinates: { lat: m.latitude, lng: m.longitude }
+      }))
+
   locations.value = res.data.content.data.map(m => ({
           ...m,
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
+
+      if(show3d.value){
+        const center = mapRef.value.getCenter();
+        mapCenter.value = { lat: center.lat(), lng: center.lng() }
+        // Xoá map hiện tại (clear DOM)
+        map.value.innerHTML = ""; // Xoá thẳng div con bên trong
+
+        // Gọi lại initMap tại toạ độ mới
+        initMap(mapCenter.value);
+        updateMarkersByCenter(); // cập nhật lại marker
+      }
+          
 
       // if(zoomLevel.value < 13)
       //     zoomLevel.value = 13
@@ -5268,7 +5875,8 @@ dataLocation.value = data
   idClick.value = locationId
   scrollToItem(locationId, indexId)
   showDataChon(classData, classDiv, classChu, divcon, location)
-  
+
+  checkDataCheckBox(location)
 };
 
 const clickDataLocation = (location, type, classData) => {
@@ -5586,11 +6194,9 @@ if (!localStorage.getItem('reloaded')) {
   loadData()
   statusGiaoThong()
   poiStart()
-
-
- 
-
   
+  mapInstanceData.value = mapRefs.value?.$mapObject;
+
   // checkDataClassI('i1', 1)
 });
 
@@ -5671,6 +6277,10 @@ onUnmounted(() => {
 
 <style scoped>
 
+.databtn:active{
+    transform: scale(0.2);
+    transition: 0.3s ease-in-out;
+}
 .map-overlay {
   position: absolute;
   top: 0;

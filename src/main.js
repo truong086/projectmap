@@ -25,7 +25,8 @@ app.use(VueMap, {
         // libraries: ['places', 'visualization'] // Để hỗ trợ tìm kiếm
         libraries: 'places',
         language: 'zh-TW',
-        v: 'beta'
+        v: 'beta',
+        map_ids: ['c538a4b0749ed9e7c5ccc7e5']
     }
 })
 pinia.use(piniaPluginPersistedstate)

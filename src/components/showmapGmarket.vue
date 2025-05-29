@@ -67,7 +67,7 @@
               <p style="font-size: 12px; font-weight: bold;">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
+                <div v-if="location?.images?.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
                         <div v-for="(image, index) in location?.images" :key="index">
                           <img @click="props.showImage(image)" v-if="image != null && props.getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
                                 <div v-if="image != null && props.getFileType(image) === 'video'" @click="props.showImage(image)">
@@ -147,7 +147,7 @@
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
+                <div v-if="location?.images?.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
                         <div v-for="(image, index) in location?.images" :key="index">
                           <img @click="props.showImage(image)" v-if="image != null && props.getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
                                 <div v-if="image != null && props.getFileType(image) === 'video'" @click="props.showImage(image)">
@@ -227,7 +227,7 @@
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
+                <div v-if="location?.images?.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
                         <div v-for="(image, index) in location?.images" :key="index">
                           <img @click="props.showImage(image)" v-if="image != null && props.getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
                                 <div v-if="image != null && props.getFileType(image) === 'video'" @click="props.showImage(image)">
@@ -308,7 +308,7 @@
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
+                <div v-if="location?.images?.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
                         <div v-for="(image, index) in location?.images" :key="index">
                           <img @click="props.showImage(image)" v-if="image != null && props.getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
                                 <div v-if="image != null && props.getFileType(image) === 'video'" @click="props.showImage(image)">
@@ -390,7 +390,7 @@
               <p style="font-size: 12px; font-weight: bold; ">維修記錄: {{ location.totalUpdate == 0 ? "無" : location.totalUpdate }}</p>
                 </div>
 
-                <div v-if="location?.images.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
+                <div v-if="location?.images?.length > 0" style="display: flex; flex-wrap: wrap; justify-content: center; overflow: auto; margin-left: 20px;">
                         <div v-for="(image, index) in location?.images" :key="index">
                           <img @click="props.showImage(image)" v-if="image != null && props.getFileType(image) === 'image'" style="width: 30px; height: 30px; border-radius: 50%;" :src="image" alt="">
                                 <div v-if="image != null && props.getFileType(image) === 'video'" @click="props.showImage(image)">

@@ -10,7 +10,8 @@ const mapOptions = {
   zoomControl: true // (tuỳ chọn) vẫn giữ thanh zoom
 } 
 -->
-<GoogleMap
+<GMapMap
+v-if="!show3d"
       ref="mapRefs"
       :center="mapCenter"
       map-id="c538a4b0749ed9e7c5ccc7e5"
@@ -18,19 +19,19 @@ const mapOptions = {
       :options="{ styles: mapStyles[selectedTheme],  mapTypeControl: false, fullscreenControl: false }"
       style="height: 100vh; width: 100vw;"
       map-type-id="roadmap"
-      @load="handleMapLoad"
+      @zoom_changed="onZoomChanged"
+      @center_changed="onCenterChanged"
       @idle="onIdle"
     >
 
-    <TrafficLayer  />
+    <GMapTrafficLayer />
     <!-- "@zoom_changed" là bắt sự kiện khi người dùng phóng to, thu nhỏ bản đồ -->
     <div v-if="checkData">
-  <Polygon
+  <GMapPolygon
     v-for="(island, index) in boundaryCoordinates"
     :key="index"
-    
+    :paths="island"
     :options="{
-      paths: island,
       fillColor: '#FF0000',
       fillOpacity: 0.3,
       strokeColor: '#FF0000',
@@ -39,10 +40,10 @@ const mapOptions = {
   />
 </div>
 <div v-else>
-  <Polygon 
+  <GMapPolygon
   v-if="boundaryCoordinates.length > 0"
+  :paths="boundaryCoordinates"
   :options="{ 
-    paths: boundaryCoordinates,
     fillColor: '#FF0000',
     fillOpacity: 0,
     strokeColor: '#FF0000',
@@ -53,15 +54,16 @@ const mapOptions = {
     
       <!-- Marker cho tất cả vị trí tìm kiếm được -->
       
-      <Marker
+      <GMapMarker
         v-for="(location, index) in resolvedLocations"
         :key="index"
-        :options="{position: location.coordinates, label: location.address}"
+        :position="location.coordinates"
+        :label="location.address"
         @click="showInfo(location.coordinates + '' + index)"
         
       >
           <!-- Hiển thị thông tin khi bấm vào marker -->
-      <InfoWindow 
+      <GMapInfoWindow
         v-if="selectedMarker === location.coordinates + '' + index && showDistanceList"
         :options="{ maxWidth: 250 }"
         @closeclick="selectedMarker = null"
@@ -80,23 +82,15 @@ const mapOptions = {
                       <button :class="'s17d' + location.lat" @click="clickDataLocation(location, 'foot-hiking', 's17d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-map" aria-hidden="true"></i></button>
                       <button :class="'s18d' + location.lat" @click="clickDataLocation(location, 'cycling-electric', 's18d' + location.lat)" style="width: 30px; height: 30px; border-radius: 50%;border: 1px dashed greenyellow; outline: none; background: transparent; cursor: pointer;"><i class="fa fa-battery-full" aria-hidden="true"></i></button>
         </div>
-      </InfoWindow>
-  </Marker>
+      </GMapInfoWindow>
+  </GMapMarker>
   <!-- Marker cho tất cả vị trí tìm kiếm được -->
    <div v-for="(location, index) in locations" :key="index">
     <div v-if="zoomLevel >= 13 && showMarkers">
     <div v-if="location.isError">
-      <Marker
+      <GMapMarker
       v-if="location.statusError == 1 && showMarkers"
-      :options="{
-        position: location.coordinates,
-        icon: {
-          // url: marker1.url, // Đây là đổi ảnh liên tục
-          url: imageStatus.status1s,
-          scaledSize: idClick == location.id ? bigIcon : smallIcon,
-          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
-        }
-      }"
+      :position="location.coordinates"
         @click="showInfo(location.coordinates.lat, location, 
         'status_' + location.id + '_' + index, 
         'div_' + location.id + '_' + index, 
@@ -104,7 +98,12 @@ const mapOptions = {
         'details_' + location.id + '_' + index,
         location.id, index,
         location)"
-
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status1s,
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
 
         class="marker-icon"
       >
@@ -123,19 +122,11 @@ const mapOptions = {
                   </GMapInfoWindow>
 
                 -->
-  </Marker>
+  </GMapMarker>
 
-      <Marker
+      <GMapMarker
       v-if="location.statusError == 2 && showMarkers"
-        :options="{
-          position: location.coordinates,
-          icon: {
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status0,
-            scaledSize: idClick == location.id ? bigIcon : smallIcon,
-            anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }
-        }"
+        :position="location.coordinates"
         @click="showInfo(location.coordinates.lat, location, 
         'status1_' + location.id + '_' + index, 
         'div1_' + location.id + '_' + index, 
@@ -143,7 +134,12 @@ const mapOptions = {
         'details1_' + location.id + '_' + index,
         location.id, index,
         location)"
-        
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status0,
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
 
         class="marker-icon"
       >
@@ -194,18 +190,10 @@ const mapOptions = {
                     </div>
                   </GMapInfoWindow>
                 -->
-  </Marker>
-  <Marker
+  </GMapMarker>
+  <GMapMarker
       v-if="location.statusError == 3 && showMarkers"
-        :options="{
-          position: location.coordinates,
-          icon: {
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status2,
-            scaledSize: idClick == location.id ? bigIcon : smallIcon,
-            anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }
-        }"
+        :position="location.coordinates"
         @click="showInfo(location.coordinates.lat, location, 
         'status2_' + location.id + '_' + index, 
         'div2_' + location.id + '_' + index, 
@@ -213,7 +201,12 @@ const mapOptions = {
         'details2_' + location.id + '_' + index,
         location.id, index,
         location)"
-       
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status2,
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
 
         class="marker-icon"
       >
@@ -267,19 +260,11 @@ const mapOptions = {
                   </GMapInfoWindow>
                 -->
      
-  </Marker>
+  </GMapMarker>
 
-  <Marker
+  <GMapMarker
       v-if="location.statusError == 4 && showMarkers"
-        :options="{
-          position: location.coordinates,
-          icon: {
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status3,
-            scaledSize: idClick == location.id ? bigIcon : smallIcon,
-            anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }
-        }"
+        :position="location.coordinates"
         @click="showInfo(location.coordinates.lat, location, 
         'status3_' + location.id + '_' + index, 
         'div3_' + location.id + '_' + index, 
@@ -287,7 +272,12 @@ const mapOptions = {
         'details3_' + location.id + '_' + index,
         location.id, index,
         location)"
-        
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status3,
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
         class="marker-icon"
       >
       <!--
@@ -338,20 +328,12 @@ const mapOptions = {
                   </GMapInfoWindow>
                 -->
      
-  </Marker>
+  </GMapMarker>
     </div>
     <div v-else>
-      <Marker
+      <GMapMarker
         v-if="showMarkers"
-        :options="{
-          position: location.coordinates,
-          icon: {
-            // url: marker1.url, // Đây là đổi ảnh liên tục
-            url: imageStatus.status1,
-            scaledSize: idClick == location.id ? bigIcon : smallIcon,
-            anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
-          }
-        }"
+        :position="location.coordinates"
         @click="showInfo(location.coordinates.lat, location, 
         'status4_' + location.id + '_' + index, 
         'div4_' + location.id + '_' + index, 
@@ -359,7 +341,12 @@ const mapOptions = {
         'details4_' + location.id + '_' + index,
         location.id, index,
         location)"
-        
+        :icon="{
+          // url: marker1.url, // Đây là đổi ảnh liên tục
+          url: imageStatus.status1,
+          scaledSize: idClick == location.id ? bigIcon : smallIcon,
+          anchor: idClick == location.id ? {x: 35, y: 45} : { x: 25, y: 25 }, // Căn giữa ảnh marker
+        }"
 
         class="marker-icon"
       >
@@ -411,7 +398,7 @@ const mapOptions = {
                   </GMapInfoWindow>
                 -->
      
-  </Marker>
+  </GMapMarker>
     </div>
    </div>
    <!--
@@ -434,45 +421,46 @@ const mapOptions = {
   -->
   </div>
       <!-- Marker cho vị trí hiện tại -->
-      <Marker
-        :options="{position: currentLocation, icon: {
+      <GMapMarker
+        :position="currentLocation"
+        label="Bạn"
+        :icon="{
           url: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
           scaledSize: { width: 40, height: 40 }
-        },
-        label: 'Bạn'
-      }"
-        
-        
+        }"
       />
       <!-- Đường đi -->
-      <Polyline 
+      <GMapPolyline
         v-if="routePath.length > 0 && selectedTransport !== 'airplane'"
+        :path="routePath"
         :options="{
-          path: routePath,
           strokeColor: '#A52A2A', // Màu đường
-          strokeOpacity: 1,
-          strokeWeight: 5,
-          fillOpacity: 0,
+          strokeOpacity: 1.0,
+          strokeWeight: 5
         }"
       />
 
         <!-- Hiển thị số km trên bản đồ -->
-    <Marker
+    <GMapMarker
       v-if="routeDistance && showDistance"
-      :options="{position: midPoint}"
+      :position="midPoint"
       label="📏"
        @click="showDistance = !showDistance"
     >
-      <InfoWindow >
+      <GMapInfoWindow>
         <div>
           <p>Travel Distance: <strong>{{ routeDistance.toFixed(2) }} km</strong></p> 
           <p>Travel Time: <strong>{{ showTimeDiChuyen }}</strong></p> 
         </div>
-      </InfoWindow>
-    </Marker>
+      </GMapInfoWindow>
+    </GMapMarker>
     
     <!--Poi-->
-    <div class="scroll-boxs" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: #e6ffff;">
+   
+    </GMapMap>
+     <div ref="map" class="map3ds" style="height: 0px; width: 0px;"></div>
+
+     <div class="scroll-boxs" style="display: flex; flex-direction: column; border-right: 1px solid rgba(0, 0, 0, 0.1); display: flex; position: absolute; overflow: auto; height: 100%; z-index: 1100; left: 0; top: 0; background-color: #e6ffff;">
         <div style="width: 100px; height: 100%; margin-top: 15px;">
 
           <div style="padding: 10px; margin-top: 15px; cursor: pointer;">
@@ -491,6 +479,12 @@ const mapOptions = {
             <div style="cursor: pointer; padding: 10px;" class="i2" @click="checkDataClassI('i2', 1)">
             <img width="28px" src="../assets/Icon/Picture3.png" alt="">
             <p style="font-size: 12px;">所有號誌清單</p>
+            </div>
+
+            <div style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i15" @click="checkDataClassI('i15', 15)">
+            <img width="28px" src="../assets/Icon/map3d.png" alt="">
+            <p style="font-size: 12px;">3D地圖</p>
+            <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
 
             <div v-if="store.getRole(0) == 1" style="margin: 15px 0; cursor: pointer; padding: 10px;" class="i3" @click="checkDataClassI('i3', 1)">
@@ -513,8 +507,8 @@ const mapOptions = {
               </router-link>
 
               <div v-else-if="store.getRole(0) == 2" style="cursor: pointer; padding: 10px;" class="i12" @click="checkDataClassI('i12', 12)">
-            <img width="38px" src="https://img.lovepik.com/free-png/20220125/lovepik-construction-engineer-png-image_401727229_wh860.png" alt="">
-            <p style="font-size: 12px;">工程師</p>
+            <img width="38px" src="../assets/Icon/engineer.png" alt="">
+            <p style="font-size: 12px;">維修清單</p>
             </div>
             <div style="cursor: pointer; padding: 10px;" class="i6" @click="checkDataClassI('i6', 2)">
             <img width="28px" src="../assets/Icon/Picture7.png" alt="">
@@ -536,6 +530,8 @@ const mapOptions = {
             <p style="font-size: 12px;">關於</p>
             <div style="width: 100%; text-align: center; align-items: center; display: flex; justify-content: center;"><div style="border-bottom: 5px solid grey; width: 50%; margin-top: 10px; border-radius: 10px;"></div></div>
             </div>
+
+            
 
           </div>
         </div>
@@ -895,6 +891,35 @@ const mapOptions = {
 
     
         </div>
+
+        <div v-if="isCheckShow == 15" style="width: 390px;">
+        <!-- Nút trong bản đồ -->
+
+        <div>
+        <div style="text-align: left; margin-left: 30px; justify-content: space-between; margin-top: 20px; width: 330px; border-bottom: 3px solid black; display: flex;">
+              <h3>Map 3D</h3>
+              <i @click="show3dFunc" style="font-size: 20px; margin-right: 20px;" class="fa fa-eercast" aria-hidden="true"></i>
+              </div>
+        </div>
+        <div style="margin: 15px 0; position: relative;">
+          <div style="width: 100%; text-align: center; flex-direction: column; display: flex; position: absolute; align-items: center; ">
+            <button @click="rotateMap('tilt', -20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Top</button>
+            <button @click="rotateMap('tilt', 20)" class="databtn" style="width: 100px; height: 30px; margin-top: 100px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Bottom</button>
+          </div>
+
+          <div style="position: absolute; top: 60px; width: 100%; height: 60px; display: flex; justify-content: space-between; padding: 0 20px;">
+            <button @click="rotateMap('rotate', 20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Left</button>
+            <button @click="rotateMap('rotate', -20)" class="databtn" style="width: 100px; height: 30px; border: none; outline: none; background-color: aqua; border-radius: 10px; cursor: pointer; box-shadow: 3px 3px 3px grey;">Right</button>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top: 200px;">
+          <button @click="toggleMapType" style="border: none; outline: none; padding: 15px 30px; border-radius: 10px; background-color: greenyellow;">
+            地圖: {{ mapType === 'roadmap' ? '衛星' : '常' }}
+          </button>
+        </div>
+    
+        </div>
     </div>
     
     </div>
@@ -913,7 +938,7 @@ const mapOptions = {
       </div>
       </div>
 
-      <div v-if="isCheckShow == 2 || isCheckShow == 3 || isCheckShow == 9">
+      <div v-if="isCheckShow == 2 || isCheckShow == 3 || isCheckShow == 9 || isCheckShow == 15">
       <div :style="{
       transform: isShowHome && isCheckShow != 10 && isCheckShow != 8 ? 'translateX(760%)' : 'translateX(0%)',
       transition: '0.4s ease-in-out',
@@ -940,7 +965,6 @@ const mapOptions = {
   
           </div>
         </div>
-    </GoogleMap>
 
     <!-- Overlay mờ phủ lên bản đồ -->
     <div class="map-overlay"></div>
@@ -1003,14 +1027,13 @@ const mapOptions = {
 import { ref, onMounted, computed, onUnmounted, getCurrentInstance, watch } from "vue";
 import axios from "axios";
 import PagesTotal from "./PageList/PagesTotal.vue";
+import { GMapTrafficLayer } from "@fawmi/vue-google-maps";
 import { useRouter } from "vue-router";
 import {useCounterStore} from '../store'
 import { useDebounceFn } from '@vueuse/core' // Giúp debounce dễ hơn
 import haversine from 'haversine-distance'; // tính khoảng cách giữa 2 điểm
 import ShowmapGmarket from './showmapGmarket.vue'
-import {Marker, GoogleMap, Polygon, TrafficLayer, InfoWindow, Polyline } from 'vue3-google-map'
 const showMarkers = ref(false)
-const mapInstanceData = ref(null) 
 // Vị trí trung tâm bản đồ (Hồ Chí Minh)
 const mapCenter = ref({ lat: 22.99318457718073, lng: 120.20495235408347 });
 const zoomLevel = ref(15);
@@ -1060,12 +1083,255 @@ const idClick = ref(0)
 let mapInstance = null
 let mapBounds = null
 const showScroll = ref(false)
+const mapInstanceData = ref(null)
+const heading = ref(320);
+const map = ref(null);
+const mapRef = ref(null);
+const show3d = ref(false)
+const makers = ref([])
+const dataOldMap = ref({})
 let hideScrollTimeout = null
+const mapType = ref('satellite'); // bắt đầu với bản đồ vệ tinh
+const toggleMapType = () => {
+  if (!mapRef.value) return;
 
-const handleMapLoad = (map) => {
-  mapInstanceData.value = map
+  mapType.value = mapType.value === 'roadmap' ? 'satellite' : 'roadmap';
+  mapRef.value.setMapTypeId(mapType.value);
+};
+
+
+const show3dFunc = () => {
+  show3d.value = !show3d.value
+  if(show3d.value){
+    initMap(mapCenter.value)
+  }else{
+  const maps = document.querySelector('.map3ds')
+    mapRef.value = null
+  maps.style.width = '0px'
+  maps.style.height = '0px'
+  renderMarkers(locations.value)
+  }
+}
+const initMap = (center) => {
+
+const maps = document.querySelector('.map3ds')
+maps.style.width = '100vw'
+maps.style.height = '100vh'
+  
+
+  mapRef.value = new google.maps.Map(map.value, {
+    center: center,
+    zoom: zoomLevel.value,
+    heading: 320,
+    tilt: 47.5,
+    mapId: "90f87356969d889c",
+    mapTypeId: 'satellite',
+    mapTypeControl: false
+  });
+
+   // Bắt sự kiện khi người dùng kéo map
+  mapRef.value.addListener("idle", () => {
+          if(show3d.value){
+          
+           // Xóa hết marker cũ
+  if (mapRef.value.myMarkers) {
+    mapRef.value.myMarkers.forEach(m => m.setMap(null));
+  } else {
+    mapRef.value.myMarkers = [];
+  }
+            const center = mapRef.value.getCenter();
+            const newCenter = { lat: center.lat(), lng: center.lng() };
+            mapCenter.value = newCenter
+          if(showMarkers.value){
+            if(inputValue.value <= 0){
+       // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+        const loadData = dataLoadStart.value.filter((location) => {
+          const distance = getDistanceData(
+            mapCenter.value.lat,
+            mapCenter.value.lng,
+            location.coordinates.lat,
+            location.coordinates.lng
+          );
+          return distance <= 1; // Lấy các điểm trong bán kính 1km
+        });
+
+        mapRef.value.myMarkers = loadData.map(location => {
+          return new google.maps.Marker({
+            map: mapRef.value,
+            position: {lat: location.coordinates.lat, lng: location.coordinates.lng},
+            icon: getMarkerIcon(location.status)
+          })
+        })
+      }else{
+       // Khi phóng to -> hiển thị các địa điểm chi tiết trong quận
+          const loadData = dataLoadStart.value.filter((location) => {
+            const distance = getDistanceData(
+              mapCenter.value.lat,
+              mapCenter.value.lng,
+              location.coordinates.lat,
+              location.coordinates.lng
+            );
+            return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
+          });
+
+          mapRef.value.myMarkers = loadData.map(location => {
+          return new google.maps.Marker({
+            map: mapRef.value,
+            position: {lat: location.coordinates.lat, lng: location.coordinates.lng},
+            icon: getMarkerIcon(location.status)
+          })
+        })
+          
+      }
+        }
+          }
+  });
+
+  mapRef.value.addListener("zoom_changed", () => {
+  showMarkers.value = false; // Đang zoom → tạm ẩn dữ liệu
+  debounceZoomEnd()
+});
+
+
+ // Xoá marker cũ nếu có
+  if (!mapRef.value.myMarkers) {
+    mapRef.value.myMarkers = [];
+  } else {
+    mapRef.value.myMarkers.forEach(marker => marker.setMap(null));
+    mapRef.value.myMarkers = [];
+  }
+
+};
+
+const getDistanceData = (lat1, lng1, lat2, lng2) =>{
+  const R = 6371; // bán kính Trái đất (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // kết quả trả về là km
 }
 
+
+const renderMarkers = (list) => {
+makers.value.forEach(marker => marker.setMap(null));
+  makers.value = [];
+  makers.value.length = 0
+
+      if (!mapRef.value) return;
+ // Xoá marker cũ nếu có
+  if (!mapRef.value.myMarkers) {
+    mapRef.value.myMarkers = [];
+  } else {
+    mapRef.value.myMarkers.forEach(marker => marker.setMap(null));
+    mapRef.value.myMarkers = [];
+  }
+
+  list.forEach((location, index) => {
+          const marker = new google.maps.Marker({
+            map: mapRef.value,
+            position: {lat: location.coordinates.lat, lng: location.coordinates.lng},
+            icon: getMarkerIcon(location.status)
+          })
+
+            if(location.isError){
+              if(location.statusError == 1 && showMarkers.value){
+                marker.addListener("click", () => {
+                  showInfo(location.coordinates.lat, location, 
+                'status_' + location.id + '_' + index, 
+                'div_' + location.id + '_' + index, 
+                'divchu_' + location.id + '_' + index, 
+                'details_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            })
+              }
+            else if(location.statusError == 2 && showMarkers.value){
+            marker.addListener("click", () => {
+             showInfo(location.coordinates.lat, location, 
+                'status1_' + location.id + '_' + index, 
+                'div1_' + location.id + '_' + index, 
+                'divchu1_' + location.id + '_' + index, 
+                'details1_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            })
+             
+            }
+            else if(location.statusError == 3 && showMarkers.value){
+            marker.addListener("click", () => {
+              showInfo(location.coordinates.lat, location, 
+                'status2_' + location.id + '_' + index, 
+                'div2_' + location.id + '_' + index, 
+                'divchu2_' + location.id + '_' + index, 
+                'details2_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            })
+              
+            }else if(location.statusError == 4 && showMarkers.value){
+              marker.addListener("click", () => {
+                showInfo(location.coordinates.lat, location, 
+                    'status3_' + location.id + '_' + index, 
+                    'div3_' + location.id + '_' + index, 
+                    'divchu3_' + location.id + '_' + index, 
+                    'details3_' + location.id + '_' + index,
+                    location.id, index,
+                    location)
+              })
+                  
+            }
+            }else{
+            marker.addListener("click", () => {
+              showInfo(location.coordinates.lat, location, 
+                'status4_' + location.id + '_' + index, 
+                'div4_' + location.id + '_' + index, 
+                'divchu4_' + location.id + '_' + index, 
+                'details4_' + location.id + '_' + index,
+                location.id, index,
+                location)
+            })
+              
+            }
+            
+          makers.value.push(marker)
+          mapRef.value.myMarkers.push(marker)
+  })
+}
+
+const getMarkerIcon = (status) => {
+  switch (status) {
+    case 1:
+      return imageStatus.value.status1s
+    case 2:
+      return imageStatus.value.status0
+    case 3:
+      return imageStatus.value.status2
+    case 4:
+      return imageStatus.value.status3
+    case 5:
+      return imageStatus.value.status1
+    default:
+      return 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+  }
+};
+
+const adjustMap = (mode, amount) => {
+  if (!mapRef.value) return;
+
+  switch (mode) {
+    case "tilt":
+      mapRef.value.setTilt(mapRef.value.getTilt() + amount);
+      break;
+    case "rotate":
+      mapRef.value.setHeading(mapRef.value.getHeading() + amount);
+      break;
+  }
+};
 const handleScroll = () => {
   showScroll.value = true
 
@@ -1097,6 +1363,14 @@ const bigIcon = ref( {
 //   isPaused.value = !isPaused.value
 // }
 
+const rotateMap = (type, amount) => {
+  if (mapInstanceData.value) {
+    heading.value = mapInstanceData.value.getHeading() + amount;
+    mapInstanceData.value.setHeading(heading.value);
+  }
+
+  adjustMap(type, amount)
+};
 // Kiểm tra tọa độ có nằm trong bounds không
 const isLatLngInBounds = (lat, lng) =>{
   if (!mapBounds) return false
@@ -4423,7 +4697,7 @@ const dataLoadStart = ref([
 
 ])
 
-const submitInput = () => {
+const submitInput = async () => {
   if(inputValue.value <= 0)
     return
   
@@ -4432,7 +4706,7 @@ const submitInput = () => {
 
   pageSize.value = 22000
   findAllDataMap(valueE.value, page.value)
-
+  locations.value = []
   locations.value = dataLoadStart.value.filter((location) => {
         const distance = getDistance(
           mapCenter.value.lat,
@@ -4440,9 +4714,14 @@ const submitInput = () => {
           location.coordinates.lat,
           location.coordinates.lng
         );
-        console.log(distance)
         return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
       });
+      if(show3d.value){
+          // renderMarkers(locations.value)
+          initMap(mapCenter.value)
+          renderMarkers(locations.value)
+      }
+        
 
       if(classI.value != null)
           document.querySelector("." + classI.value).style.boxShadow = "none"
@@ -4597,7 +4876,28 @@ const showDataMap = (location, data) => {
   if (!isLatLngInBounds(location.lat, location.lng)) {
     mapCenter.value = location
   } 
+
+  if(show3d.value){
+    focusMarker(data.id)
+  }
 }
+
+const focusMarker = (index) => {
+  const marker = locations.value.find(item => item.id == index); // Lấy marker tương ứng
+  if (marker) {
+    const position = marker.coordinates;
+    
+    // marker.setIcon({
+    //       scaledSize: new google.maps.Size(60, 60), // Phóng to
+    //       anchor: {x: 35, y: 45}
+    // })
+    if(!isLatLngInBounds(marker.coordinates.lat, marker.coordinates.lng)){
+          mapRef.value.setZoom(18); // Zoom gần hơn
+           mapRef.value.panTo(position); // Di chuyển tới marker
+    }
+    dataOldMap.value = marker
+  }
+};
 const clickDataUpdate = (id) => {
 router.push({path: "/admin/fromelementPages", query: {id: id}})
 }
@@ -4626,11 +4926,32 @@ const getDistance = (lat1, lng1, lat2, lng2) => {
   // Biến timeout để debounce
 let centerChangeTimeout = null;
 
+  const onCenterChanged = () => {
+    if (centerChangeTimeout) clearTimeout(centerChangeTimeout);
 
+centerChangeTimeout = setTimeout(() => {
+showDistanceList.value = false
+  if (mapRefs.value) {
+    const center = mapRefs.value.$mapObject.getCenter();
+    const newCenter = { lat: center.lat(), lng: center.lng() };
+    if(isCheckShow.value != 12){
+    if (
+      Math.abs(newCenter.lat - mapCenter.value.lat) > 0.01 ||
+      Math.abs(newCenter.lng - mapCenter.value.lng) > 0.01
+    ) {
+      // mapCenter.value = { lat: center.lat(), lng: center.lng() };
+      onZoomChanged()
+    }
+    }
+    // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
+    
+  }
+}, 500); // Chỉ cập nhật sau 300ms khi người dùng dừng di chuyển
+  }
 const onZoomChanged = () => {
-zoomLevel.value = mapInstanceData.value.getZoom();
-const center = mapInstanceData.value.getCenter();
-const newCenter = { lat: center.lat(), lng: center.lng() };
+    zoomLevel.value = mapRefs.value.$mapObject.getZoom();
+    const center = mapRefs.value.$mapObject.getCenter();
+    const newCenter = { lat: center.lat(), lng: center.lng() };
 
     // Kiểm tra nếu thay đổi vị trí trung tâm lớn hơn 0.001 độ (~100m) thì mới cập nhật
     if (
@@ -4640,6 +4961,7 @@ const newCenter = { lat: center.lat(), lng: center.lng() };
       mapCenter.value = { lat: center.lat(), lng: center.lng() };
 
       if (zoomLevel.value >= 13) {
+      
       if(btnSearch.value == null && duongdi.value.length <= 0){
       
       if(inputValue.value <= 0){
@@ -4704,32 +5026,9 @@ const debounceZoomEnd = useDebounceFn(() => {
 // Hoặc bạn có thể dùng event `idle` nếu bạn chỉ muốn hiển thị data khi map dừng di chuyển/zoom hẳn:
 const onIdle = () => {
   showMarkers.value = true
-  if (!mapInstanceData.value) return
-  mapInstance = mapRefs.value.ready ? mapRefs.value.map : null
+  if (!mapRefs.value) return
+  mapInstance = mapRefs.value.$mapObject
   mapBounds = mapInstance.getBounds()
-
-   clearTimeout(centerChangeTimeout)
-  centerChangeTimeout = setTimeout(() => {
-    showDistanceList.value = false
-
-    if (mapInstanceData.value) {
-      const center = mapInstanceData.value.getCenter()
-      const newCenter = {
-        lat: center.lat(),
-        lng: center.lng()
-      }
-
-      // Kiểm tra nếu người dùng không bật điều kiện đặc biệt
-      if (isCheckShow.value !== 12) {
-        if (
-          Math.abs(newCenter.lat - mapCenter.value.lat) > 0.01 ||
-          Math.abs(newCenter.lng - mapCenter.value.lng) > 0.01
-        ) {
-          onZoomChanged()
-        }
-      }
-    }
-  }, 500)
 }
 
 // const zoomData = (data) => {
@@ -4961,7 +5260,8 @@ document.body.style.overflow = "hidden";
           coordinates: { lat: m.latitude, lng: m.longitude }
       }))
 
-      mapCenter.value = {lat: mapRefs.value.map.getCenter().lat(), lng: mapRefs.value.map.getCenter().lng()}
+     if(!show3d.value)
+           mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
       
       if(searchData === ""){
       if(inputValue.value <= 0){
@@ -4987,6 +5287,9 @@ document.body.style.overflow = "hidden";
             return distance <= inputValue.value; // Lấy các điểm trong bán kính 1km
         });
       }
+
+        renderMarkers(locations.value)
+        
       }else{
         locations.value = dataLoadStart.value
       }
@@ -4998,11 +5301,11 @@ document.body.style.overflow = "hidden";
       page.value = res.data.content.page;
       totalPage.value = res.data.content.totalPages;
   }
-  console.log(res)
   isLoading.value = false;
 document.body.classList.remove("loading");
 document.body.style.overflow = "auto";
 }
+
 // Hàm lấy ranh giới từ tên quận
 const fetchOSMBoundary = async () => {
 isLoading.value = true;
@@ -5184,7 +5487,7 @@ btnSearch.value = classData
 
 duongdi.value = []
 if(pageSize.value >= 500){
-  mapCenter.value = {lat: mapRefs.value.map.getCenter().lat(), lng: mapRefs.value.map.getCenter().lng()}
+  mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
       if(inputValue.value <= 0){
 locations.value = dataLoadStart.value.filter((location) => {
         const distance = getDistance(
@@ -5220,7 +5523,8 @@ return locations.value
 
 const AllData = () => {
   duongdi.value = []
-mapCenter.value = {lat: mapRefs.value.map.getCenter().lat(), lng: mapRefs.value.map.getCenter().lng()}
+  if(!show3d.value)
+    mapCenter.value = {lat: mapRefs.value.$mapObject.getCenter().lat(), lng: mapRefs.value.$mapObject.getCenter().lng()}
 pageSize.value = 22000
 findAllDataMap(valueE.value, page.value)
       
@@ -5293,6 +5597,7 @@ dataLocation.value = data
   scrollToItem(locationId, indexId)
   showDataChon(classData, classDiv, classChu, divcon, location)
   
+
 };
 
 const clickDataLocation = (location, type, classData) => {
@@ -5610,11 +5915,9 @@ if (!localStorage.getItem('reloaded')) {
   loadData()
   statusGiaoThong()
   poiStart()
-
-
- 
-
   
+  mapInstanceData.value = mapRefs.value?.$mapObject;
+
   // checkDataClassI('i1', 1)
 });
 
@@ -5695,6 +5998,10 @@ onUnmounted(() => {
 
 <style scoped>
 
+.databtn:active{
+    transform: scale(0.2);
+    transition: 0.3s ease-in-out;
+}
 .map-overlay {
   position: absolute;
   top: 0;
@@ -6026,4 +6333,3 @@ box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 animation: fadeIn 0.3s ease;
 }
 </style>
-
