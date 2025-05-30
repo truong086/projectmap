@@ -1126,6 +1126,7 @@ const left = ref(0)
 const right = ref(0)
 const top = ref(0)
 const button = ref(0)
+const totalTil = ref(0)
 let hideScrollTimeout = null
 const mapType = ref('satellite'); // bắt đầu với bản đồ vệ tinh
 
@@ -1290,6 +1291,10 @@ maps.style.height = '100vh'
 
         // Gọi lại initMap tại toạ độ mới
         initMap(newCenter);
+         if (mapInstanceData.value) {
+            heading.value = mapInstanceData.value.getHeading() + totalTil.value;
+            mapInstanceData.value.setHeading(heading.value);
+          }
             if(button.value > 0){
       adjustMap('tilt', button.value)
 }else if(top.value < 0){
@@ -1523,6 +1528,7 @@ if(type === 'tilt' && amount > 0){
   if (mapInstanceData.value) {
     heading.value = mapInstanceData.value.getHeading() + amount;
     mapInstanceData.value.setHeading(heading.value);
+    totalTil.value += amount
   }
 
   adjustMap(type, amount)
@@ -4938,18 +4944,21 @@ const checkDataClassI = (classData, index) =>{
       findAllDataMap(valueE.value, page.value)
       AllData()
       dataSelect.value = "all"
+      routePath.value = []
       break
 
     case 'i3':
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
       dataSelect.value = "b6s"
       totalError('b6s')
+      routePath.value = []
       break
 
     case 'i4':
       mapCenter.value = {lat: 22.99318457718073, lng: 120.20495235408347}
       dataSelect.value = "b3s"
       searchStatus3('b3s')
+      routePath.value = []
       break
 
     case 'i8':
@@ -4961,12 +4970,15 @@ const checkDataClassI = (classData, index) =>{
         findAllUser()
       else findAllUserByEnginner()
       findAllEngineer()
+      selectDataInput.value = []
+      routePath.value = []
       break
 
     case 'i12':
       dataSelect.value = 'b6s'
       findAllEngineer()
       isPhanTrang.value = false
+      routePath.value = []
       break
   }
 }
@@ -6204,7 +6216,7 @@ if (!localStorage.getItem('reloaded')) {
   statusGiaoThong()
   poiStart()
   
-  mapInstanceData.value = mapRefs.value?.$mapObject;
+  mapInstanceData.value = mapRef.value;
 
   // checkDataClassI('i1', 1)
 });
