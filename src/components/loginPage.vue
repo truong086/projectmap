@@ -130,7 +130,7 @@ import axios from 'axios';
     position: absolute;
     width: 100%;
     height: 100%;
-    background-image: url('https://img4.thuthuatphanmem.vn/uploads/2020/10/29/hinh-anh-an-toan-giao-thong-dep_052811820.png');
+    background-image: url('../assets/LoginTemplate/images/Bg2.jpg');
     background-size: cover;
     background-repeat: no-repeat;
 }
