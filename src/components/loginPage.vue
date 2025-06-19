@@ -5,34 +5,34 @@
 			<div class="wrap-login100">
 				<form class="login100-form validate-form">
 					<span class="login100-form-title p-b-43">
-						Login to continue
+						請登入 交通號誌維修管理系統
 					</span>
 					
 					
 					<div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
 						<input class="input100" type="text" v-model="LoginModel.name">
 						<span class="focus-input100"></span>
-						<span class="label-input100">Email</span>
+						<span class="label-input100">帳號</span>
 					</div>
 					
 					
 					<div class="wrap-input100 validate-input" data-validate="Password is required">
 						<input class="input100" type="password" v-model="LoginModel.password" name="pass">
 						<span class="focus-input100"></span>
-						<span class="label-input100">Password</span>
+						<span class="label-input100">密碼</span>
 					</div>
 
 					<div class="flex-sb-m w-full p-t-3 p-b-32">
 						<div class="contact100-form-checkbox">
 							<input class="input-checkbox100" id="ckb1" type="checkbox" name="remember-me">
 							<label class="label-checkbox100" for="ckb1">
-								Remember me
+								記住我的帳號
 							</label>
 						</div>
 
 						<div>
 							<a href="#" class="txt1">
-								Forgot Password?
+								忘記密碼
 							</a>
 						</div>
 					</div>
@@ -40,11 +40,11 @@
 
 					<div class="container-login100-form-btn">
 						<button class="login100-form-btn" type="button" v-on:click="login">
-							Login
+							登入
 						</button>
 					</div>
 					
-					<div class="text-center p-t-46 p-b-20">
+					<!-- <div class="text-center p-t-46 p-b-20">
 						<span class="txt2">
 							or sign up using
 						</span>
@@ -58,7 +58,7 @@
 						<a href="#" class="login100-form-social-item flex-c-m bg2 m-r-5">
 							<i class="fa fa-twitter" aria-hidden="true"></i>
 						</a>
-					</div>
+					</div> -->
 				</form>
 
 				<div class="login100-more" >
