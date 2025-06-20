@@ -140,7 +140,7 @@ import axios from 'axios';
     display: block;
     width: 100%;
     height: 100%;
-    background-image: url('../assets/LoginTemplate/images/Bg2s.jpg');
+    background-image: url('../assets/LoginTemplate/images/bg2sUpdate.png');
     background-size: cover;
     background-repeat: no-repeat;
 }
