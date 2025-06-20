@@ -2,7 +2,7 @@
     <body style="background-color: #666666; margin-top: -60px;">
 	<div class="limiter" style="height: 100vh;">
 		<div class="container-login100">
-			<div class="wrap-login100" style="height: 100vh; position: relative;">
+			<div class="wrap-login100" style="height: 100vh;">
 				<form class="login100-form validate-form" style="margin-top: -180px;">
 
 					<div style="text-align: left;">
@@ -136,14 +136,14 @@ import axios from 'axios';
 
 <style scoped>
 .login100-more::before{
-    position: absolute;
+    content: "";
+    display: block;
     width: 100%;
     height: 100%;
-    background-image: url('../assets/LoginTemplate/images/Bg2.jpg');
+    background-image: url('../assets/LoginTemplate/images/Bg2s.jpg');
     background-size: cover;
     background-repeat: no-repeat;
 }
-
 /* Màn hình chờ */
 .loading-overlay {
   position: fixed;

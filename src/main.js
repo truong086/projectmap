@@ -14,8 +14,8 @@ import store from './store'
 import Vue3Notification from '@kyvg/vue3-notification'
 
 const app = createApp(App)
-// app.config.globalProperties.hostname = "https://localhost:44377"
-app.config.globalProperties.hostname = "https://tn.tsmms.tw"
+app.config.globalProperties.hostname = "https://localhost:44377"
+// app.config.globalProperties.hostname = "https://tn.tsmms.tw"
 // app.config.globalProperties.hostname = "https://aa27-34-80-69-96.ngrok-free.app"
 const pinia = createPinia();
 app.use(pinia);
