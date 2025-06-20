@@ -3,34 +3,21 @@
 	<div class="limiter" style="height: 100vh;">
 		<div class="container-login100">
 			<div class="wrap-login100" style="height: 100vh; position: relative;">
-				<form class="login100-form validate-form" style="margin-top: -50px;">
-          <div style="margin: 15px 0;">
-            <p style="font-size: 18px; font-family: 'Noto Sans TC', sans-serif; line-height: 30px; font-style: italic;">
-              您好，歡迎使用
-            </p>
-            <p style="font-size: 18px; font-family: 'Noto Sans TC', sans-serif; font-style: italic;">
-              交通號誌維修管理系統
-            </p>
-          </div>
-          
-					<div style="width: 600px; text-align: left; margin-left: -20px;">
-            <p style="font-weight: bold; font-size: 30px;">
-						<img style="margin: 0 20px;" src="../assets/LoginTemplate/images/bg5.png" width="40px" alt="">請登入 交通號誌維修管理系統
-            </p>
-          </div>
+				<form class="login100-form validate-form" style="margin-top: -180px;">
 
-          <div style="margin: 20px 0;">
-            
-            <img src="../assets/LoginTemplate/images/bg4.png" width="60px" alt="">
+					<div style="text-align: left;">
+            <div style="margin-bottom: 5px; padding-top: 15px; margin-left: 10px;">
+              <img width="30px" src="../assets/LoginTemplate/images/bg5.png" alt="">
+            </div>
+            <div style="margin-left: 10px;">
+              <p style="font-weight: bold; font-size: 20px; color: black;">您好，歡迎使用</p>
+              <p style="font-weight: bold; font-size: 20px; color: black;">交通號誌維修管理系統</p>
+              <p style="font-weight: bold; font-size: 10px; font-family: 'Noto Sans TC', sans-serif;">即時管理，迅速維修</p>
+            </div>
+            <div style="margin-left: 30px;">
+              <img src="../assets/LoginTemplate/images/bg4.png" width="320px" alt="">
+            </div>
           </div>
-          
-          <div style="position: absolute; top: 30px; right: 20px;">
-            <p style="font-size: 18px;  font-family: 'Noto Sans TC', sans-serif;">
-              即時管理，迅速維修
-            </p>
-          </div>
-					
-					
 					<div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
 						<input class="input100" type="text" v-model="LoginModel.name">
 						<span class="focus-input100"></span>
