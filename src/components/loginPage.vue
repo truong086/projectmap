@@ -10,12 +10,12 @@
               <img width="30px" src="../assets/LoginTemplate/images/bg5.png" alt="">
             </div>
             <div style="margin-left: 10px;">
-              <p style="font-weight: bold; font-size: 20px; color: black;">您好，歡迎使用</p>
-              <p style="font-weight: bold; font-size: 20px; color: black;">交通號誌維修管理系統</p>
-              <p style="font-weight: bold; font-size: 10px; font-family: 'Noto Sans TC', sans-serif;">即時管理，迅速維修</p>
+              <p style="font-weight: bold; font-size: 26px; color: black;">您好，歡迎使用</p>
+              <p style="font-weight: bold; font-size: 26px; color: black;">交通號誌維修管理系統</p>
+              <p style="font-weight: bold; font-size: 16px; font-family: 'Noto Sans TC', sans-serif;">即時管理，迅速維修</p>
             </div>
             <div style="margin-left: 30px;">
-              <img src="../assets/LoginTemplate/images/bg4.png" width="320px" alt="">
+              <img src="../assets/LoginTemplate/images/bg4.png" width="350px" alt="">
             </div>
           </div>
 					<div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
@@ -48,7 +48,7 @@
 			
 
 					<div class="container-login100-form-btn">
-						<button class="login100-form-btn" type="button" v-on:click="login">
+						<button class="login100-form-btn" type="button" v-on:click="login" style="font-size: 20px; font-weight: bold;">
 							登入
 						</button>
 					</div>
